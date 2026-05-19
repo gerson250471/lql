@@ -1,0 +1,16 @@
+# modulos javascript
+node_modules/
+.clasp.json
+creds.json
+
+# Ambientes virtuais
+venv/
+.env
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Configurações de IDE
+.vscode/
+.idea/

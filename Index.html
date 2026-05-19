@@ -1,0 +1,1590 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>CRM LQL Consig</title>
+    <base target="_top" />
+    <!-- Bibliotecas de Visual e Ícones -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <!-- Metodologia MAJB: Estilo Centralizado na Hostinger -->
+    <link rel="stylesheet" href="https://majb.online/shared/style.css" />
+  </head>
+  <body>
+    <!-- FAIXA DE HOMOLOGAÇÃO COM TAILWIND -->
+    <div
+      class="fixed top-0 left-0 w-full h-8 flex items-center justify-center bg-yellow-400 text-black font-black text-[10px] tracking-widest uppercase z-[9999] shadow-md"
+    >
+      ⚠️ AMBIENTE DE HOMOLOGAÇÃO / TESTES - DADOS NÃO OFICIAIS
+    </div>
+
+    <div id="app">
+      <!-- TELA DE LOGIN -->
+      <div
+        id="loginScreen"
+        class="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-100 to-blue-50"
+      >
+        <div
+          class="bg-white/90 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full max-w-md border border-white text-center"
+        >
+          <div class="flex justify-center mb-6">
+            <div
+              class="w-32 h-32 logo-circle border-4 border-yellow-500 shadow-xl overflow-hidden flex items-center justify-center"
+            >
+              <img
+                src="https://majb.online/shared/logo_LQL.jpg"
+                class="max-w-full h-auto"
+                alt="Logo LQL"
+              />
+            </div>
+          </div>
+
+          <h1
+            class="text-3xl font-black lql-blue tracking-tight mb-8 uppercase"
+          >
+            LQL SOLUÇÕES
+          </h1>
+
+          <div class="space-y-6 text-left">
+            <div>
+              <label
+                class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1 ml-1"
+                >Chave J</label
+              >
+              <input
+                type="text"
+                id="chaveJ"
+                class="w-full p-4 rounded-xl border border-slate-200 outline-none uppercase font-bold focus:border-blue-500"
+                placeholder="EX: JG240958"
+              />
+              <button
+                onclick="tentarLogin()"
+                id="btnLogin"
+                class="w-full mt-3 bg-blue-700 text-white font-black py-4 rounded-xl shadow-xl transition-all hover:bg-blue-800 disabled:opacity-75 disabled:cursor-wait"
+              >
+                ACESSAR O SISTEMA
+              </button>
+            </div>
+            <div
+              id="loginMsg"
+              class="text-center text-sm text-red-500 hidden font-bold mt-2"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TELA PRINCIPAL (SISTEMA) -->
+      <div id="mainScreen" class="hidden pt-8">
+        <nav
+          class="bg-white border-b px-6 py-3 flex justify-between items-center sticky top-8 z-40 shadow-sm"
+        >
+          <div class="flex items-center gap-4">
+            <div
+              class="w-10 h-10 logo-circle border border-slate-900 hidden md:flex"
+            >
+              <div
+                class="w-10 h-10 logo-circle border-2 border-yellow-500 shadow-sm hidden md:flex overflow-hidden"
+              >
+                <img
+                  src="https://majb.online/shared/logo_LQL.jpg"
+                  alt="Logo LQL"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+            <div class="flex gap-1 md:gap-2 overflow-x-auto pb-1 md:pb-0">
+              <button
+                onclick="switchView('home')"
+                id="navHome"
+                class="px-3 py-2 rounded-lg text-[10px] font-black uppercase nav-btn-active transition-all whitespace-nowrap"
+              >
+                Início
+              </button>
+              <button
+                onclick="switchView('crm')"
+                id="navCrm"
+                class="px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                Gestão CRM
+              </button>
+              <button
+                onclick="switchView('leads')"
+                id="navLeads"
+                class="px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                Mailing Leads
+              </button>
+              <button
+                onclick="switchView('simulador')"
+                id="navSim"
+                class="px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                Simulador
+              </button>
+              <button
+                onclick="switchView('comissoes')"
+                id="navCom"
+                class="px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                Comissões
+              </button>
+              <button
+                onclick="switchView('adminLeads')"
+                id="navAdminLeads"
+                class="hidden px-3 py-2 rounded-lg text-[10px] font-black uppercase text-red-600 hover:bg-red-50 transition-all whitespace-nowrap"
+              >
+                <i class="fas fa-lock-open mr-1"></i> Atribuir Leads
+              </button>
+            </div>
+          </div>
+          <div class="text-right flex flex-col justify-center">
+            <p
+              id="nomeDisplay"
+              class="text-[9px] md:text-[10px] font-black text-slate-700 uppercase"
+            ></p>
+            <button
+              onclick="location.reload()"
+              class="text-[9px] text-red-500 font-bold uppercase underline mt-1"
+            >
+              Sair
+            </button>
+          </div>
+        </nav>
+
+        <!-- PÁGINA: HOME -->
+        <div
+          id="viewHome"
+          class="view-content p-4 md:p-6 max-w-6xl mx-auto space-y-6 md:space-y-8"
+        >
+          <div
+            class="bg-white p-6 md:p-8 rounded-2xl border border-blue-100 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6"
+          >
+            <div class="text-center md:text-left">
+              <h2
+                class="text-2xl md:text-3xl font-black lql-blue tracking-tighter"
+              >
+                Bem-vindo(a), <span id="welcomeNome" class="italic"></span>!
+              </h2>
+              <p class="text-slate-500 font-medium text-sm md:text-base mt-1">
+                O seu portal de vendas e Gestão LQL Soluções.
+              </p>
+            </div>
+            <div
+              class="text-center md:text-right bg-slate-50 p-4 rounded-xl border border-slate-100 w-full md:w-auto"
+            >
+              <p
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >
+                A Sua Meta Mensal
+              </p>
+              <p
+                id="metaValor"
+                class="text-2xl md:text-3xl font-black text-slate-800"
+              >
+                € 0,00
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
+            <div
+              onclick="switchView('crm')"
+              class="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 transition-all cursor-pointer group shadow-sm flex items-center gap-4"
+            >
+              <div
+                class="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center text-white shrink-0"
+              >
+                <i class="fas fa-users text-xl"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 group-hover:text-amber-600">
+                  Gestão CRM
+                </h3>
+                <p class="text-xs text-slate-500">Gerir propostas.</p>
+              </div>
+            </div>
+            <div
+              onclick="switchView('leads')"
+              class="bg-white p-6 rounded-xl border border-slate-200 hover:border-purple-400 transition-all cursor-pointer group shadow-sm flex items-center gap-4"
+            >
+              <div
+                class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center text-white shrink-0"
+              >
+                <i class="fas fa-headset text-xl"></i>
+              </div>
+              <div>
+                <h3
+                  class="font-bold text-slate-800 group-hover:text-purple-700"
+                >
+                  Mailing Leads
+                </h3>
+                <p class="text-xs text-slate-500">Base higienizada.</p>
+              </div>
+            </div>
+            <div
+              onclick="switchView('simulador')"
+              class="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 transition-all cursor-pointer group shadow-sm flex items-center gap-4"
+            >
+              <div
+                class="w-12 h-12 bg-blue-700 rounded-lg flex items-center justify-center text-white shrink-0"
+              >
+                <i class="fas fa-calculator text-xl"></i>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800 group-hover:lql-blue">
+                  Abrir Simulador
+                </h3>
+                <p class="text-xs text-slate-500">Cálculos rápidos.</p>
+              </div>
+            </div>
+            <div
+              onclick="switchView('comissoes')"
+              class="bg-white p-6 rounded-xl border border-slate-200 hover:border-blue-400 transition-all cursor-pointer group shadow-sm flex items-center gap-4"
+            >
+              <div
+                class="w-12 h-12 bg-emerald-600 rounded-lg flex items-center justify-center text-white shrink-0"
+              >
+                <i class="fas fa-percent text-xl"></i>
+              </div>
+              <div>
+                <h3
+                  class="font-bold text-slate-800 group-hover:text-emerald-700"
+                >
+                  Tabelas Vigentes
+                </h3>
+                <p class="text-xs text-slate-500">Comissões do perfil.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PÁGINA: ATRIBUIR LEADS (RESTRITA) -->
+        <div
+          id="viewAdminLeads"
+          class="view-content hidden p-4 md:p-6 max-w-6xl mx-auto space-y-6"
+        >
+          <header
+            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4"
+          >
+            <div>
+              <h1
+                class="text-3xl md:text-4xl font-black text-red-700 italic uppercase tracking-tighter"
+              >
+                <i class="fas fa-tasks mr-2"></i> DISTRIBUIÇÃO DE LEADS
+              </h1>
+              <p class="text-slate-500 text-sm font-medium">
+                Selecione os leads livres e atribua a um promotor.
+              </p>
+            </div>
+            <button
+              onclick="carregarPainelAdmin()"
+              class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold uppercase text-xs hover:bg-slate-50 transition-colors shadow-sm"
+            >
+              <i class="fas fa-sync-alt mr-1"></i> Atualizar Base
+            </button>
+          </header>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div
+              class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[600px]"
+            >
+              <div
+                class="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center rounded-t-2xl"
+              >
+                <h3
+                  class="font-black text-slate-700 uppercase text-sm tracking-widest"
+                >
+                  Leads Livres (Sem Promotor)
+                </h3>
+                <span
+                  id="contadorLeadsLivres"
+                  class="bg-red-100 text-red-700 font-black text-xs px-2 py-1 rounded"
+                  >0</span
+                >
+              </div>
+              <div
+                class="p-4 flex-1 overflow-y-auto space-y-2"
+                id="listaLeadsLivres"
+              >
+                <p class="text-center text-slate-400 font-bold mt-10">
+                  <i class="fas fa-spinner fa-spin"></i> A carregar leads
+                  disponíveis...
+                </p>
+              </div>
+            </div>
+            <div
+              class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 h-fit sticky top-24"
+            >
+              <h3
+                class="font-black text-slate-700 uppercase text-sm tracking-widest mb-4 border-b pb-2"
+              >
+                Ação de Atribuição
+              </h3>
+              <div class="space-y-6">
+                <div>
+                  <label
+                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
+                    >1. Selecione o Promotor</label
+                  >
+                  <select
+                    id="selectPromotorDestino"
+                    class="w-full p-3 border-2 border-slate-200 rounded-xl font-bold text-slate-600 bg-white outline-none focus:border-red-500 transition-colors"
+                  >
+                    <option value="">A carregar promotores...</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2"
+                    >2. Resumo</label
+                  >
+                  <div
+                    class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center"
+                  >
+                    <p
+                      class="text-3xl font-black text-slate-800"
+                      id="qtdSelecionados"
+                    >
+                      0
+                    </p>
+                    <p class="text-[10px] uppercase text-slate-500 font-bold">
+                      Leads Marcados
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onclick="confirmarAtribuicao()"
+                  id="btnAtribuirLeads"
+                  class="w-full bg-emerald-600 text-white font-black py-4 rounded-xl shadow-md transition-all hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <i class="fas fa-check-circle mr-1"></i> APROVAR ATRIBUIÇÃO
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PÁGINA: GESTÃO CRM -->
+        <div
+          id="viewCrm"
+          class="view-content hidden p-4 md:p-6 max-w-6xl mx-auto space-y-6"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4"
+          >
+            <div>
+              <h1
+                class="text-3xl md:text-4xl font-black lql-blue italic uppercase tracking-tighter"
+              >
+                OS MEUS CLIENTES / CRM
+              </h1>
+              <p class="text-slate-500 text-sm font-medium">
+                Acompanhe o seu funil de vendas
+              </p>
+            </div>
+            <button
+              onclick="abrirModalNovaProposta()"
+              class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-white px-6 py-3 rounded-xl font-black uppercase text-sm transition-colors shadow-lg flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-plus"></i> Nova Proposta
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div
+              class="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm"
+            >
+              <p class="text-[10px] font-black text-slate-400 uppercase">
+                Total Registado
+              </p>
+              <p
+                id="crmTotalPropostas"
+                class="text-2xl font-black text-slate-800"
+              >
+                0
+              </p>
+            </div>
+            <div
+              class="bg-white p-4 rounded-xl border border-slate-200 text-center shadow-sm"
+            >
+              <p class="text-[10px] font-black text-slate-400 uppercase">
+                Volume (€)
+              </p>
+              <p id="crmVolumeTotal" class="text-xl font-black text-blue-600">
+                € 0,00
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-2xl border border-blue-200 shadow-xl overflow-hidden"
+          >
+            <div
+              class="bg-slate-100 p-4 border-b border-slate-200 flex justify-between items-center"
+            >
+              <h3
+                class="font-black text-slate-700 uppercase text-sm tracking-wide"
+              >
+                Últimas Propostas
+              </h3>
+              <button
+                onclick="carregarPropostasCRM()"
+                class="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                <i class="fas fa-sync-alt"></i> Atualizar
+              </button>
+            </div>
+            <div class="p-0 overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr
+                    class="bg-slate-50 text-[10px] uppercase text-slate-500 tracking-wider"
+                  >
+                    <th class="p-4 border-b font-black">Data</th>
+                    <th class="p-4 border-b font-black">Cliente</th>
+                    <th class="p-4 border-b font-black text-right">Valor</th>
+                    <th class="p-4 border-b font-black text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaPropostasBody">
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="p-8 text-center text-slate-400 font-bold"
+                    >
+                      <i class="fas fa-circle-notch fa-spin mr-2"></i> A
+                      carregar propostas...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PÁGINA: LEADS -->
+        <div
+          id="viewLeads"
+          class="view-content hidden p-4 md:p-6 max-w-6xl mx-auto space-y-6"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4"
+          >
+            <div>
+              <h1
+                class="text-3xl md:text-4xl font-black text-purple-700 italic uppercase tracking-tighter"
+              >
+                MAILING DE LEADS
+              </h1>
+              <p class="text-slate-500 text-sm font-medium">
+                A sua base de clientes higienizados para prospeção
+              </p>
+            </div>
+
+            <div class="flex gap-2 w-full md:w-auto">
+              <!-- NOVO FILTRO AQUI -->
+              <select
+                id="filtroStatusLead"
+                onchange="filtrarLeads()"
+                class="flex-1 md:w-auto bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold uppercase text-xs focus:outline-none focus:border-purple-500 shadow-sm cursor-pointer"
+              >
+                <option value="">TODOS OS STATUS</option>
+                <option value="NOVO">NOVO</option>
+                <option value="TENTATIVA">TENTATIVA</option>
+                <option value="WHATSAPP">WHATSAPP</option>
+                <option value="EM NEGOCIAÇÃO">EM NEGOCIAÇÃO</option>
+                <option value="PROPOSTA GERADA">PROPOSTA GERADA</option>
+                <option value="NÃO TEM INTERESSE">SEM INTERESSE</option>
+              </select>
+
+              <button
+                onclick="carregarLeads()"
+                class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg font-bold uppercase text-xs hover:bg-slate-50 transition-colors shadow-sm whitespace-nowrap"
+              >
+                <i class="fas fa-sync-alt mr-1"></i> Atualizar
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+            id="containerLeads"
+          >
+            <div
+              class="col-span-full p-10 text-center text-slate-400 font-bold"
+            >
+              <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br />A
+              procurar a sua carteira de leads...
+            </div>
+          </div>
+        </div>
+
+        <!-- PÁGINA: SIMULADOR -->
+        <div
+          id="viewSimulador"
+          class="view-content hidden p-4 md:p-6 max-w-5xl mx-auto space-y-6"
+        >
+          <header class="flex justify-between items-center mb-8">
+            <h1
+              class="text-4xl md:text-6xl font-black lql-blue italic uppercase tracking-tighter"
+            >
+              SIMULADOR
+            </h1>
+          </header>
+          <div
+            class="bg-white rounded-2xl border border-blue-200 shadow-xl overflow-hidden"
+          >
+            <div class="flex flex-col sm:flex-row bg-slate-100 border-b">
+              <button
+                id="tabEmp"
+                onclick="changeSimMode('emprestimo')"
+                class="w-full sm:w-auto px-8 py-4 text-[11px] font-black uppercase tab-active transition-all"
+              >
+                Valor do Empréstimo
+              </button>
+              <button
+                id="tabPar"
+                onclick="changeSimMode('parcela')"
+                class="w-full sm:w-auto px-8 py-4 text-[11px] font-black uppercase text-slate-400 sm:border-l transition-all"
+              >
+                Valor da Parcela
+              </button>
+            </div>
+            <div class="p-6 md:p-8 space-y-8">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                <div class="space-y-2">
+                  <label
+                    id="lblVal"
+                    class="text-[10px] font-black lql-blue uppercase tracking-widest"
+                    >VALOR DO EMPRÉSTIMO</label
+                  >
+                  <div
+                    class="flex border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-blue-600 transition-colors"
+                  >
+                    <span
+                      class="bg-slate-50 px-4 py-3 text-slate-400 font-bold flex items-center"
+                      >R$</span
+                    >
+                    <input
+                      type="number"
+                      id="vInput"
+                      class="w-full p-3 outline-none font-bold text-xl text-slate-700"
+                      placeholder="0.00"
+                      oninput="calcSim()"
+                    />
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label
+                    class="text-[10px] font-black lql-blue uppercase tracking-widest"
+                    >CONVÉNIO / TABELA</label
+                  >
+                  <select
+                    id="selTab"
+                    class="w-full p-4 border-2 border-slate-200 rounded-xl font-bold text-slate-600 bg-white outline-none focus:border-blue-600"
+                    onchange="calcSim()"
+                  >
+                    <option value="">A carregar...</option>
+                  </select>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <label
+                  id="lblRes"
+                  class="text-[10px] font-black lql-blue uppercase tracking-widest"
+                  >VALOR DAS PARCELAS</label
+                >
+                <div
+                  id="resBox"
+                  class="p-8 md:p-10 border-2 border-dashed border-blue-300 rounded-xl bg-blue-50/30 text-center min-h-[140px] flex items-center justify-center"
+                >
+                  <span
+                    id="resTxt"
+                    class="text-slate-400 font-bold uppercase tracking-widest text-sm"
+                    >A aguardar dados...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PÁGINA: COMISSÕES -->
+        <div
+          id="viewComissoes"
+          class="view-content hidden p-4 md:p-6 max-w-5xl mx-auto space-y-8"
+        >
+          <h1
+            class="text-3xl md:text-5xl font-black text-blue-700 italic uppercase tracking-tighter text-center"
+          >
+            TABELA DE COMISSIONAMENTO
+          </h1>
+          <div id="commCont" class="space-y-8 pb-20">
+            <div
+              class="flex flex-col items-center justify-center p-20 gap-4"
+              id="commLoading"
+            >
+              <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
+              <p class="text-slate-400 font-bold uppercase text-xs">
+                A procurar taxas em vigor...
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: NOVA PROPOSTA -->
+      <div
+        id="modalNovaProposta"
+        class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4"
+      >
+        <div
+          class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter"
+        >
+          <div
+            class="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center"
+          >
+            <h2 class="text-xl font-black lql-blue uppercase tracking-tight">
+              Nova Proposta
+            </h2>
+            <button
+              onclick="fecharModalNovaProposta()"
+              class="text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                >Nome do Cliente</label
+              >
+              <input
+                type="text"
+                id="crmCliente"
+                class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 uppercase font-bold text-slate-700 text-sm"
+                placeholder="Nome Completo"
+              />
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >CPF / NIF</label
+                >
+                <input
+                  type="text"
+                  id="crmCpf"
+                  class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm"
+                  placeholder="000.000.000-00"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Valor (€/R$)</label
+                >
+                <input
+                  type="number"
+                  id="crmValor"
+                  class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm"
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <!-- NOVO CAMPO: BANCO -->
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                >Banco Origem/Destino</label
+              >
+              <input
+                type="text"
+                id="crmBanco"
+                class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase"
+                placeholder="Ex: Itaú, BMG, C6..."
+              />
+            </div>
+            <!-- FIM NOVO CAMPO -->
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                >Observações</label
+              >
+              <textarea
+                id="crmObs"
+                rows="3"
+                class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 text-slate-700 text-sm"
+                placeholder="Banco, tabela, taxa pretendida..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <button
+              onclick="fecharModalNovaProposta()"
+              class="flex-1 py-3 px-4 bg-white border border-slate-300 text-slate-600 rounded-xl font-bold uppercase text-xs hover:bg-slate-100 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onclick="salvarPropostaNoCRM()"
+              id="btnSalvarCrm"
+              class="flex-1 py-3 px-4 bg-blue-700 text-white rounded-xl font-black uppercase text-xs hover:bg-blue-800 transition-colors shadow-md"
+            >
+              Guardar Proposta
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: FICHA DO LEAD -->
+      <div
+        id="modalLead"
+        class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4"
+      >
+        <div
+          class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden modal-enter flex flex-col max-h-[90vh]"
+        >
+          <div
+            class="bg-purple-700 p-5 flex justify-between items-center text-white"
+          >
+            <h2 class="text-xl font-black uppercase tracking-tight">
+              <i class="fas fa-user-tag mr-2"></i>Ficha do Lead
+            </h2>
+            <button
+              onclick="fecharModalLead()"
+              class="text-white/70 hover:text-white transition-colors"
+            >
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+          <div class="flex-1 overflow-y-auto p-6 bg-slate-50">
+            <div
+              class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm mb-6"
+            >
+              <h3
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-2"
+              >
+                Dados Higienizados
+              </h3>
+              <div class="grid grid-cols-2 gap-y-4 gap-x-6">
+                <div class="col-span-2">
+                  <p class="text-[10px] uppercase text-slate-500 font-bold">
+                    Nome
+                  </p>
+                  <p
+                    id="leadDetalheNome"
+                    class="font-black text-slate-800 text-lg uppercase"
+                  >
+                    -
+                  </p>
+                </div>
+                <div>
+                  <p class="text-[10px] uppercase text-slate-500 font-bold">
+                    CPF / NIF
+                  </p>
+                  <p id="leadDetalheCpf" class="font-bold text-slate-700">-</p>
+                </div>
+                <div>
+                  <p class="text-[10px] uppercase text-slate-500 font-bold">
+                    Nascimento
+                  </p>
+                  <p id="leadDetalheNasc" class="font-bold text-slate-700">-</p>
+                </div>
+                <div class="col-span-2">
+                  <p class="text-[10px] uppercase text-slate-500 font-bold">
+                    Nome da Mãe
+                  </p>
+                  <p
+                    id="leadDetalheMae"
+                    class="font-bold text-slate-700 uppercase"
+                  >
+                    -
+                  </p>
+                </div>
+                <div>
+                  <p class="text-[10px] uppercase text-slate-500 font-bold">
+                    Renda Estimada
+                  </p>
+                  <p id="leadDetalheRenda" class="font-bold text-purple-700">
+                    -
+                  </p>
+                </div>
+                <div class="flex gap-2 items-end">
+                  <div class="flex-1">
+                    <p class="text-[10px] uppercase text-slate-500 font-bold">
+                      Contactos
+                    </p>
+                    <p id="leadDetalheCel1" class="font-bold text-slate-700">
+                      -
+                    </p>
+                  </div>
+                  <a
+                    href="#"
+                    id="btnZapLead"
+                    target="_blank"
+                    class="bg-green-500 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-green-600 shadow-sm"
+                    ><i class="fab fa-whatsapp"></i
+                  ></a>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm"
+            >
+              <h3
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 border-b pb-2"
+              >
+                Registrar Ação / Histórico
+              </h3>
+              <div
+                class="flex gap-2 mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200"
+              >
+                <select
+                  id="leadAcao"
+                  class="p-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-600 outline-none w-1/3"
+                >
+                  <option value="TENTATIVA">Tentou Contacto</option>
+                  <option value="WHATSAPP">Envio WhatsApp</option>
+                  <option value="EM NEGOCIAÇÃO">Em Negociação</option>
+                  <option value="PROPOSTA GERADA">Proposta Gerada</option>
+                  <option value="NÃO TEM INTERESSE">Sem Interesse</option>
+                </select>
+                <input
+                  type="text"
+                  id="leadObs"
+                  placeholder="Observações..."
+                  class="p-2 border border-slate-300 rounded-lg text-xs flex-1 outline-none"
+                />
+                <button
+                  onclick="salvarInteracaoLead()"
+                  id="btnSalvarInteracao"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-3 rounded-lg text-xs font-bold uppercase transition-colors"
+                >
+                  <i class="fas fa-check"></i>
+                </button>
+              </div>
+              <div
+                id="leadTimeline"
+                class="space-y-3 max-h-48 overflow-y-auto pr-2"
+              >
+                <p class="text-center text-xs text-slate-400 py-4">
+                  <i class="fas fa-spinner fa-spin mr-1"></i> A carregar
+                  histórico...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTAINER DE NOTIFICAÇÕES (TOAST) -->
+    <div
+      id="toastContainer"
+      class="fixed top-5 right-5 z-[9999] flex flex-col gap-3 pointer-events-none"
+    ></div>
+
+    <!-- SCRIPTS -->
+    <script>
+      let user = null;
+      let simMode = "emprestimo";
+      let leadAtualCpf = "";
+
+      function tentarLogin() {
+        const chave = document.getElementById("chaveJ").value;
+        const btn = document.getElementById("btnLogin");
+        const msg = document.getElementById("loginMsg");
+        if (!chave) return;
+
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-circle-notch fa-spin"></i> A AUTENTICAR...';
+        msg.classList.add("hidden");
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.sucesso) {
+              user = res;
+              initApp();
+            } else {
+              msg.innerText = res.erro;
+              msg.classList.remove("hidden");
+              btn.disabled = false;
+              btn.innerText = "ACESSAR O SISTEMA";
+            }
+          })
+          .withFailureHandler(function (err) {
+            msg.innerText = "Erro no servidor: " + err.message;
+            msg.classList.remove("hidden");
+            btn.disabled = false;
+            btn.innerText = "ACESSAR O SISTEMA";
+          })
+          .autenticarUsuario(chave);
+      }
+
+      function initApp() {
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("mainScreen").classList.remove("hidden");
+
+        document.getElementById("nomeDisplay").innerText =
+          `${user.nome} (${user.perfil})`;
+        document.getElementById("welcomeNome").innerText =
+          user.nome.split(" ")[0];
+
+        let metaNum = user.meta || 0;
+        document.getElementById("metaValor").innerText = metaNum.toLocaleString(
+          "pt-BR",
+          { style: "currency", currency: "BRL" },
+        );
+
+        // --- LÓGICA BLINDADA DE NÍVEL DE ACESSO ---
+        if (
+          user.nivelAcesso === "ADMINISTRADOR" ||
+          user.nivelAcesso === "PROGRAMADOR"
+        ) {
+          document.getElementById("navAdminLeads").classList.remove("hidden");
+        } else {
+          document.getElementById("navAdminLeads").classList.add("hidden");
+        }
+        // --------------------------------------
+
+        switchView("home");
+        loadSimOptions();
+        loadCommissionData();
+        carregarPropostasCRM();
+        carregarLeads();
+      }
+
+      function switchView(view) {
+        // Esconde todas as telas
+        document
+          .querySelectorAll(".view-content")
+          .forEach((el) => el.classList.add("hidden"));
+        // Mostra a tela selecionada
+        document
+          .getElementById("view" + view.charAt(0).toUpperCase() + view.slice(1))
+          .classList.remove("hidden");
+
+        // --- CORREÇÃO DA PINTURA DOS BOTÕES PARA NÃO APAGAR O 'HIDDEN' ---
+        const btns = [
+          "navHome",
+          "navCrm",
+          "navLeads",
+          "navSim",
+          "navCom",
+          "navAdminLeads",
+        ];
+
+        btns.forEach((id) => {
+          let btn = document.getElementById(id);
+          // Remove as cores de "ativo" e aplica o cinza padrão de "inativo"
+          btn.classList.remove("nav-btn-active", "text-red-600");
+          btn.classList.add("text-slate-400", "hover:bg-slate-100");
+        });
+
+        const activeMap = {
+          home: "navHome",
+          crm: "navCrm",
+          leads: "navLeads",
+          simulador: "navSim",
+          comissoes: "navCom",
+          adminLeads: "navAdminLeads",
+        };
+
+        if (activeMap[view]) {
+          let btnAtivo = document.getElementById(activeMap[view]);
+          // Aplica a cor de botão selecionado
+          btnAtivo.classList.remove("text-slate-400", "hover:bg-slate-100");
+          btnAtivo.classList.add("nav-btn-active");
+        }
+
+        // Se a tela for a de Admin, puxa os dados
+        if (view === "adminLeads") {
+          carregarPainelAdmin();
+        }
+      }
+
+      // 1. Variável global para guardar os leads na memória sem precisar ir ao Google toda hora
+      let todosOsLeadsDoPromotor = [];
+
+      // 2. Busca os dados no Google UMA VEZ
+      function carregarLeads() {
+        const container = document.getElementById("containerLeads");
+        container.innerHTML = `<div class="col-span-full p-10 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>A procurar a sua carteira...</div>`;
+
+        google.script.run
+          .withSuccessHandler(function (leads) {
+            todosOsLeadsDoPromotor = leads; // Salva o pacote que veio do Google na memória
+            document.getElementById("filtroStatusLead").value = ""; // Reseta o select para "TODOS"
+            renderizarLeads(todosOsLeadsDoPromotor); // Manda desenhar na tela
+          })
+          .getLeadsDoPromotor(user.chave);
+      }
+
+      // 3. Desenha os cards na tela usando alta performance (blocosHtml)
+      function renderizarLeads(lista) {
+        const container = document.getElementById("containerLeads");
+        container.innerHTML = "";
+
+        if (lista.length === 0) {
+          container.innerHTML = `<div class="col-span-full p-10 text-center text-slate-400 text-sm border-2 border-dashed rounded-xl">Nenhum Lead encontrado para este filtro.</div>`;
+          return;
+        }
+
+        let blocosHtml = "";
+
+        lista.forEach(function (l) {
+          // Define a cor de acordo com o status
+          let statusColor =
+            l.status === "NOVO"
+              ? "bg-blue-100 text-blue-700"
+              : l.status === "EM NEGOCIAÇÃO"
+                ? "bg-amber-100 text-amber-700"
+                : l.status === "NÃO TEM INTERESSE"
+                  ? "bg-red-100 text-red-700"
+                  : l.status === "PROPOSTA GERADA"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-slate-100 text-slate-700";
+
+          blocosHtml += `
+            <div onclick="abrirFichaLead('${l.cpf}')" class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:border-purple-400 cursor-pointer transition-all group">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="font-black text-slate-800 text-sm group-hover:text-purple-700 transition-colors uppercase leading-tight">${l.nome}</h4>
+                <span class="px-2 py-1 rounded text-[9px] font-black uppercase ${statusColor} ml-2 whitespace-nowrap">${l.status}</span>
+              </div>
+              <div class="text-xs text-slate-500 space-y-1">
+                <p><i class="fas fa-id-card w-4 text-center"></i> ${l.cpf}</p>
+                <p><i class="fas fa-money-bill-wave w-4 text-center text-green-600"></i> ${l.renda}</p>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = blocosHtml;
+      }
+
+      // 4. Função disparada toda vez que o Promotor muda o Select
+      function filtrarLeads() {
+        const statusSelecionado =
+          document.getElementById("filtroStatusLead").value;
+
+        if (statusSelecionado === "") {
+          // Se escolheu "TODOS", manda a lista inteira da memória para a tela
+          renderizarLeads(todosOsLeadsDoPromotor);
+        } else {
+          // Se escolheu um status, cria uma sub-lista rápida só com os status iguais e desenha
+          const leadsFiltrados = todosOsLeadsDoPromotor.filter((l) => {
+            let statusLead = (l.status || "NOVO").toUpperCase();
+            return statusLead === statusSelecionado.toUpperCase();
+          });
+          renderizarLeads(leadsFiltrados);
+        }
+      }
+
+      function abrirFichaLead(cpf) {
+        leadAtualCpf = cpf;
+        document.getElementById("modalLead").classList.remove("hidden");
+        document.getElementById("leadTimeline").innerHTML =
+          `<p class="text-center text-xs text-slate-400 py-4"><i class="fas fa-spinner fa-spin mr-1"></i> A carregar dados...</p>`;
+
+        google.script.run
+          .withSuccessHandler(function (dados) {
+            document.getElementById("leadDetalheNome").innerText =
+              dados.lead.nome;
+            document.getElementById("leadDetalheCpf").innerText =
+              dados.lead.cpf;
+            document.getElementById("leadDetalheNasc").innerText =
+              dados.lead.nasc;
+            document.getElementById("leadDetalheMae").innerText =
+              dados.lead.nomeMae;
+            document.getElementById("leadDetalheRenda").innerText =
+              dados.lead.renda;
+            document.getElementById("leadDetalheCel1").innerText =
+              `${dados.lead.cel1} / ${dados.lead.cel2}`;
+
+            const zapLink = document.getElementById("btnZapLead");
+            if (dados.lead.cel1)
+              zapLink.href = `https://wa.me/55${dados.lead.cel1.toString().replace(/\D/g, "")}`;
+
+            const timeline = document.getElementById("leadTimeline");
+            timeline.innerHTML = "";
+            if (dados.historico.length === 0) {
+              timeline.innerHTML = `<p class="text-xs text-slate-400 italic">Nenhum contacto registado.</p>`;
+            } else {
+              dados.historico.forEach(function (h) {
+                timeline.innerHTML += `
+                  <div class="border-l-2 border-purple-200 pl-3 pb-2 relative">
+                    <div class="absolute w-2 h-2 bg-purple-500 rounded-full -left-[5px] top-1"></div>
+                    <p class="text-[10px] font-black text-slate-400">${h.data}</p>
+                    <p class="text-xs font-bold text-slate-700 uppercase">${h.acao}</p>
+                    <p class="text-xs text-slate-500 italic">${h.obs || "-"}</p>
+                  </div>
+                `;
+              });
+            }
+          })
+          .getDetalhesEHistoricoLead(cpf, user.chave);
+      }
+
+      function fecharModalLead() {
+        document.getElementById("modalLead").classList.add("hidden");
+        document.getElementById("leadObs").value = "";
+      }
+
+      function salvarInteracaoLead() {
+        const acao = document.getElementById("leadAcao").value;
+        const obs = document.getElementById("leadObs").value;
+        const btn = document.getElementById("btnSalvarInteracao");
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        const payload = {
+          cpf: leadAtualCpf,
+          promotor: user.chave,
+          acao: acao,
+          obs: obs,
+        };
+
+        google.script.run
+          .withSuccessHandler(function () {
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.disabled = false;
+            document.getElementById("leadObs").value = "";
+            showToast("Ação registrada com sucesso!");
+            carregarLeads(); // Atualiza a lista por trás
+
+            // O GATILHO INTELIGENTE AQUI:
+            if (acao === "PROPOSTA GERADA") {
+              // Pega o nome que está escrito na tela do modal do lead
+              let nomeDoLead =
+                document.getElementById("leadDetalheNome").innerText;
+              fecharModalLead(); // Fecha a ficha do lead
+              switchView("crm"); // Muda para a tela de CRM
+              abrirModalNovaProposta(nomeDoLead, leadAtualCpf); // Abre a nova proposta pré-preenchida!
+            } else {
+              abrirFichaLead(leadAtualCpf); // Se não for proposta, só recarrega o histórico
+            }
+          })
+          .withFailureHandler(function (err) {
+            showToast("Erro ao guardar histórico: " + err.message, "error");
+            btn.innerHTML = '<i class="fas fa-check"></i>';
+            btn.disabled = false;
+          })
+          .registrarInteracaoLead(payload);
+      }
+
+      // Agora ela aceita receber o nome e o cpf automaticamente
+      function abrirModalNovaProposta(nomePre = "", cpfPre = "") {
+        document.getElementById("crmCliente").value = nomePre;
+        document.getElementById("crmCpf").value = cpfPre;
+        document.getElementById("crmValor").value = "";
+        document.getElementById("crmBanco").value = ""; // Limpa o banco
+        document.getElementById("crmObs").value = "";
+        document.getElementById("modalNovaProposta").classList.remove("hidden");
+      }
+
+      function fecharModalNovaProposta() {
+        document.getElementById("modalNovaProposta").classList.add("hidden");
+      }
+
+      function salvarPropostaNoCRM() {
+        const cliente = document.getElementById("crmCliente").value.trim();
+        const cpf = document.getElementById("crmCpf").value.trim();
+        const valor = parseFloat(document.getElementById("crmValor").value);
+        const banco = document
+          .getElementById("crmBanco")
+          .value.trim()
+          .toUpperCase(); // Pega o Banco
+        const obs = document.getElementById("crmObs").value.trim();
+
+        if (!cliente || !valor || !banco) {
+          showToast("Preencha o Nome, Valor e o Banco.", "error");
+          return;
+        }
+
+        const btn = document.getElementById("btnSalvarCrm");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A GUARDAR...';
+
+        const dados = {
+          promotor: user.chave,
+          perfil: user.perfil,
+          cliente: cliente,
+          cpf: cpf,
+          valor: valor,
+          banco: banco, // Envia para o Google
+          obs: obs,
+        };
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerHTML = "Guardar Proposta";
+            if (res.sucesso) {
+              fecharModalNovaProposta();
+              showToast("Proposta registada com sucesso!", "success");
+              carregarPropostasCRM(); // Atualiza a tabela na tela
+            } else {
+              showToast(res.erro, "error");
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerHTML = "Guardar Proposta";
+            showToast("Erro no servidor: " + err.message, "error");
+          })
+          .salvarNovaProposta(dados);
+      }
+
+      function carregarPropostasCRM() {
+        const tbody = document.getElementById("tabelaPropostasBody");
+        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A carregar as suas propostas...</td></tr>`;
+
+        google.script.run
+          .withSuccessHandler(function (propostas) {
+            tbody.innerHTML = "";
+
+            if (propostas.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 text-sm">Nenhuma proposta registada ainda.</td></tr>`;
+              document.getElementById("crmTotalPropostas").innerText = "0";
+              document.getElementById("crmVolumeTotal").innerText = "R$ 0,00";
+              return;
+            }
+
+            let volumeTotal = 0;
+
+            propostas.forEach(function (p) {
+              const valorNum = parseFloat(p.valor) || 0;
+              volumeTotal += valorNum;
+              const valorFormatado = valorNum.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+
+              let statusColor = "bg-slate-100 text-slate-600 border-slate-200";
+              const statusUp = p.status.toUpperCase();
+
+              if (statusUp === "NOVA")
+                statusColor = "bg-blue-100 text-blue-700 border-blue-200";
+              else if (statusUp === "EM ANÁLISE" || statusUp === "PENDENTE")
+                statusColor = "bg-amber-100 text-amber-700 border-amber-200";
+              else if (statusUp === "APROVADA" || statusUp === "PAGA")
+                statusColor =
+                  "bg-emerald-100 text-emerald-700 border-emerald-200";
+              else if (statusUp === "RECUSADA" || statusUp === "CANCELADA")
+                statusColor = "bg-red-100 text-red-700 border-red-200";
+
+              tbody.innerHTML += `
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 group">
+                  <td class="p-4 text-xs font-bold text-slate-500">${p.data}</td>
+                  <td class="p-4 text-sm font-black text-slate-800">${p.cliente}</td>
+                  <td class="p-4 text-sm font-bold text-slate-700 text-right">${valorFormatado}</td>
+                  <td class="p-4 text-center">
+                    <span class="px-3 py-1 rounded-full text-[10px] font-black border uppercase ${statusColor}">${p.status}</span>
+                  </td>
+                </tr>
+              `;
+            });
+
+            document.getElementById("crmTotalPropostas").innerText =
+              propostas.length;
+            document.getElementById("crmVolumeTotal").innerText =
+              volumeTotal.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+          })
+          .withFailureHandler(function (err) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 font-bold">Erro ao carregar propostas.</td></tr>`;
+          })
+          .getPropostas(user.chave);
+      }
+
+      function loadSimOptions() {
+        google.script.run
+          .withSuccessHandler(function (tabs) {
+            const sel = document.getElementById("selTab");
+            sel.innerHTML = `<option value="">Selecione...</option>`;
+            tabs.forEach(function (t) {
+              sel.innerHTML += `<option value="${t.fator}">${t.texto}</option>`;
+            });
+          })
+          .getTabelasPorPerfil(user.perfil);
+      }
+
+      function changeSimMode(m) {
+        simMode = m;
+        document.getElementById("tabEmp").className =
+          m === "emprestimo"
+            ? "w-full sm:w-auto px-8 py-4 text-[11px] font-black uppercase tab-active transition-all"
+            : "w-full sm:w-auto px-8 py-4 text-[11px] font-black uppercase text-slate-400 transition-all";
+        document.getElementById("tabPar").className =
+          m === "parcela"
+            ? "w-full sm:w-auto px-8 py-4 text-[11px] font-black uppercase tab-active sm:border-l transition-all"
+            : "w-full sm:w-auto px-8 py-4 text-[11px] font-black uppercase text-slate-400 sm:border-l transition-all";
+        document.getElementById("lblVal").innerText =
+          m === "emprestimo" ? "VALOR DO EMPRÉSTIMO" : "VALOR DA PARCELA";
+        document.getElementById("lblRes").innerText =
+          m === "emprestimo"
+            ? "VALOR ESTIMADO DAS PARCELAS"
+            : "MARGEM TOTAL ESTIMADA";
+        document.getElementById("vInput").value = "";
+        resetSimResult();
+      }
+
+      function resetSimResult() {
+        const resTxt = document.getElementById("resTxt");
+        resTxt.innerText = "A aguardar dados...";
+        resTxt.className =
+          "text-slate-400 font-bold uppercase tracking-widest text-sm";
+      }
+
+      function calcSim() {
+        const fator = parseFloat(document.getElementById("selTab").value);
+        const valor = parseFloat(document.getElementById("vInput").value);
+        const display = document.getElementById("resTxt");
+
+        if (!fator || !valor || isNaN(valor)) return resetSimResult();
+
+        const resultado =
+          simMode === "emprestimo" ? valor * fator : valor / fator;
+        display.innerText = resultado.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+        display.className =
+          "text-3xl md:text-5xl font-black lql-blue tracking-tighter animate-in zoom-in duration-300";
+
+        clearTimeout(this.logTimeout);
+        this.logTimeout = setTimeout(function () {
+          google.script.run.saveSystemLog({
+            userKey: user.chave,
+            userProfile: user.perfil,
+            operationType: `Cálculo (${simMode})`,
+            operationResult: resultado.toFixed(2),
+          });
+        }, 2000);
+      }
+
+      function loadCommissionData() {
+        const cont = document.getElementById("commCont");
+        google.script.run
+          .withSuccessHandler(function (dados) {
+            cont.innerHTML = "";
+            if (!dados || dados.length === 0) {
+              cont.innerHTML = `<div class="p-10 text-center font-bold text-red-500 uppercase">Tabela não disponível para o perfil ${user.perfil}.</div>`;
+              return;
+            }
+            dados.forEach(function (g) {
+              // Nova estrutura de Tabela usando Tailwind CSS puro
+              let table = `
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-md mb-8 overflow-hidden">
+                  <div class="bg-slate-50 border-b border-slate-200 p-5">
+                    <h3 class="font-black text-slate-700 uppercase text-sm tracking-widest">${g.titulo}</h3>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                      <thead>
+                        <tr class="bg-slate-100 text-[10px] uppercase text-slate-500 tracking-wider">
+                          <th class="p-4 border-b border-slate-200 font-black">Taxa Inicial</th>
+                          <th class="p-4 border-b border-slate-200 font-black">Taxa Final</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center">Prazo Inicial</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center">Prazo Final</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center bg-slate-800 text-yellow-400">${user.perfil}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+              `;
+
+              g.itens.forEach(function (i) {
+                table += `
+                  <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100 group">
+                    <td class="p-4 text-xs font-bold text-slate-600">${i.taxaIni}</td>
+                    <td class="p-4 text-xs font-bold text-slate-600">${i.taxaFin}</td>
+                    <td class="p-4 text-xs font-medium text-slate-500 text-center">${i.prazoIni}</td>
+                    <td class="p-4 text-xs font-medium text-slate-500 text-center">${i.prazoFin}</td>
+                    <td class="p-4 text-sm font-black text-emerald-600 text-center bg-slate-50 group-hover:bg-emerald-50 transition-colors">${i.comissao}</td>
+                  </tr>
+                `;
+              });
+
+              table += `</tbody></table></div></div>`;
+              cont.innerHTML += table;
+            });
+          })
+          .withFailureHandler(function (err) {
+            cont.innerHTML = `<p class="text-center text-red-600 font-bold p-10 uppercase">${err.message}</p>`;
+          })
+          .getDadosComissao(user.perfil);
+      }
+
+      // Variável para guardar os CPFs selecionados pelo Admin
+      let leadsSelecionadosParaAtribuicao = [];
+
+      // Função para carregar os Leads livres e os Promotores na tela do Admin
+
+      // Função para carregar os Leads livres e os Promotores na tela do Admin
+      function carregarPainelAdmin() {
+        // Só carrega se a pessoa for ADMIN ou PROGRAMADOR
+        if (
+          user.nivelAcesso !== "ADMINISTRADOR" &&
+          user.nivelAcesso !== "PROGRAMADOR"
+        )
+          return;
+
+        leadsSelecionadosParaAtribuicao = [];
+        document.getElementById("qtdSelecionados").innerText = "0";
+        document.getElementById("listaLeadsLivres").innerHTML =
+          '<p class="text-center text-slate-400 font-bold mt-10"><i class="fas fa-spinner fa-spin"></i> A carregar base...</p>';
+        document.getElementById("selectPromotorDestino").innerHTML =
+          '<option value="">A carregar promotores...</option>';
+
+        // Chama o backend para buscar as informações
+        google.script.run
+          .withSuccessHandler(function (dados) {
+            // 1. Preencher o Select de Promotores
+            const select = document.getElementById("selectPromotorDestino");
+            select.innerHTML =
+              '<option value="">-- Escolha um Promotor --</option>';
+            dados.promotores.forEach((p) => {
+              select.innerHTML += `<option value="${p.chave}">${p.nome} (${p.perfil})</option>`;
+            });
+
+            // 2. Preencher a lista de Leads Livres
+            const lista = document.getElementById("listaLeadsLivres");
+            document.getElementById("contadorLeadsLivres").innerText =
+              dados.leadsLivres.length;
+
+            if (dados.leadsLivres.length === 0) {
+              lista.innerHTML =
+                '<p class="text-center text-slate-400 text-sm mt-10">Nenhum lead livre na base de dados.</p>';
+              return;
+            }
+
+            // CORREÇÃO DE PERFORMANCE: Montamos tudo na memória antes de colar na tela
+            let blocosHtml = "";
+
+            dados.leadsLivres.forEach((l) => {
+              blocosHtml += `
+                <label class="flex items-center gap-4 p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+                  <input type="checkbox" value="${l.cpf}" onchange="toggleLeadSelecionado(this)" class="w-5 h-5 accent-red-600 rounded">
+                  <div class="flex-1">
+                    <p class="font-black text-slate-700 uppercase text-sm">${l.nome}</p>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase"><i class="fas fa-id-card mr-1"></i> ${l.cpf} | Renda: ${l.renda}</p>
+                  </div>
+                </label>
+              `;
+            });
+
+            // O navegador renderiza a tela apenas 1 vez (não trava mais!)
+            lista.innerHTML = blocosHtml;
+          })
+          .withFailureHandler(function (err) {
+            // EXIBE O ERRO NA TELA PARA FACILITAR O DIAGNÓSTICO
+            document.getElementById("listaLeadsLivres").innerHTML =
+              `<div class="p-10 text-center"><i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i><p class="font-bold text-red-600 uppercase text-sm">Erro no Servidor</p><p class="text-slate-500 text-xs mt-2">${err.message}</p></div>`;
+            document.getElementById("selectPromotorDestino").innerHTML =
+              '<option value="">Erro ao carregar</option>';
+          })
+          .getDadosPainelAdmin();
+      }
+
+      // Função que atualiza o contador de selecionados
+      function toggleLeadSelecionado(checkbox) {
+        if (checkbox.checked) {
+          leadsSelecionadosParaAtribuicao.push(checkbox.value);
+        } else {
+          leadsSelecionadosParaAtribuicao =
+            leadsSelecionadosParaAtribuicao.filter(
+              (cpf) => cpf !== checkbox.value,
+            );
+        }
+        document.getElementById("qtdSelecionados").innerText =
+          leadsSelecionadosParaAtribuicao.length;
+      }
+
+      // Função que envia a aprovação para o Google Sheets
+      // Função que envia a aprovação para o Google Sheets
+      function confirmarAtribuicao() {
+        const promotorChave = document.getElementById(
+          "selectPromotorDestino",
+        ).value;
+        const btn = document.getElementById("btnAtribuirLeads");
+
+        if (leadsSelecionadosParaAtribuicao.length === 0) {
+          showToast("Selecione pelo menos um Lead para atribuir.", "error");
+          return;
+        }
+        if (!promotorChave) {
+          showToast("Selecione o Promotor que receberá estes leads.", "error");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A PROCESSAR...';
+
+        google.script.run
+          .withSuccessHandler(function () {
+            btn.disabled = false;
+            btn.innerHTML =
+              '<i class="fas fa-check-circle mr-1"></i> APROVAR ATRIBUIÇÃO';
+            // SUCESSO! Chama o Toast verde
+            showToast("Leads atribuídos com sucesso!", "success");
+            carregarPainelAdmin(); // Recarrega a tela para limpar os que já foram
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerHTML =
+              '<i class="fas fa-check-circle mr-1"></i> APROVAR ATRIBUIÇÃO';
+            // ERRO! Chama o Toast vermelho
+            showToast("Erro ao atribuir leads: " + err.message, "error");
+          })
+          .atribuirLeadsEmMassa(leadsSelecionadosParaAtribuicao, promotorChave);
+      }
+
+      // Função global de Toast (Notificações) MAJB
+      function showToast(mensagem, tipo = "success") {
+        const container = document.getElementById("toastContainer");
+        const toast = document.createElement("div");
+
+        // Define as cores com base no tipo (sucesso = verde, erro = vermelho)
+        const cores =
+          tipo === "success"
+            ? "bg-emerald-600 text-white border-emerald-700"
+            : "bg-red-600 text-white border-red-700";
+
+        const icone =
+          tipo === "success" ? "fa-check-circle" : "fa-exclamation-triangle";
+
+        // Classes do Tailwind para o design e a animação de deslizar
+        toast.className = `flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border ${cores} transform transition-all duration-300 translate-x-full opacity-0 pointer-events-auto`;
+
+        toast.innerHTML = `
+          <i class="fas ${icone} text-xl"></i>
+          <p class="font-bold text-sm tracking-wide uppercase">${mensagem}</p>
+        `;
+
+        container.appendChild(toast);
+
+        // Animação de entrada (desliza para a tela)
+        setTimeout(() => {
+          toast.classList.remove("translate-x-full", "opacity-0");
+        }, 10);
+
+        // Animação de saída e remoção (após 4 segundos)
+        setTimeout(() => {
+          toast.classList.add("translate-x-full", "opacity-0");
+          setTimeout(() => toast.remove(), 300); // Espera a animação terminar para excluir o elemento
+        }, 4000);
+      }
+    </script>
+  </body>
+</html>
