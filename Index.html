@@ -710,6 +710,34 @@
                 placeholder="Ex: Itaú, BMG, C6..."
               />
             </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Convênio</label
+                >
+                <select
+                  id="crmConvenio"
+                  onchange="atualizarOrgaos()"
+                  class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase bg-white"
+                >
+                  <option value="">A carregar...</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Órgão</label
+                >
+                <select
+                  id="crmOrgao"
+                  class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase bg-slate-50 disabled:opacity-50"
+                  disabled
+                >
+                  <option value="">Selecione o Convênio</option>
+                </select>
+              </div>
+            </div>
             <!-- FIM NOVO CAMPO -->
             <div>
               <label
@@ -896,6 +924,7 @@
       let user = null;
       let simMode = "emprestimo";
       let leadAtualCpf = "";
+      let mapaConvenioGlobal = {};
 
       function tentarLogin() {
         const chave = document.getElementById("chaveJ").value;
@@ -960,6 +989,38 @@
         loadCommissionData();
         carregarPropostasCRM();
         carregarLeads();
+        carregarCombosProposta();
+      }
+
+      function carregarCombosProposta() {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            mapaConvenioGlobal = res.mapa;
+            const selectConv = document.getElementById("crmConvenio");
+            selectConv.innerHTML = '<option value="">-- Selecione --</option>';
+            res.convenios.forEach((c) => {
+              selectConv.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+          })
+          .getOpcoesConvenioOrgao();
+      }
+
+      function atualizarOrgaos() {
+        const convenioSelecionado =
+          document.getElementById("crmConvenio").value;
+        const selectOrgao = document.getElementById("crmOrgao");
+
+        selectOrgao.innerHTML = '<option value="">-- Selecione --</option>';
+
+        if (!convenioSelecionado || !mapaConvenioGlobal[convenioSelecionado]) {
+          selectOrgao.disabled = true;
+          return;
+        }
+
+        selectOrgao.disabled = false;
+        mapaConvenioGlobal[convenioSelecionado].forEach((org) => {
+          selectOrgao.innerHTML += `<option value="${org}">${org}</option>`;
+        });
       }
 
       function switchView(view) {
@@ -1188,6 +1249,12 @@
         document.getElementById("crmValor").value = "";
         document.getElementById("crmBanco").value = ""; // Limpa o banco
         document.getElementById("crmObs").value = "";
+        // Zera os novos campos
+        document.getElementById("crmConvenio").value = "";
+        document.getElementById("crmOrgao").innerHTML =
+          '<option value="">Selecione o Convênio</option>';
+        document.getElementById("crmOrgao").disabled = true;
+
         document.getElementById("modalNovaProposta").classList.remove("hidden");
       }
 
@@ -1205,8 +1272,13 @@
           .toUpperCase(); // Pega o Banco
         const obs = document.getElementById("crmObs").value.trim();
 
-        if (!cliente || !valor || !banco) {
-          showToast("Preencha o Nome, Valor e o Banco.", "error");
+        // Captura as novas opções
+        const convenio = document.getElementById("crmConvenio").value;
+        const orgao = document.getElementById("crmOrgao").value;
+
+        // Adiciona na validação
+        if (!cliente || !valor || !banco || !convenio || !orgao) {
+          showToast("Preencha Nome, Valor, Banco, Convênio e Órgão.", "error");
           return;
         }
 
@@ -1221,6 +1293,8 @@
           cpf: cpf,
           valor: valor,
           banco: banco, // Envia para o Google
+          convenio: convenio, // <-- NOVO
+          orgao: orgao, // <-- NOVO
           obs: obs,
         };
 
