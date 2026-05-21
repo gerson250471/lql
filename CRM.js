@@ -36,7 +36,7 @@ function getPropostas(chaveJ) {
 }
 
 /**
- * Salva uma nova proposta na aba "Propostas"
+ * Salva uma nova proposta na aba "Propostas" com ID Automático
  */
 function salvarNovaProposta(dados) {
   try {
@@ -52,6 +52,8 @@ function salvarNovaProposta(dados) {
 
     let novaLinha = new Array(headers.length).fill("");
 
+    // MAPEAMENTO DE COLUNAS
+    const idxId = headers.indexOf("ID");             // <-- ADICIONADO MAPEAMENTO DO ID
     const idxData = headers.indexOf("DATA");
     const idxPromotor = headers.indexOf("PROMOTOR");
     const idxPerfil = headers.indexOf("PERFIL");
@@ -62,10 +64,13 @@ function salvarNovaProposta(dados) {
     const idxBanco = headers.indexOf("BANCO");
     const idxConvenio = headers.indexOf("CONVENIO");
     const idxOrgao = headers.indexOf("ORGAO"); 
-    const idxProduto = headers.indexOf("PRODUTO"); // <-- MAPEANDO COLUNA PRODUTO      
+    const idxProduto = headers.indexOf("PRODUTO");       
     const idxStatus = headers.indexOf("STATUS");
 
-    // Preenche dinamicamente
+    // PREENCHIMENTO DINÂMICO
+    // Gera um código único baseado na data e hora (Ex: PRP-17189345)
+    if (idxId !== -1) novaLinha[idxId] = "PRP-" + new Date().getTime(); 
+    
     if (idxData !== -1) novaLinha[idxData] = new Date();
     if (idxPromotor !== -1) novaLinha[idxPromotor] = dados.promotor;
     if (idxPerfil !== -1) novaLinha[idxPerfil] = dados.perfil;
@@ -73,10 +78,10 @@ function salvarNovaProposta(dados) {
     if (idxCpf !== -1) novaLinha[idxCpf] = dados.cpf;
     if (idxValor !== -1) novaLinha[idxValor] = dados.valor;
     if (idxObs !== -1) novaLinha[idxObs] = dados.obs;
-    if (idxBanco !== -1) novaLinha[idxBanco] = dados.banco;
+    if (idxBanco !== -1) novaLinha[idxBanco] = dados.banco.toUpperCase();
     if (idxConvenio !== -1) novaLinha[idxConvenio] = dados.convenio; 
     if (idxOrgao !== -1) novaLinha[idxOrgao] = dados.orgao;          
-    if (idxProduto !== -1) novaLinha[idxProduto] = dados.produto; // <-- GRAVANDO PRODUTO
+    if (idxProduto !== -1) novaLinha[idxProduto] = dados.produto;
     
     // Toda proposta nasce com status "NOVA"
     if (idxStatus !== -1) novaLinha[idxStatus] = "NOVA";
