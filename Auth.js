@@ -17,14 +17,13 @@ function autenticarUsuario(chaveJ) {
     const idxPerfil = headers.indexOf("PERFIL");
     const idxSituacao = headers.indexOf("SITUAÇÃO");
     const idxMeta = headers.indexOf("META");
+    const idxNivel = headers.indexOf("NÍVEL DE ACESSO"); // <-- Mapeamento Dinâmico
 
     const usuario = data.slice(1).find(row => 
       row[idxChave] && row[idxChave].toString().trim().toUpperCase() === chaveJ.trim().toUpperCase() && 
       row[idxSituacao] && row[idxSituacao].toString().trim().toUpperCase() === "ATIVO"
     );
 
-    // Exemplo de como deve ficar dentro da sua função autenticarUsuario
-    // CÓDIGO CORRIGIDO A PARTIR DAQUI:
     if (usuario) {
       return {
         sucesso: true,
@@ -32,7 +31,7 @@ function autenticarUsuario(chaveJ) {
         nome: usuario[idxNome],  
         perfil: usuario[idxPerfil],
         meta: usuario[idxMeta],  
-        nivelAcesso: usuario[5] //  (Nível de Acesso)
+        nivelAcesso: idxNivel !== -1 ? usuario[idxNivel] : "PROMOTOR" // <-- Extração Segura com fallback
       };
     }
     return { sucesso: false, erro: "Chave J inválida ou utilizador inativo." };
