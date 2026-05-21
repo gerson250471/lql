@@ -698,17 +698,31 @@
             </div>
 
             <!-- NOVO CAMPO: BANCO -->
-            <div>
-              <label
-                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-                >Banco Origem/Destino</label
-              >
-              <input
-                type="text"
-                id="crmBanco"
-                class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase"
-                placeholder="Ex: Itaú, BMG, C6..."
-              />
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Banco Origem/Destino</label
+                >
+                <input
+                  type="text"
+                  id="crmBanco"
+                  class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase"
+                  placeholder="Ex: Itaú, BMG, C6..."
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Produto</label
+                >
+                <select
+                  id="crmProduto"
+                  class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase bg-white"
+                >
+                  <option value="">A carregar...</option>
+                </select>
+              </div>
             </div>
             <div class="grid grid-cols-2 gap-4 mt-4">
               <div>
@@ -996,10 +1010,19 @@
         google.script.run
           .withSuccessHandler(function (res) {
             mapaConvenioGlobal = res.mapa;
+
+            // 1. Alimenta Convênios
             const selectConv = document.getElementById("crmConvenio");
             selectConv.innerHTML = '<option value="">-- Selecione --</option>';
             res.convenios.forEach((c) => {
               selectConv.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+
+            // 2. Alimenta Produtos (NOVO)
+            const selectProd = document.getElementById("crmProduto");
+            selectProd.innerHTML = '<option value="">-- Selecione --</option>';
+            res.produtos.forEach((p) => {
+              selectProd.innerHTML += `<option value="${p}">${p}</option>`;
             });
           })
           .getOpcoesConvenioOrgao();
@@ -1247,9 +1270,10 @@
         document.getElementById("crmCliente").value = nomePre;
         document.getElementById("crmCpf").value = cpfPre;
         document.getElementById("crmValor").value = "";
-        document.getElementById("crmBanco").value = ""; // Limpa o banco
+        document.getElementById("crmBanco").value = "BANCO DO BRASIL";
         document.getElementById("crmObs").value = "";
         // Zera os novos campos
+        document.getElementById("crmProduto").value = "";
         document.getElementById("crmConvenio").value = "";
         document.getElementById("crmOrgao").innerHTML =
           '<option value="">Selecione o Convênio</option>';
@@ -1275,10 +1299,14 @@
         // Captura as novas opções
         const convenio = document.getElementById("crmConvenio").value;
         const orgao = document.getElementById("crmOrgao").value;
+        const produto = document.getElementById("crmProduto").value; // <-- CAPTURA PRODUTO
 
-        // Adiciona na validação
-        if (!cliente || !valor || !banco || !convenio || !orgao) {
-          showToast("Preencha Nome, Valor, Banco, Convênio e Órgão.", "error");
+        // Adiciona o produto na validação obrigatória
+        if (!cliente || !valor || !banco || !convenio || !orgao || !produto) {
+          showToast(
+            "Preencha Nome, Valor, Banco, Convênio, Órgão e Produto.",
+            "error",
+          );
           return;
         }
 
@@ -1295,6 +1323,7 @@
           banco: banco, // Envia para o Google
           convenio: convenio, // <-- NOVO
           orgao: orgao, // <-- NOVO
+          produto: produto, // <-- ENVIA PRODUTO PARA O SERVIDOR
           obs: obs,
         };
 
@@ -1305,7 +1334,7 @@
             if (res.sucesso) {
               fecharModalNovaProposta();
               showToast("Proposta registada com sucesso!", "success");
-              carregarPropostasCRM(); // Atualiza a tabela na tela
+              carregarPropostasCRM();
             } else {
               showToast(res.erro, "error");
             }

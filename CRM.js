@@ -61,7 +61,8 @@ function salvarNovaProposta(dados) {
     const idxObs = headers.indexOf("OBS");
     const idxBanco = headers.indexOf("BANCO");
     const idxConvenio = headers.indexOf("CONVENIO");
-    const idxOrgao = headers.indexOf("ORGAO");       
+    const idxOrgao = headers.indexOf("ORGAO"); 
+    const idxProduto = headers.indexOf("PRODUTO"); // <-- MAPEANDO COLUNA PRODUTO      
     const idxStatus = headers.indexOf("STATUS");
 
     // Preenche dinamicamente
@@ -75,7 +76,8 @@ function salvarNovaProposta(dados) {
     if (idxBanco !== -1) novaLinha[idxBanco] = dados.banco;
     if (idxConvenio !== -1) novaLinha[idxConvenio] = dados.convenio; 
     if (idxOrgao !== -1) novaLinha[idxOrgao] = dados.orgao;          
-
+    if (idxProduto !== -1) novaLinha[idxProduto] = dados.produto; // <-- GRAVANDO PRODUTO
+    
     // Toda proposta nasce com status "NOVA"
     if (idxStatus !== -1) novaLinha[idxStatus] = "NOVA";
 
@@ -97,16 +99,17 @@ function salvarNovaProposta(dados) {
 }
 
 /**
- * Busca as opções de Convênio e mapeia os Órgãos correspondentes a partir da aba "Padrao"
+ * Busca as opções de Convênio, Órgãos e Produtos a partir da aba "Padrao"
  */
 function getOpcoesConvenioOrgao() {
   const ss = getDatabaseConnection();
   const sheet = ss.getSheetByName("Padrao");
-  if (!sheet) return { convenios: [], mapa: {} };
+  if (!sheet) return { convenios: [], mapa: {}, produtos: [] };
 
   const data = sheet.getDataRange().getValues();
   const convenios = [];
   const mapa = {};
+  const produtos = []; // <-- ADICIONADO: Array para armazenar os produtos
 
   for (let i = 1; i < data.length; i++) {
     let conv = data[i][5]; // Coluna F
@@ -133,5 +136,14 @@ function getOpcoesConvenioOrgao() {
     }
   }
 
-  return { convenios: convenios, mapa: mapa };
+  // --- ADICIONADO: Captura os Produtos únicos da Coluna K (Índice 10) ---
+  for (let i = 1; i < data.length; i++) {
+    let prod = data[i][10]; // Coluna K
+    if (prod && prod.toString().trim() !== "") {
+      let p = prod.toString().trim().toUpperCase();
+      if (!produtos.includes(p)) produtos.push(p);
+    }
+  }
+
+  return { convenios: convenios, mapa: mapa, produtos: produtos };
 }
