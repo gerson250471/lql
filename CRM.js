@@ -147,3 +147,107 @@ function getOpcoesConvenioOrgao() {
 
   return { convenios: convenios, mapa: mapa, produtos: produtos };
 }
+
+/**
+ * Busca os dados completos de uma proposta específica pelo ID para edição
+ */
+function obterPropostaPorId(idProposta) {
+  try {
+    const ss = getDatabaseConnection();
+    const sheet = ss.getSheetByName("Propostas");
+    if (!sheet) throw new Error("Aba 'Propostas' não encontrada.");
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0].map(h => h.toString().trim().toUpperCase());
+
+    const idxId = headers.indexOf("ID");
+    const idxCliente = headers.indexOf("CLIENTE");
+    const idxCpf = headers.indexOf("CPF");
+    const idxValor = headers.indexOf("VALOR");
+    const idxBanco = headers.indexOf("BANCO");
+    const idxConvenio = headers.indexOf("CONVENIO");
+    const idxOrgao = headers.indexOf("ORGAO");
+    const idxProduto = headers.indexOf("PRODUTO");
+    const idxObs = headers.indexOf("OBS");
+
+    // Procura a linha correspondente ao ID
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][idxId] && data[i][idxId].toString().trim() === idProposta.toString().trim()) {
+        return {
+          sucesso: true,
+          proposta: {
+            id: data[i][idxId],
+            cliente: data[i][idxCliente],
+            cpf: data[i][idxCpf],
+            valor: data[i][idxValor],
+            banco: data[i][idxBanco],
+            convenio: data[i][idxConvenio],
+            orgao: data[i][idxOrgao],
+            produto: data[i][idxProduto],
+            obs: data[i][idxObs]
+          }
+        };
+      }
+    }
+    return { sucesso: false, erro: "Proposta não encontrada." };
+  } catch (e) {
+    return { sucesso: false, erro: e.message };
+  }
+}
+
+/**
+ * Atualiza os dados de uma proposta existente na aba "Propostas"
+ */
+function atualizarPropostaExistente(dados) {
+  try {
+    const ss = getDatabaseConnection();
+    const sheet = ss.getSheetByName("Propostas");
+    if (!sheet) throw new Error("Aba 'Propostas' não encontrada.");
+
+    const dataRange = sheet.getDataRange();
+    const data = dataRange.getValues();
+    const headers = data[0].map(h => h.toString().trim().toUpperCase());
+
+    const idxId = headers.indexOf("ID");
+    const idxCliente = headers.indexOf("CLIENTE");
+    const idxCpf = headers.indexOf("CPF");
+    const idxValor = headers.indexOf("VALOR");
+    const idxBanco = headers.indexOf("BANCO");
+    const idxConvenio = headers.indexOf("CONVENIO");
+    const idxOrgao = headers.indexOf("ORGAO");
+    const idxProduto = headers.indexOf("PRODUTO");
+    const idxObs = headers.indexOf("OBS");
+
+    let linhaIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][idxId] && data[i][idxId].toString().trim() === dados.id.toString().trim()) {
+        linhaIndex = i + 1; // Ajusta para o índice real da planilha (base 1)
+        break;
+      }
+    }
+
+    if (linhaIndex === -1) throw new Error("Proposta não localizada para atualização.");
+
+    // Atualiza apenas as colunas permitidas na linha correspondente
+    if (idxCliente !== -1) sheet.getCell(linhaIndex, idxCliente + 1).setValue(dados.cliente.toUpperCase());
+    if (idxCpf !== -1) sheet.getCell(linhaIndex, idxCpf + 1).setValue(dados.cpf);
+    if (idxValor !== -1) sheet.getCell(linhaIndex, idxValor + 1).setValue(dados.valor);
+    if (idxBanco !== -1) sheet.getCell(linhaIndex, idxBanco + 1).setValue(dados.banco.toUpperCase());
+    if (idxConvenio !== -1) sheet.getCell(linhaIndex, idxConvenio + 1).setValue(dados.convenio);
+    if (idxOrgao !== -1) sheet.getCell(linhaIndex, idxOrgao + 1).setValue(dados.orgao);
+    if (idxProduto !== -1) sheet.getCell(linhaIndex, idxProduto + 1).setValue(dados.produto);
+    if (idxObs !== -1) sheet.getCell(linhaIndex, idxObs + 1).setValue(dados.obs);
+
+    // Grava no Log de Auditoria
+    saveSystemLog({
+      userKey: dados.promotor,
+      userProfile: dados.perfil,
+      operationType: "Edição Proposta CRM",
+      operationResult: "ID: " + dados.id + " | Cliente: " + dados.cliente
+    });
+
+    return { sucesso: true, mensagem: "Proposta atualizada com sucesso!" };
+  } catch (e) {
+    return { sucesso: false, erro: e.message };
+  }
+}

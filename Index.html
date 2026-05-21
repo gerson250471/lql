@@ -447,12 +447,13 @@
                     <th class="p-4 border-b font-black">Cliente</th>
                     <th class="p-4 border-b font-black text-right">Valor</th>
                     <th class="p-4 border-b font-black text-center">Estado</th>
+                    <th class="p-4 border-b font-black text-center">Ações</th>
                   </tr>
                 </thead>
                 <tbody id="tabelaPropostasBody">
                   <tr>
                     <td
-                      colspan="4"
+                      colspan="5"
                       class="p-8 text-center text-slate-400 font-bold"
                     >
                       <i class="fas fa-circle-notch fa-spin mr-2"></i> A
@@ -641,13 +642,17 @@
         id="modalNovaProposta"
         class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4"
       >
+        <input type="hidden" id="crmPropostaId" value="" />
         <div
           class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter"
         >
           <div
             class="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center"
           >
-            <h2 class="text-xl font-black lql-blue uppercase tracking-tight">
+            <h2
+              id="modalPropostaTitulo"
+              class="text-xl font-black lql-blue uppercase tracking-tight"
+            >
               Nova Proposta
             </h2>
             <button
@@ -1267,12 +1272,17 @@
 
       // Agora ela aceita receber o nome e o cpf automaticamente
       function abrirModalNovaProposta(nomePre = "", cpfPre = "") {
+        // Garante que o ID está limpo (Significa NOVO cadastro)
+        document.getElementById("crmPropostaId").value = "";
+        document.getElementById("modalPropostaTitulo").innerText =
+          "Nova Proposta CRM";
+        document.getElementById("btnSalvarCrm").innerText = "Guardar Proposta";
+
         document.getElementById("crmCliente").value = nomePre;
         document.getElementById("crmCpf").value = cpfPre;
         document.getElementById("crmValor").value = "";
         document.getElementById("crmBanco").value = "BANCO DO BRASIL";
         document.getElementById("crmObs").value = "";
-        // Zera os novos campos
         document.getElementById("crmProduto").value = "";
         document.getElementById("crmConvenio").value = "";
         document.getElementById("crmOrgao").innerHTML =
@@ -1287,21 +1297,19 @@
       }
 
       function salvarPropostaNoCRM() {
+        const idExistente = document.getElementById("crmPropostaId").value; // Captura se tem ID
         const cliente = document.getElementById("crmCliente").value.trim();
         const cpf = document.getElementById("crmCpf").value.trim();
         const valor = parseFloat(document.getElementById("crmValor").value);
         const banco = document
           .getElementById("crmBanco")
           .value.trim()
-          .toUpperCase(); // Pega o Banco
+          .toUpperCase();
         const obs = document.getElementById("crmObs").value.trim();
-
-        // Captura as novas opções
         const convenio = document.getElementById("crmConvenio").value;
         const orgao = document.getElementById("crmOrgao").value;
-        const produto = document.getElementById("crmProduto").value; // <-- CAPTURA PRODUTO
+        const produto = document.getElementById("crmProduto").value;
 
-        // Adiciona o produto na validação obrigatória
         if (!cliente || !valor || !banco || !convenio || !orgao || !produto) {
           showToast(
             "Preencha Nome, Valor, Banco, Convênio, Órgão e Produto.",
@@ -1315,48 +1323,61 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A GUARDAR...';
 
         const dados = {
+          id: idExistente, // Transmite o ID (vazio ou preenchido)
           promotor: user.chave,
           perfil: user.perfil,
           cliente: cliente,
           cpf: cpf,
           valor: valor,
-          banco: banco, // Envia para o Google
-          convenio: convenio, // <-- NOVO
-          orgao: orgao, // <-- NOVO
-          produto: produto, // <-- ENVIA PRODUTO PARA O SERVIDOR
+          banco: banco,
+          convenio: convenio,
+          orgao: orgao,
+          produto: produto,
           obs: obs,
         };
+
+        // Define qual função do servidor chamar baseado na existência do ID
+        const funcaoServidor = idExistente
+          ? "atualizarPropostaExistente"
+          : "salvarNovaProposta";
 
         google.script.run
           .withSuccessHandler(function (res) {
             btn.disabled = false;
-            btn.innerHTML = "Guardar Proposta";
+            btn.innerHTML = idExistente
+              ? "Atualizar Proposta"
+              : "Guardar Proposta";
             if (res.sucesso) {
               fecharModalNovaProposta();
-              showToast("Proposta registada com sucesso!", "success");
-              carregarPropostasCRM();
+              showToast(
+                res.mensagem || "Proposta registada com sucesso!",
+                "success",
+              );
+              carregarPropostasCRM(); // Atualiza a lista/grid do funil
             } else {
               showToast(res.erro, "error");
             }
           })
           .withFailureHandler(function (err) {
             btn.disabled = false;
-            btn.innerHTML = "Guardar Proposta";
+            btn.innerHTML = idExistente
+              ? "Atualizar Proposta"
+              : "Guardar Proposta";
             showToast("Erro no servidor: " + err.message, "error");
           })
-          .salvarNovaProposta(dados);
+          [funcaoServidor](dados); // Executa dinamicamente a função correta
       }
 
       function carregarPropostasCRM() {
         const tbody = document.getElementById("tabelaPropostasBody");
-        tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A carregar as suas propostas...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A carregar as suas propostas...</td></tr>`;
 
         google.script.run
           .withSuccessHandler(function (propostas) {
             tbody.innerHTML = "";
 
             if (propostas.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 text-sm">Nenhuma proposta registada ainda.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 text-sm">Nenhuma proposta registrada ainda.</td></tr>`;
               document.getElementById("crmTotalPropostas").innerText = "0";
               document.getElementById("crmVolumeTotal").innerText = "R$ 0,00";
               return;
@@ -1393,6 +1414,11 @@
                   <td class="p-4 text-center">
                     <span class="px-3 py-1 rounded-full text-[10px] font-black border uppercase ${statusColor}">${p.status}</span>
                   </td>
+                  <td class="p-4 text-center">
+                    <button onclick="abrirModalParaEdicao('${p.id}')" class="text-blue-600 bg-blue-50 p-2 rounded-lg hover:bg-blue-100 transition-all shadow-sm">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </td>
                 </tr>
               `;
             });
@@ -1406,7 +1432,7 @@
               });
           })
           .withFailureHandler(function (err) {
-            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 font-bold">Erro ao carregar propostas.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 font-bold">Erro ao carregar propostas.</td></tr>`;
           })
           .getPropostas(user.chave);
       }
@@ -1687,6 +1713,63 @@
           toast.classList.add("translate-x-full", "opacity-0");
           setTimeout(() => toast.remove(), 300); // Espera a animação terminar para excluir o elemento
         }, 4000);
+      }
+
+      function abrirModalParaEdicao(idProposta) {
+        showToast("A carregar dados da proposta...", "success");
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              showToast(res.erro, "error");
+              return;
+            }
+
+            // Prepara o modal visualmente para edição
+            document.getElementById("crmPropostaId").value = res.proposta.id;
+            document.getElementById("modalPropostaTitulo").innerText =
+              "Editar Proposta #" + res.proposta.id;
+            document.getElementById("btnSalvarCrm").innerText =
+              "Atualizar Proposta";
+
+            // Preenche os campos básicos
+            document.getElementById("crmCliente").value = res.proposta.cliente;
+            document.getElementById("crmCpf").value = res.proposta.cpf;
+            document.getElementById("crmValor").value = res.proposta.valor;
+            document.getElementById("crmBanco").value = res.proposta.banco;
+            document.getElementById("crmObs").value = res.proposta.obs;
+            document.getElementById("crmProduto").value = res.proposta.produto;
+
+            // Lógica para selecionar o Convênio e disparar a cascata de Órgãos
+            document.getElementById("crmConvenio").value =
+              res.proposta.convenio;
+
+            // Força a atualização do combo de Órgãos baseado no convênio carregado
+            const selectOrgao = document.getElementById("crmOrgao");
+            selectOrgao.innerHTML = '<option value="">-- Selecione --</option>';
+
+            if (
+              res.proposta.convenio &&
+              mapaConvenioGlobal[res.proposta.convenio]
+            ) {
+              selectOrgao.disabled = false;
+              mapaConvenioGlobal[res.proposta.convenio].forEach((o) => {
+                const selected = o === res.proposta.orgao ? "selected" : "";
+                selectOrgao.innerHTML += `<option value="${o}" ${selected}>${o}</option>`;
+              });
+            } else {
+              selectOrgao.disabled = true;
+            }
+
+            // Exibe o modal na tela
+            document
+              .getElementById("modalNovaProposta")
+              .classList.remove("hidden");
+          })
+          .withFailureHandler(function (err) {
+            showToast("Erro ao buscar proposta: " + err.message, "error");
+          })
+          .obterPropostaPorId(idProposta);
       }
     </script>
   </body>
