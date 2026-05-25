@@ -1504,6 +1504,15 @@
       }
 
       function loadCommissionData() {
+        // GATILHO INTELIGENTE: Se for gestor, carrega a matriz consolidada
+        if (
+          user.nivelAcesso === "ADMINISTRADOR" ||
+          user.nivelAcesso === "PROGRAMADOR"
+        ) {
+          carregarTabelaConsolidadaAdmin();
+          return; // Para a execução aqui e não carrega a tabela normal
+        }
+        // Se for um promotor normal, segue com a tabela simples
         const cont = document.getElementById("commCont");
         google.script.run
           .withSuccessHandler(function (dados) {
@@ -1770,6 +1779,69 @@
             showToast("Erro ao buscar proposta: " + err.message, "error");
           })
           .obterPropostaPorId(idProposta);
+      }
+
+      function carregarTabelaConsolidadaAdmin() {
+        const container = document.getElementById("commCont"); // Reutiliza ou cria um container dedicado
+        container.innerHTML =
+          "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> A processar matriz de comissões...</p>";
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              container.innerHTML = `<p class='text-center text-red-500 font-bold p-10'>${res.erro}</p>`;
+              return;
+            }
+
+            container.innerHTML = "";
+
+            res.dados.forEach(function (grupo) {
+              // 1. Monta dinamicamente os cabeçalhos das colunas de perfis
+              let thPerfisHtml = "";
+              res.perfis.forEach(function (perfil) {
+                thPerfisHtml += `<th class="p-4 border-b border-slate-200 text-center bg-slate-800 text-yellow-400 font-black">${perfil}</th>`;
+              });
+
+              let tableHtml = `
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-md mb-8 overflow-hidden animate-in fade-in duration-300">
+            <div class="bg-slate-50 border-b border-slate-200 p-5">
+              <h3 class="font-black text-slate-700 uppercase text-sm tracking-widest">${grupo.titulo}</h3>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-100 text-[10px] uppercase text-slate-500 tracking-wider">
+                    <th class="p-4 border-b border-slate-200 font-black">Taxa Inicial</th>
+                    <th class="p-4 border-b border-slate-200 font-black">Taxa Final</th>
+                    <th class="p-4 border-b border-slate-200 font-black text-center">Prazo Inicial</th>
+                    <th class="p-4 border-b border-slate-200 font-black text-center">Prazo Final</th>
+                    ${thPerfisHtml} </tr>
+                </thead>
+                <tbody>
+        `;
+
+              // 2. Monta as linhas de dados injetando os valores correspondentes de cada perfil
+              grupo.itens.forEach(function (item) {
+                let tdPerfisHtml = "";
+                res.perfis.forEach(function (perfil) {
+                  tdPerfisHtml += `<td class="p-4 text-sm font-black text-emerald-600 text-center bg-slate-50/50 group-hover:bg-emerald-50/30 transition-colors border-l border-slate-100">${item.comissoes[perfil] || "0,00%"}</td>`;
+                });
+
+                tableHtml += `
+            <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 group">
+              <td class="p-4 text-xs font-bold text-slate-600">${item.taxaIni}</td>
+              <td class="p-4 text-xs font-bold text-slate-600">${item.taxaFin}</td>
+              <td class="p-4 text-xs font-medium text-slate-500 text-center">${item.prazoIni}</td>
+              <td class="p-4 text-xs font-medium text-slate-500 text-center">${item.prazoFin}</td>
+              ${tdPerfisHtml} </tr>
+          `;
+              });
+
+              tableHtml += `</tbody></table></div></div>`;
+              container.innerHTML += tableHtml;
+            });
+          })
+          .getResumoComissoesAdmin();
       }
     </script>
   </body>
