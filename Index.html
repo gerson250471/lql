@@ -295,15 +295,35 @@
                 class="bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-center rounded-t-2xl"
               >
                 <h3
-                  class="font-black text-slate-700 uppercase text-sm tracking-widest"
+                  class="font-black text-slate-700 uppercase text-sm tracking-widest hidden md:block"
                 >
-                  Leads Livres (Sem Promotor)
+                  Leads Livres
                 </h3>
-                <span
-                  id="contadorLeadsLivres"
-                  class="bg-red-100 text-red-700 font-black text-xs px-2 py-1 rounded"
-                  >0</span
-                >
+                <div class="flex items-center gap-1 md:gap-2">
+                  <button
+                    onclick="limparSelecaoLeads()"
+                    class="text-slate-400 hover:text-red-500 text-[10px] font-black uppercase px-2 py-1 transition-colors"
+                  >
+                    Limpar
+                  </button>
+                  <button
+                    onclick="selecionarLote(10)"
+                    class="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase px-3 py-1 rounded shadow-sm transition-colors"
+                  >
+                    +10 Leads
+                  </button>
+                  <button
+                    onclick="selecionarLote(50)"
+                    class="bg-purple-800 hover:bg-purple-900 text-white text-[10px] font-black uppercase px-3 py-1 rounded shadow-sm transition-colors"
+                  >
+                    +50
+                  </button>
+                  <span
+                    id="contadorLeadsLivres"
+                    class="bg-red-100 text-red-700 font-black text-xs px-2 py-1 rounded ml-2 shadow-inner"
+                    >0</span
+                  >
+                </div>
               </div>
               <div
                 class="p-4 flex-1 overflow-y-auto space-y-2"
@@ -1844,6 +1864,52 @@
             container.innerHTML = `<div class="p-10 text-center"><i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i><p class="font-bold text-red-600 uppercase text-sm">Falha de Comunicação</p><p class="text-slate-500 text-xs mt-2">${err.message}</p></div>`;
           })
           .getResumoComissoesAdmin();
+      }
+
+      /**
+       * Seleciona automaticamente um lote de X leads que ainda não estejam marcados
+       */
+      function selecionarLote(quantidade) {
+        // Encontra todos os checkboxes na lista que NÃO estão selecionados
+        const checkboxes = document.querySelectorAll(
+          '#listaLeadsLivres input[type="checkbox"]:not(:checked)',
+        );
+        let selecionadosAgora = 0;
+
+        for (let i = 0; i < checkboxes.length; i++) {
+          if (selecionadosAgora >= quantidade) break; // Para quando atingir o lote pedido
+
+          checkboxes[i].checked = true; // Marca o quadradinho na tela
+          toggleLeadSelecionado(checkboxes[i]); // Reutiliza a sua função para atualizar a memória e o contador gigante
+
+          selecionadosAgora++;
+        }
+
+        if (selecionadosAgora > 0) {
+          showToast(
+            `${selecionadosAgora} novos leads adicionados ao lote!`,
+            "success",
+          );
+        } else {
+          showToast(
+            "Não há mais leads livres suficientes para marcar.",
+            "error",
+          );
+        }
+      }
+
+      /**
+       * Limpa toda a seleção atual com um único clique
+       */
+      function limparSelecaoLeads() {
+        const checkboxes = document.querySelectorAll(
+          '#listaLeadsLivres input[type="checkbox"]:checked',
+        );
+        checkboxes.forEach((cb) => {
+          cb.checked = false;
+        });
+        leadsSelecionadosParaAtribuicao = [];
+        document.getElementById("qtdSelecionados").innerText = "0";
       }
     </script>
   </body>
