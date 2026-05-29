@@ -64,10 +64,10 @@ function getTabelasPorPerfil(perfil) {
   }));
 }
 
-/**
+//**
  * Busca o resumo consolidado de todas as comissões com os perfis lado a lado
- * @return {Object} Contém os cabeçalhos dos perfis e as linhas agrupadas
- */
+  * @return { Object } Contém os cabeçalhos dos perfis e as linhas agrupadas
+    */
 function getResumoComissoesAdmin() {
   try {
     const ss = getDatabaseConnection();
@@ -84,15 +84,25 @@ function getResumoComissoesAdmin() {
     const idxPini = headers.indexOf("PRAZO INI");
     const idxPfin = headers.indexOf("PRAZO FIM");
 
-    // Identifica dinamicamente os perfis (tudo o que estiver após a coluna do Prazo Final)
+    if (idxGrupo === -1 || idxPfin === -1) {
+      throw new Error("Colunas obrigatórias não encontradas na aba bdComissao. Verifique os cabeçalhos.");
+    }
+
     const limiteFixo = Math.max(idxGrupo, idxDesc, idxTini, idxTfin, idxPini, idxPfin);
     const perfisDetectados = [];
     const indicesPerfis = [];
 
+    // 🛡️ A CORREÇÃO: Lista de colunas a ignorar (que não são perfis)
+    const colunasIgnoradas = ["ATUAL", "ULT ATUALIZAÇÃO", "ULT ATUALIZACAO", "ÚLTIMA ATUALIZAÇÃO"];
+
     for (let j = 0; j < headers.length; j++) {
       if (j > limiteFixo && headers[j] !== "") {
-        perfisDetectados.push(headers[j]);
-        indicesPerfis.push(j);
+        let nomeColuna = headers[j].toString().trim().toUpperCase();
+        // Só adiciona se o cabeçalho não estiver na lista de ignorados
+        if (!colunasIgnoradas.includes(nomeColuna)) {
+          perfisDetectados.push(headers[j]);
+          indicesPerfis.push(j);
+        }
       }
     }
 
@@ -102,21 +112,25 @@ function getResumoComissoesAdmin() {
       if (typeof val === 'number') {
         return (val * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
       }
-      return val || "0,00%";
+      if (val instanceof Date) return "0,00%";
+      return val ? String(val).trim() : "0,00%";
     };
 
-    // Varre as linhas de dados agrupando por tabela
+    const sanitizeString = (val) => {
+      if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy");
+      return (val !== undefined && val !== null && val !== "") ? String(val).trim() : "-";
+    };
+
     data.slice(1).forEach(row => {
       const nomeGrupo = row[idxGrupo];
-      if (!nomeGrupo) return;
+      if (!nomeGrupo || String(nomeGrupo).trim() === "") return;
 
-      const tituloTabela = `${nomeGrupo} ${row[idxDesc] || ""}`.trim();
+      const tituloTabela = `${String(nomeGrupo).trim()} ${row[idxDesc] ? String(row[idxDesc]).trim() : ""}`.trim();
 
       if (!grupos[tituloTabela]) {
         grupos[tituloTabela] = { titulo: tituloTabela, itens: [] };
       }
 
-      // Mapeia os valores de comissão de cada perfil para esta linha específica
       const comissoesPorPerfil = {};
       perfisDetectados.forEach((perfil, index) => {
         const colunaI = indicesPerfis[index];
@@ -126,9 +140,9 @@ function getResumoComissoesAdmin() {
       grupos[tituloTabela].itens.push({
         taxaIni: formatPercent(row[idxTini]),
         taxaFin: formatPercent(row[idxTfin]),
-        prazoIni: row[idxPini] || "-",
-        prazoFin: row[idxPfin] || "-",
-        comissoes: comissoesPorPerfil // Objeto contendo { BLACK: "X%", GOLD: "Y%" }
+        prazoIni: sanitizeString(row[idxPini]),
+        prazoFin: sanitizeString(row[idxPfin]),
+        comissoes: comissoesPorPerfil
       });
     });
 
