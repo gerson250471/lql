@@ -1,4 +1,4 @@
-**
+/**
  * FICHEIRO: Simulador.js
  * Tabelas de cálculos e comissionamentos
  */
