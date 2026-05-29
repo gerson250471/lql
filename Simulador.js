@@ -99,8 +99,17 @@ function getResumoComissoesAdmin() {
     const perfisDetectados = [];
     const indicesPerfis = [];
 
-    // 🛡️ A CORREÇÃO: Lista de colunas a ignorar (que não são perfis)
-    const colunasIgnoradas = ["ATUAL", "ULT ATUALIZAÇÃO", "ULT ATUALIZACAO", "ÚLTIMA ATUALIZAÇÃO"];
+    // 🛡️ A CORREÇÃO: Lista de colunas a ignorar (que não são perfis ou que queremos ocultar da visão do admin)
+    const colunasIgnoradas = [
+      "ATUAL", 
+      "ULT ATUALIZAÇÃO", 
+      "ULT ATUALIZACAO", 
+      "ÚLTIMA ATUALIZAÇÃO",
+      "RUBI",      // <-- ADICIONADO PARA OCULTAR
+      "SAFIRA",    // <-- ADICIONADO PARA OCULTAR
+      "DIAMENTE",  // <-- ADICIONADO PARA OCULTAR (grafia conforme a planilha)
+      "DIAMANTE"   // <-- ADICIONADO PARA OCULTAR (caso corrija a ortografia depois)
+    ];
 
     for (let j = 0; j < headers.length; j++) {
       if (j > limiteFixo && headers[j] !== "") {
