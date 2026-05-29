@@ -1,4 +1,4 @@
-/**
+**
  * FICHEIRO: Simulador.js
  * Tabelas de cálculos e comissionamentos
  */
@@ -23,28 +23,35 @@ function getDadosComissao(perfil) {
 
   const grupos = {};
 
+  // 🛡️ BLINDAGEM ANTI-FALHA SILENCIOSA
+  const formatPercent = (val) => {
+    if (typeof val === 'number') {
+      return (val * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+    }
+    if (val instanceof Date) return "0,00%";
+    return val ? String(val).trim() : "0,00%";
+  };
+
+  const sanitizeString = (val) => {
+    if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy");
+    return (val !== undefined && val !== null && val !== "") ? String(val).trim() : "-";
+  };
+
   data.slice(1).forEach(row => {
     const nomeGrupo = row[idxGrupo];
-    if (!nomeGrupo) return;
+    if (!nomeGrupo || String(nomeGrupo).trim() === "") return;
 
-    const tituloTabela = `${nomeGrupo} ${row[idxDesc] || ""}`.trim();
+    const tituloTabela = `${String(nomeGrupo).trim()} ${row[idxDesc] ? String(row[idxDesc]).trim() : ""}`.trim();
 
     if (!grupos[tituloTabela]) {
       grupos[tituloTabela] = { titulo: tituloTabela, itens: [] };
     }
 
-    const formatPercent = (val) => {
-      if (typeof val === 'number') {
-        return (val * 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
-      }
-      return val || "0,00%";
-    };
-
     grupos[tituloTabela].itens.push({
       taxaIni: formatPercent(row[idxTini]),
       taxaFin: formatPercent(row[idxTfin]),
-      prazoIni: row[idxPini] || "-",
-      prazoFin: row[idxPfin] || "-",
+      prazoIni: sanitizeString(row[idxPini]),
+      prazoFin: sanitizeString(row[idxPfin]),
       comissao: formatPercent(row[idxPerfil])
     });
   });
@@ -64,10 +71,10 @@ function getTabelasPorPerfil(perfil) {
   }));
 }
 
-//**
+/**
  * Busca o resumo consolidado de todas as comissões com os perfis lado a lado
-  * @return { Object } Contém os cabeçalhos dos perfis e as linhas agrupadas
-    */
+ * @return {Object} Contém os cabeçalhos dos perfis e as linhas agrupadas
+ */
 function getResumoComissoesAdmin() {
   try {
     const ss = getDatabaseConnection();
