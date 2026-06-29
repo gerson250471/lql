@@ -1,0 +1,13 @@
+{
+  "name": "_lql",
+  "version": "1.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/gerson250471/lql.git",
+  "author": "Gerson Bernardo <gbds25@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "versao:patch": "yarn version --patch && node atualizar-versao.js",
+    "versao:minor": "yarn version --minor && node atualizar-versao.js",
+    "versao:major": "yarn version --major && node atualizar-versao.js"
+  }
+}
