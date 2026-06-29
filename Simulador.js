@@ -105,10 +105,12 @@ function getResumoComissoesAdmin() {
       "ULT ATUALIZAÇÃO", 
       "ULT ATUALIZACAO", 
       "ÚLTIMA ATUALIZAÇÃO",
-      "RUBI",      // <-- ADICIONADO PARA OCULTAR
-      "SAFIRA",    // <-- ADICIONADO PARA OCULTAR
-      "DIAMENTE",  // <-- ADICIONADO PARA OCULTAR (grafia conforme a planilha)
-      "DIAMANTE"   // <-- ADICIONADO PARA OCULTAR (caso corrija a ortografia depois)
+      // ATUALIZANDO FAIXA QUE NÃO PODEM ESTAR VISÍVEIS
+      "FAIXA 1", 
+      "FAIXA 2", 
+      "FAIXA 3", 
+      "FAIXA 4", 
+      "FAIXA 5"
     ];
 
     for (let j = 0; j < headers.length; j++) {
