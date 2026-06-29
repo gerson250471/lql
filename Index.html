@@ -138,6 +138,13 @@
               >
                 <i class="fas fa-lock-open mr-1"></i> Atribuir Leads
               </button>
+              <button
+                onclick="switchView('parametros')"
+                id="navParametros"
+                class="hidden px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                <i class="fas fa-cogs mr-1"></i> Parâmetros
+              </button>
             </div>
           </div>
           <div class="text-right flex flex-col justify-center items-end">
@@ -149,7 +156,7 @@
               <span
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
-                V: 1.00.00
+                V: 1.1.0
               </span>
               <button
                 onclick="location.reload()"
@@ -662,6 +669,45 @@
             </div>
           </div>
         </div>
+        <!-- PÁGINA: PARAMETROS -->
+        <div
+          id="viewParametros"
+          class="view-content hidden p-4 md:p-6 max-w-6xl mx-auto space-y-6"
+        >
+          <header
+            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4"
+          >
+            <div>
+              <h1
+                class="text-3xl md:text-4xl font-black text-slate-800 italic uppercase tracking-tighter"
+              >
+                <i class="fas fa-sliders-h mr-2"></i> Parâmetros do Sistema
+              </h1>
+              <p class="text-slate-500 text-sm font-medium">
+                Gestão de multiplicadores e regras de negócio.
+              </p>
+            </div>
+            <button
+              onclick="salvarNovosParametros()"
+              id="btnSalvarParams"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-black uppercase text-sm transition-colors shadow-lg flex items-center justify-center gap-2"
+            >
+              <i class="fas fa-save"></i> Guardar Alterações
+            </button>
+          </header>
+
+          <div
+            class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+          >
+            <div
+              id="containerTabelaParametros"
+              class="p-10 text-center text-slate-400 font-bold"
+            >
+              <i class="fas fa-spinner fa-spin mr-2"></i> A carregar matriz de
+              parâmetros...
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- MODAL: NOVA PROPOSTA -->
@@ -1025,8 +1071,10 @@
           user.nivelAcesso === "PROGRAMADOR"
         ) {
           document.getElementById("navAdminLeads").classList.remove("hidden");
+          document.getElementById("navParametros").classList.remove("hidden"); // <-- NOVO
         } else {
           document.getElementById("navAdminLeads").classList.add("hidden");
+          document.getElementById("navParametros").classList.add("hidden"); // <-- NOVO
         }
         // --------------------------------------
 
@@ -1096,6 +1144,7 @@
           "navSim",
           "navCom",
           "navAdminLeads",
+          "navParametros", // <-- 1. ADICIONADO AQUI
         ];
 
         btns.forEach((id) => {
@@ -1112,6 +1161,7 @@
           simulador: "navSim",
           comissoes: "navCom",
           adminLeads: "navAdminLeads",
+          parametros: "navParametros", // <-- 2. ADICIONADO AQUI
         };
 
         if (activeMap[view]) {
@@ -1124,6 +1174,8 @@
         // Se a tela for a de Admin, puxa os dados
         if (view === "adminLeads") {
           carregarPainelAdmin();
+        } else if (view === "parametros") {
+          carregarParametrosPadrao(); // <-- GATILHO ADICIONADO AQUI
         }
       }
 
@@ -1917,6 +1969,110 @@
         });
         leadsSelecionadosParaAtribuicao = [];
         document.getElementById("qtdSelecionados").innerText = "0";
+      }
+
+      /**
+       * Puxa a matriz de parâmetros do Back-end e desenha os inputs de edição
+       */
+      function carregarParametrosPadrao() {
+        const container = document.getElementById("containerTabelaParametros");
+        container.innerHTML =
+          '<div class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> A carregar matriz de repasses...</div>';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              container.innerHTML = `<p class="p-10 text-center text-red-500 font-bold">Erro: ${res.erro}</p>`;
+              return;
+            }
+
+            let tableHtml = `
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="tabelaParamsEditor">
+                  <thead>
+                    <tr class="bg-slate-800 text-[10px] uppercase text-yellow-400 tracking-wider">
+                      <th class="p-4 border-b border-slate-200 font-black">${res.cabecalhos[0]}</th>
+                      <th class="p-4 border-b border-slate-200 font-black text-center">${res.cabecalhos[1]}</th>
+                      <th class="p-4 border-b border-slate-200 font-black text-center">${res.cabecalhos[2]}</th>
+                      <th class="p-4 border-b border-slate-200 font-black text-center">${res.cabecalhos[3]}</th>
+                      <th class="p-4 border-b border-slate-200 font-black text-center">${res.cabecalhos[4]}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+            `;
+
+            res.dados.forEach((linha, index) => {
+              // Converte o decimal da planilha (ex: 0.48) para visualização em percentagem (ex: 48.00)
+              const formatForInput = (val) => (Number(val) * 100).toFixed(2);
+
+              tableHtml += `
+                <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors">
+                  <td class="p-4 text-[10px] font-black text-slate-600 uppercase bg-slate-50/50 border-r border-slate-100">${linha.grupo}</td>
+                  <td class="p-2 text-center"><input type="number" step="0.01" data-row="${index}" class="w-20 p-2 text-center text-xs font-black text-emerald-700 bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" value="${formatForInput(linha.black)}"></td>
+                  <td class="p-2 text-center"><input type="number" step="0.01" data-row="${index}" class="w-20 p-2 text-center text-xs font-black text-emerald-700 bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" value="${formatForInput(linha.gold)}"></td>
+                  <td class="p-2 text-center"><input type="number" step="0.01" data-row="${index}" class="w-20 p-2 text-center text-xs font-black text-emerald-700 bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" value="${formatForInput(linha.gestor)}"></td>
+                  <td class="p-2 text-center"><input type="number" step="0.01" data-row="${index}" class="w-20 p-2 text-center text-xs font-black text-emerald-700 bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all" value="${formatForInput(linha.top)}"></td>
+                </tr>
+              `;
+            });
+
+            tableHtml += `</tbody></table></div>`;
+            container.innerHTML = tableHtml;
+          })
+          .withFailureHandler(function (err) {
+            container.innerHTML = `<div class="p-10 text-center"><i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i><p class="font-bold text-red-600 uppercase text-sm">Erro de Comunicação</p><p class="text-slate-500 text-xs mt-2">${err.message}</p></div>`;
+          })
+          .getParametrosPadrao();
+      }
+
+      /**
+       * Lê todos os campos e envia a atualização para o Back-end
+       */
+      function salvarNovosParametros() {
+        const btn = document.getElementById("btnSalvarParams");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-2"></i> A GRAVAR...';
+
+        const numLinhas = document.querySelectorAll(
+          "#tabelaParamsEditor tbody tr",
+        ).length;
+        let dadosParaSalvar = [];
+
+        // Varre a tabela capturando as 4 colunas de cada linha
+        for (let i = 0; i < numLinhas; i++) {
+          let rowInputs = document.querySelectorAll(
+            `#tabelaParamsEditor input[data-row="${i}"]`,
+          );
+          let linha = [];
+          rowInputs.forEach((input) => {
+            // Converte de volta de 48.00 para 0.48 para o Google Sheets entender
+            linha.push(Number(input.value) / 100);
+          });
+          dadosParaSalvar.push(linha);
+        }
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerHTML =
+              '<i class="fas fa-save mr-2"></i> Guardar Alterações';
+            if (res.sucesso) {
+              showToast("Parâmetros atualizados com sucesso!", "success");
+            } else {
+              showToast("Erro na gravação: " + res.erro, "error");
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerHTML =
+              '<i class="fas fa-save mr-2"></i> Guardar Alterações';
+            showToast(
+              "Falha ao comunicar com o servidor: " + err.message,
+              "error",
+            );
+          })
+          .atualizarParametrosPadrao(dadosParaSalvar);
       }
     </script>
   </body>

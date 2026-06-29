@@ -1,0 +1,14 @@
+# Ignorar dependências do Node e ficheiros de configuração do Yarn
+
+node_modules/
+package.json
+yarn.lock
+
+# Ignorar os nossos scripts de automação local
+
+atualizar-versao.js
+
+# Ignorar ficheiros do Git e do VS Code
+
+.git/
+.vscode/
