@@ -47,6 +47,9 @@ function atualizarParametrosPadrao(dados) {
     // Grava de uma só vez (muito mais rápido e seguro)
     sheet.getRange(linhaInicial, colunaInicial, numLinhas, numColunas).setValues(dados);
     
+    // <-- CORREÇÃO VITAL: Força a planilha a recalcular todas as fórmulas instantaneamente!
+    SpreadsheetApp.flush();
+    
     return { sucesso: true };
   } catch (e) {
     return { sucesso: false, erro: e.message };

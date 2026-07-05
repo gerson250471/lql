@@ -156,7 +156,8 @@
               <span
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
-                V: 1.1.0
+                <!-- Versão do Sistema -->
+                V: 1.1.1
               </span>
               <button
                 onclick="location.reload()"
@@ -1176,6 +1177,11 @@
           carregarPainelAdmin();
         } else if (view === "parametros") {
           carregarParametrosPadrao(); // <-- GATILHO ADICIONADO AQUI
+        } else if (view === "comissoes") {
+          // <-- CORREÇÃO: Força o sistema a ir buscar os dados frescos ao servidor!
+          document.getElementById("commCont").innerHTML =
+            "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> A processar matriz de comissões...</p>";
+          loadCommissionData();
         }
       }
 
