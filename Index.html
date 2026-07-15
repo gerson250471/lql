@@ -132,6 +132,13 @@
                 Comissões
               </button>
               <button
+                onclick="switchView('producao')"
+                id="navProducao"
+                class="px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                Minha Produção
+              </button>
+              <button
                 onclick="switchView('adminLeads')"
                 id="navAdminLeads"
                 class="hidden px-3 py-2 rounded-lg text-[10px] font-black uppercase text-red-600 hover:bg-red-50 transition-all whitespace-nowrap"
@@ -670,6 +677,187 @@
             </div>
           </div>
         </div>
+        <!-- MINHA PRODUÇÃO -->
+        <div
+          id="viewProducao"
+          class="view-content hidden p-4 md:p-6 max-w-[95%] mx-auto space-y-6"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-2"
+          >
+            <div>
+              <h1
+                class="text-3xl md:text-4xl font-black text-emerald-700 italic uppercase tracking-tighter"
+              >
+                <i class="fas fa-chart-line mr-2"></i> Minha Produção
+              </h1>
+              <p class="text-slate-500 text-sm font-medium">
+                Acompanhe os seus contratos e pagamentos oficiais.
+              </p>
+            </div>
+
+            <div
+              class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto"
+            >
+              <label
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2"
+                >Mês/Ano:</label
+              >
+              <input
+                type="month"
+                id="filtroMesProducao"
+                onchange="carregarProducao()"
+                class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-emerald-500 bg-slate-50 flex-1 md:w-48 cursor-pointer"
+              />
+              <button
+                onclick="carregarProducao()"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition-colors"
+                title="Atualizar"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div
+              class="bg-white border-b-4 border-emerald-500 p-5 rounded-2xl shadow-sm text-center md:text-left"
+            >
+              <p
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Comissão Estimada
+              </p>
+              <p
+                id="resumoComissao"
+                class="text-2xl md:text-3xl font-black text-emerald-600"
+              >
+                R$ 0,00
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-blue-500 p-5 rounded-2xl shadow-sm text-center md:text-left"
+            >
+              <p
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Volume Considerado
+              </p>
+              <p
+                id="resumoVolume"
+                class="text-2xl md:text-3xl font-black text-blue-600"
+              >
+                R$ 0,00
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-slate-400 p-5 rounded-2xl shadow-sm text-center md:text-left"
+            >
+              <p
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Total de Contratos
+              </p>
+              <p
+                id="resumoContratos"
+                class="text-2xl md:text-3xl font-black text-slate-700"
+              >
+                0
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-purple-500 p-5 rounded-2xl shadow-sm text-center md:text-left flex flex-col justify-center items-center md:items-start bg-purple-50/30"
+            >
+              <p
+                class="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1"
+              >
+                Ações
+              </p>
+              <button
+                class="text-xs font-bold text-purple-700 uppercase hover:underline"
+              >
+                <i class="fas fa-file-pdf mr-1"></i> Exportar Relatório
+              </button>
+            </div>
+          </div>
+          <div
+            class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden"
+          >
+            <div class="overflow-x-auto pb-4">
+              <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr
+                    class="bg-slate-800 text-[9px] uppercase text-slate-300 tracking-wider"
+                  >
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Data Mov.
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Convênio
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Contrato
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Data Cont.
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Taxa
+                    </th>
+                    <th
+                      class="p-3 border-b border-slate-700 font-black text-right"
+                    >
+                      Parcela
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Restrição RCC
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Grupo
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Produto
+                    </th>
+                    <th class="p-3 border-b border-slate-700 font-black">
+                      Descrição
+                    </th>
+                    <th
+                      class="p-3 border-b border-slate-700 font-black text-right text-blue-400"
+                    >
+                      Valor Cons.
+                    </th>
+                    <th
+                      class="p-3 border-b border-slate-700 font-black text-right text-blue-400"
+                    >
+                      Valor Bruto
+                    </th>
+                    <th
+                      class="p-3 border-b border-slate-700 font-black text-right text-emerald-400"
+                    >
+                      Sua Comissão
+                    </th>
+                    <th
+                      class="p-3 border-b border-slate-700 font-black text-center"
+                    >
+                      Pago Em
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaProducaoBody">
+                  <tr>
+                    <td
+                      colspan="14"
+                      class="p-8 text-center text-slate-400 font-bold"
+                    >
+                      <i class="fas fa-spinner fa-spin mr-2"></i> A carregar a
+                      sua produção...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
         <!-- PÁGINA: PARAMETROS -->
         <div
           id="viewParametros"
@@ -1144,6 +1332,7 @@
           "navLeads",
           "navSim",
           "navCom",
+          "navProducao",
           "navAdminLeads",
           "navParametros", // <-- 1. ADICIONADO AQUI
         ];
@@ -1161,6 +1350,7 @@
           leads: "navLeads",
           simulador: "navSim",
           comissoes: "navCom",
+          producao: "navProducao",
           adminLeads: "navAdminLeads",
           parametros: "navParametros", // <-- 2. ADICIONADO AQUI
         };
@@ -1182,6 +1372,8 @@
           document.getElementById("commCont").innerHTML =
             "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> A processar matriz de comissões...</p>";
           loadCommissionData();
+        } else if (view === "producao") {
+          carregarProducao();
         }
       }
 
@@ -1200,6 +1392,98 @@
             renderizarLeads(todosOsLeadsDoPromotor); // Manda desenhar na tela
           })
           .getLeadsDoPromotor(user.chave);
+      }
+
+      // MINHA PRODUÇÃO
+      function carregarProducao() {
+        const tbody = document.getElementById("tabelaProducaoBody");
+        const inputMes = document.getElementById("filtroMesProducao");
+
+        // Se o campo de mês estiver vazio, define o mês e ano atuais (ex: "2026-07")
+        if (!inputMes.value) {
+          const hoje = new Date();
+          const ano = hoje.getFullYear();
+          const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+          inputMes.value = `${ano}-${mes}`;
+        }
+
+        // Separa o valor "YYYY-MM" em Ano e Mês
+        const [anoFiltro, mesFiltro] = inputMes.value.split("-");
+
+        tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A processar produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+
+        // Zera os cards enquanto carrega
+        document.getElementById("resumoComissao").innerText = "R$ 0,00";
+        document.getElementById("resumoVolume").innerText = "R$ 0,00";
+        document.getElementById("resumoContratos").innerText = "0";
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              return;
+            }
+
+            tbody.innerHTML = "";
+
+            if (res.dados.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="14" class="p-10 text-center text-slate-400">Nenhuma produção oficial registada no mês de <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
+              return;
+            }
+
+            let somaComissao = 0;
+            let somaVolume = 0;
+            let totalContratos = res.dados.length;
+
+            res.dados.forEach(function (p) {
+              const formataMoeda = (valor) =>
+                Number(valor).toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                });
+
+              // Soma os valores numéricos para os cards
+              somaComissao += Number(p.comissao) || 0;
+              somaVolume += Number(p.valorConsiderado) || 0;
+
+              tbody.innerHTML += `
+                <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 group">
+                  <td class="p-3 text-[10px] font-bold text-slate-500">${p.dataMovimento}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-700 uppercase">${p.convenio}</td>
+                  <td class="p-3 text-[10px] font-black text-slate-800">${p.contrato}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-500">${p.dataContrato}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-600">${p.taxa}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-700 text-right">${formataMoeda(p.parcela)}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-500">${p.restricao}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-600 uppercase">${p.grupo}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-600 uppercase">${p.produto}</td>
+                  <td class="p-3 text-[10px] font-medium text-slate-500 truncate max-w-[150px]" title="${p.descricao}">${p.descricao}</td>
+                  <td class="p-3 text-[10px] font-black text-blue-600 text-right">${formataMoeda(p.valorConsiderado)}</td>
+                  <td class="p-3 text-[10px] font-black text-slate-700 text-right">${formataMoeda(p.valor)}</td>
+                  <td class="p-3 text-[10px] font-black text-emerald-600 text-right bg-emerald-50/30">${formataMoeda(p.comissao)}</td>
+                  <td class="p-3 text-[10px] font-bold text-slate-500 text-center">${p.pagoEm}</td>
+                </tr>
+              `;
+            });
+
+            // Alimenta os Cards com as somas formatadas
+            document.getElementById("resumoComissao").innerText =
+              somaComissao.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+            document.getElementById("resumoVolume").innerText =
+              somaVolume.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+            document.getElementById("resumoContratos").innerText =
+              totalContratos;
+          })
+          .withFailureHandler(function (err) {
+            tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-red-500 font-bold">Falha de comunicação: ${err.message}</td></tr>`;
+          })
+          .getProducaoPromotor(user.chave, mesFiltro, anoFiltro);
       }
 
       // 3. Desenha os cards na tela usando alta performance (blocosHtml)
