@@ -32,7 +32,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxDesc = headers.indexOf("DESCRIÇÃO DO PRODUTO");
     const idxComissao = headers.indexOf("COMISSÃO");
     const idxValor = headers.indexOf("VALOR");
-    const idxValorCons = headers.indexOf("VALOR CONSIDERADO");
+    const idxProducao = headers.indexOf("PRODUCAO");
     const idxPagoEm = headers.indexOf("PAGO EM");
 
     const formatData = (val) => val instanceof Date ? Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy") : (val ? val.toString() : "-");
@@ -63,7 +63,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
           descricao: row[idxDesc] || "-",
           comissao: formatNum(row[idxComissao]),
           valor: formatNum(row[idxValor]),
-          valorConsiderado: formatNum(row[idxValorCons]),
+          producao: formatNum(row[idxProducao]),
           pagoEm: formatData(row[idxPagoEm])
         });
       }
@@ -95,9 +95,9 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     const idxPromotor = headers.indexOf("PROMOTOR");
     const idxAno = headers.indexOf("ANO");
     const idxMes = headers.indexOf("MÊS");
-    const idxComissao = headers.indexOf("COMISSÃO");
+    const idxComissao = headers.indexOf("COMISSAO");
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
-    const idxValorCons = headers.indexOf("VALOR CONSIDERADO");
+    const idxProducao = headers.indexOf("PRODUCAO");
     const idxValorLiquido = headers.indexOf("VALOR LIQUIDO"); // Lucro da empresa
 
     if (idxChave === -1 || idxPromotor === -1 || idxMes === -1) {
@@ -125,7 +125,7 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
         const chave = row[idxChave] || "SEM_CHAVE";
         const nomePromotor = row[idxPromotor] || "NÃO IDENTIFICADO";
         
-        const vCons = formatNum(row[idxValorCons]);
+        const vCons = formatNum(row[idxProducao]);
         const vBruto = formatNum(row[idxValorBruto]);
         const vCom = formatNum(row[idxComissao]);
         const vLiq = formatNum(row[idxValorLiquido]);
