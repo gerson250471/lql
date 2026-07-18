@@ -152,6 +152,13 @@
               >
                 <i class="fas fa-cogs mr-1"></i> Parâmetros
               </button>
+              <button
+                onclick="switchView('adminProducao')"
+                id="navAdminProducao"
+                class="hidden px-3 py-2 rounded-lg text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all whitespace-nowrap"
+              >
+                <i class="fas fa-chart-pie mr-1"></i> Resumo Produção
+              </button>
             </div>
           </div>
           <div class="text-right flex flex-col justify-center items-end">
@@ -164,7 +171,7 @@
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
                 <!-- Versão do Sistema -->
-                V: 1.1.2
+                V: 1.1.3
               </span>
               <button
                 onclick="location.reload()"
@@ -507,7 +514,180 @@
             </div>
           </div>
         </div>
+        <!-- RESUMO PARA ADMINISTRADOR -->
+        <div
+          id="viewAdminProducao"
+          class="view-content hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6"
+        >
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-2"
+          >
+            <div>
+              <h1
+                class="text-3xl md:text-4xl font-black text-indigo-800 italic uppercase tracking-tighter"
+              >
+                <i class="fas fa-chart-pie mr-2"></i> Resumo de Produção
+              </h1>
+              <p class="text-slate-500 text-sm font-medium">
+                Consolidado financeiro da equipa por mês/ano.
+              </p>
+            </div>
 
+            <div
+              class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto"
+            >
+              <label
+                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2"
+                >Mês/Ano:</label
+              >
+              <input
+                type="month"
+                id="filtroMesAdmin"
+                onchange="carregarResumoAdmin()"
+                class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 bg-slate-50 flex-1 md:w-48 cursor-pointer"
+              />
+              <button
+                onclick="carregarResumoAdmin()"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition-colors"
+                title="Atualizar"
+              >
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+            <div
+              class="bg-white border-b-4 border-indigo-500 p-4 rounded-xl shadow-sm"
+            >
+              <p
+                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Volume Considerado
+              </p>
+              <p
+                id="adminTotalVolume"
+                class="text-xl md:text-2xl font-black text-indigo-700"
+              >
+                R$ 0,00
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-slate-500 p-4 rounded-xl shadow-sm"
+            >
+              <p
+                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Valor Bruto Total
+              </p>
+              <p
+                id="adminTotalBruto"
+                class="text-xl md:text-2xl font-black text-slate-700"
+              >
+                R$ 0,00
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-emerald-500 p-4 rounded-xl shadow-sm"
+            >
+              <p
+                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Total Comissões Pagas
+              </p>
+              <p
+                id="adminTotalComissao"
+                class="text-xl md:text-2xl font-black text-emerald-600"
+              >
+                R$ 0,00
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-amber-500 p-4 rounded-xl shadow-sm"
+            >
+              <p
+                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Lucro Estimado (Líquido)
+              </p>
+              <p
+                id="adminTotalLiquido"
+                class="text-xl md:text-2xl font-black text-amber-600"
+              >
+                R$ 0,00
+              </p>
+            </div>
+            <div
+              class="bg-white border-b-4 border-blue-400 p-4 rounded-xl shadow-sm text-center"
+            >
+              <p
+                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+              >
+                Contratos
+              </p>
+              <p
+                id="adminTotalContratos"
+                class="text-3xl font-black text-blue-600 mt-1"
+              >
+                0
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden"
+          >
+            <div class="overflow-x-auto pb-4">
+              <table class="w-full text-left border-collapse whitespace-nowrap">
+                <thead>
+                  <tr
+                    class="bg-slate-800 text-[10px] uppercase text-slate-300 tracking-wider"
+                  >
+                    <th class="p-4 border-b border-slate-700 font-black">
+                      Promotor
+                    </th>
+                    <th
+                      class="p-4 border-b border-slate-700 font-black text-center"
+                    >
+                      Qtd Contratos
+                    </th>
+                    <th
+                      class="p-4 border-b border-slate-700 font-black text-right text-indigo-300"
+                    >
+                      Volume Considerado
+                    </th>
+                    <th
+                      class="p-4 border-b border-slate-700 font-black text-right"
+                    >
+                      Valor Bruto
+                    </th>
+                    <th
+                      class="p-4 border-b border-slate-700 font-black text-right text-emerald-400"
+                    >
+                      Comissão (Custo)
+                    </th>
+                    <th
+                      class="p-4 border-b border-slate-700 font-black text-right text-amber-400"
+                    >
+                      Líquido (Empresa)
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="tabelaAdminProducaoBody">
+                  <tr>
+                    <td
+                      colspan="6"
+                      class="p-8 text-center text-slate-400 font-bold"
+                    >
+                      <i class="fas fa-spinner fa-spin mr-2"></i> A processar
+                      relatórios de produção...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
         <!-- PÁGINA: LEADS -->
         <div
           id="viewLeads"
@@ -898,7 +1078,181 @@
           </div>
         </div>
       </div>
+      <!-- PÁGINA: RESUMO DA PRODUÇÃO (ADMIN) -->
+      <div
+        id="viewAdminProducao"
+        class="view-content hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6"
+      >
+        <div
+          class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-2"
+        >
+          <div>
+            <h1
+              class="text-3xl md:text-4xl font-black text-indigo-800 italic uppercase tracking-tighter"
+            >
+              <i class="fas fa-chart-pie mr-2"></i> Resumo de Produção
+            </h1>
+            <p class="text-slate-500 text-sm font-medium">
+              Consolidado financeiro da equipa por mês/ano.
+            </p>
+          </div>
 
+          <div
+            class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto"
+          >
+            <label
+              class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2"
+              >Mês/Ano:</label
+            >
+            <input
+              type="month"
+              id="filtroMesAdmin"
+              onchange="carregarResumoAdmin()"
+              class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 bg-slate-50 flex-1 md:w-48 cursor-pointer"
+            />
+            <button
+              onclick="carregarResumoAdmin()"
+              class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition-colors"
+              title="Atualizar"
+            >
+              <i class="fas fa-sync-alt"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- CARDS TOTAIS DA EMPRESA -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+          <div
+            class="bg-white border-b-4 border-indigo-500 p-4 rounded-xl shadow-sm"
+          >
+            <p
+              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Volume Considerado
+            </p>
+            <p
+              id="adminTotalVolume"
+              class="text-xl md:text-2xl font-black text-indigo-700"
+            >
+              R$ 0,00
+            </p>
+          </div>
+          <div
+            class="bg-white border-b-4 border-slate-500 p-4 rounded-xl shadow-sm"
+          >
+            <p
+              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Valor Bruto Total
+            </p>
+            <p
+              id="adminTotalBruto"
+              class="text-xl md:text-2xl font-black text-slate-700"
+            >
+              R$ 0,00
+            </p>
+          </div>
+          <div
+            class="bg-white border-b-4 border-emerald-500 p-4 rounded-xl shadow-sm"
+          >
+            <p
+              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Total Comissões Pagas
+            </p>
+            <p
+              id="adminTotalComissao"
+              class="text-xl md:text-2xl font-black text-emerald-600"
+            >
+              R$ 0,00
+            </p>
+          </div>
+          <div
+            class="bg-white border-b-4 border-amber-500 p-4 rounded-xl shadow-sm"
+          >
+            <p
+              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Lucro Estimado (Líquido)
+            </p>
+            <p
+              id="adminTotalLiquido"
+              class="text-xl md:text-2xl font-black text-amber-600"
+            >
+              R$ 0,00
+            </p>
+          </div>
+          <div
+            class="bg-white border-b-4 border-blue-400 p-4 rounded-xl shadow-sm text-center"
+          >
+            <p
+              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Contratos
+            </p>
+            <p
+              id="adminTotalContratos"
+              class="text-3xl font-black text-blue-600 mt-1"
+            >
+              0
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden"
+        >
+          <div class="overflow-x-auto pb-4">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr
+                  class="bg-slate-800 text-[10px] uppercase text-slate-300 tracking-wider"
+                >
+                  <th class="p-4 border-b border-slate-700 font-black">
+                    Promotor
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-center"
+                  >
+                    Qtd Contratos
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-right text-indigo-300"
+                  >
+                    Volume Considerado
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-right"
+                  >
+                    Valor Bruto
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-right text-emerald-400"
+                  >
+                    Comissão (Custo)
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-right text-amber-400"
+                  >
+                    Líquido (Empresa)
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAdminProducaoBody">
+                <tr>
+                  <td
+                    colspan="6"
+                    class="p-8 text-center text-slate-400 font-bold"
+                  >
+                    <i class="fas fa-spinner fa-spin mr-2"></i> A processar
+                    relatórios de produção...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <!-- MODAL: NOVA PROPOSTA -->
       <div
         id="modalNovaProposta"
@@ -1260,10 +1614,14 @@
           user.nivelAcesso === "PROGRAMADOR"
         ) {
           document.getElementById("navAdminLeads").classList.remove("hidden");
-          document.getElementById("navParametros").classList.remove("hidden"); // <-- NOVO
+          document.getElementById("navParametros").classList.remove("hidden");
+          document
+            .getElementById("navAdminProducao")
+            .classList.remove("hidden"); // <-- NOVO
         } else {
           document.getElementById("navAdminLeads").classList.add("hidden");
-          document.getElementById("navParametros").classList.add("hidden"); // <-- NOVO
+          document.getElementById("navParametros").classList.add("hidden");
+          document.getElementById("navAdminProducao").classList.add("hidden"); // <-- NOVO
         }
         // --------------------------------------
 
@@ -1374,6 +1732,8 @@
           loadCommissionData();
         } else if (view === "producao") {
           carregarProducao();
+        } else if (view === "adminProducao") {
+          carregarResumoAdmin();
         }
       }
 
@@ -2363,6 +2723,81 @@
             );
           })
           .atualizarParametrosPadrao(dadosParaSalvar);
+      }
+
+      function carregarResumoAdmin() {
+        const tbody = document.getElementById("tabelaAdminProducaoBody");
+        const inputMes = document.getElementById("filtroMesAdmin");
+
+        if (!inputMes.value) {
+          const hoje = new Date();
+          const ano = hoje.getFullYear();
+          const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+          inputMes.value = `${ano}-${mes}`;
+        }
+
+        const [anoFiltro, mesFiltro] = inputMes.value.split("-");
+
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A consolidar produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+
+        // Zera os cards
+        document.getElementById("adminTotalVolume").innerText = "R$ 0,00";
+        document.getElementById("adminTotalBruto").innerText = "R$ 0,00";
+        document.getElementById("adminTotalComissao").innerText = "R$ 0,00";
+        document.getElementById("adminTotalLiquido").innerText = "R$ 0,00";
+        document.getElementById("adminTotalContratos").innerText = "0";
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              return;
+            }
+
+            tbody.innerHTML = "";
+
+            if (res.dados.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhuma produção registada para <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
+              return;
+            }
+
+            const formataMoeda = (valor) =>
+              Number(valor).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+
+            res.dados.forEach(function (p) {
+              tbody.innerHTML += `
+                <tr class="hover:bg-indigo-50/30 transition-colors border-b border-slate-100 group">
+                  <td class="p-4 text-xs font-black text-slate-700 uppercase"><i class="fas fa-user-tie text-slate-400 mr-2"></i>${p.nome}</td>
+                  <td class="p-4 text-xs font-bold text-slate-500 text-center">${p.qtdContratos}</td>
+                  <td class="p-4 text-xs font-black text-indigo-700 text-right bg-indigo-50/10">${formataMoeda(p.volumeConsiderado)}</td>
+                  <td class="p-4 text-xs font-bold text-slate-600 text-right">${formataMoeda(p.valorBruto)}</td>
+                  <td class="p-4 text-xs font-black text-emerald-600 text-right">${formataMoeda(p.comissaoPaga)}</td>
+                  <td class="p-4 text-xs font-black text-amber-600 text-right bg-amber-50/10">${formataMoeda(p.valorLiquido)}</td>
+                </tr>
+              `;
+            });
+
+            // Atualiza os Cards Totais da Empresa
+            const globais = res.totaisGlobais;
+            document.getElementById("adminTotalVolume").innerText =
+              formataMoeda(globais.volume);
+            document.getElementById("adminTotalBruto").innerText = formataMoeda(
+              globais.bruto,
+            );
+            document.getElementById("adminTotalComissao").innerText =
+              formataMoeda(globais.comissao);
+            document.getElementById("adminTotalLiquido").innerText =
+              formataMoeda(globais.liquido);
+            document.getElementById("adminTotalContratos").innerText =
+              globais.contratos;
+          })
+          .withFailureHandler(function (err) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Falha de comunicação: ${err.message}</td></tr>`;
+          })
+          .getResumoProducaoAdmin(mesFiltro, anoFiltro);
       }
     </script>
   </body>
