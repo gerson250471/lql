@@ -171,7 +171,7 @@
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
                 <!-- Versão do Sistema -->
-                V: 1.1.4
+                V: 1.1.5
               </span>
               <button
                 onclick="logout()"
@@ -2812,7 +2812,12 @@
         document.getElementById("chaveJ").value = "";
         document.getElementById("loginMsg").classList.add("hidden");
 
-        // 4. Mostra uma mensagem visual de sucesso
+        // 4. DESTRAVA E RESTAURA O BOTÃO DE LOGIN <-- ESTA É A CORREÇÃO
+        const btnLogin = document.getElementById("btnLogin");
+        btnLogin.disabled = false;
+        btnLogin.innerText = "ACESSAR O SISTEMA";
+
+        // 5. Mostra uma mensagem visual de sucesso
         showToast("Sessão terminada com segurança.", "success");
       }
     </script>
