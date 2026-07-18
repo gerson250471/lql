@@ -13,7 +13,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const headers = data[0].map(h => h.toString().trim().toUpperCase());
     const idxChave = headers.indexOf("CHAVE J");
     const idxAno = headers.indexOf("ANO");
-    const idxMes = headers.indexOf("MÊS"); 
+    const idxMes = headers.indexOf("MÊS");
 
     if (idxChave === -1 || idxAno === -1 || idxMes === -1) {
       throw new Error("As colunas 'CHAVE J', 'ANO' ou 'MÊS' não foram encontradas.");
@@ -32,14 +32,16 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxPagoEm = headers.indexOf("PAGO EM");
 
     // MAPEAMENTO FINANCEIRO BLINDADO
-    // Tenta encontrar "PRODUCAO", se não achar, procura "VALOR CONSIDERADO"
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
+    if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
     
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
     
-    // Puxa estritamente a coluna "VALOR" (A coluna R que tem o dinheiro)
-    const idxComissaoDinheiro = headers.indexOf("VALOR"); 
+    // CORREÇÃO AQUI: Procura o nome exato da Coluna R
+    let idxValorComissao = headers.indexOf("VALOR COMISSÃO");
+    if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
+    if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR"); // Fallback
 
     const formatData = (val) => val instanceof Date ? Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy") : (val ? val.toString() : "-");
     const formatNum = (val) => typeof val === 'number' ? val : 0;
@@ -65,10 +67,10 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
           grupo: row[idxGrupo] || "-",
           produto: row[idxProduto] || "-",
           descricao: row[idxDesc] || "-",
-          // Variáveis que enviam o dinheiro real para o ecrã
+          
           producao: formatNum(row[idxProducao]),
           valorBruto: formatNum(row[idxValorBruto]),
-          comissao: formatNum(row[idxComissaoDinheiro]), // Agora pega os R$ da coluna VALOR
+          comissao: formatNum(row[idxValorComissao]), // Puxa o dinheiro da comissão
           pagoEm: formatData(row[idxPagoEm])
         });
       }
@@ -103,9 +105,15 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     // MAPEAMENTO FINANCEIRO BLINDADO ADMIN
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
+    if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
 
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
-    const idxComissaoDinheiro = headers.indexOf("VALOR"); // A coluna R
+    
+    // CORREÇÃO AQUI
+    let idxValorComissao = headers.indexOf("VALOR COMISSÃO");
+    if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
+    if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR");
+
     const idxValorLiquido = headers.indexOf("VALOR LIQUIDO");
 
     if (idxChave === -1 || idxPromotor === -1 || idxMes === -1) {
@@ -134,7 +142,7 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
         
         const vCons = formatNum(row[idxProducao]);
         const vBruto = formatNum(row[idxValorBruto]);
-        const vCom = formatNum(row[idxComissaoDinheiro]);
+        const vCom = formatNum(row[idxValorComissao]);
         const vLiq = formatNum(row[idxValorLiquido]);
 
         if (!resumoPorPromotor[chave]) {
