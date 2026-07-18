@@ -13,7 +13,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const headers = data[0].map(h => h.toString().trim().toUpperCase());
     const idxChave = headers.indexOf("CHAVE J");
     const idxAno = headers.indexOf("ANO");
-    const idxMes = headers.indexOf("MÊS");
+    const idxMes = headers.indexOf("MÊS"); 
 
     if (idxChave === -1 || idxAno === -1 || idxMes === -1) {
       throw new Error("As colunas 'CHAVE J', 'ANO' ou 'MÊS' não foram encontradas.");
@@ -31,10 +31,16 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxDesc = headers.indexOf("DESCRIÇÃO DO PRODUTO");
     const idxPagoEm = headers.indexOf("PAGO EM");
 
-    // MAPEAMENTO CORRETO: As colunas que guardam o dinheiro
-    const idxValorCons = headers.indexOf("VALOR CONSIDERADO"); // Coluna da Produção
-    const idxValorBruto = headers.indexOf("VALOR BRUTO");      // Coluna do Valor Bruto
-    const idxValorComissao = headers.indexOf("VALOR");         // Coluna R (O dinheiro real da comissão)
+    // MAPEAMENTO FINANCEIRO BLINDADO
+    // Tenta encontrar "PRODUCAO", se não achar, procura "VALOR CONSIDERADO"
+    let idxProducao = headers.indexOf("PRODUÇÃO");
+    if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
+    if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
+    
+    const idxValorBruto = headers.indexOf("VALOR BRUTO");
+    
+    // Puxa estritamente a coluna "VALOR" (A coluna R que tem o dinheiro)
+    const idxComissaoDinheiro = headers.indexOf("VALOR"); 
 
     const formatData = (val) => val instanceof Date ? Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy") : (val ? val.toString() : "-");
     const formatNum = (val) => typeof val === 'number' ? val : 0;
@@ -60,10 +66,10 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
           grupo: row[idxGrupo] || "-",
           produto: row[idxProduto] || "-",
           descricao: row[idxDesc] || "-",
-          // Mapeamento financeiro corrigido
-          producao: formatNum(row[idxValorCons]),
+          // Variáveis que enviam o dinheiro real para o ecrã
+          producao: formatNum(row[idxProducao]),
           valorBruto: formatNum(row[idxValorBruto]),
-          comissao: formatNum(row[idxValorComissao]),
+          comissao: formatNum(row[idxComissaoDinheiro]), // Agora pega os R$ da coluna VALOR
           pagoEm: formatData(row[idxPagoEm])
         });
       }
@@ -94,12 +100,15 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     const idxPromotor = headers.indexOf("PROMOTOR");
     const idxAno = headers.indexOf("ANO");
     const idxMes = headers.indexOf("MÊS");
-    
-    // MAPEAMENTO CORRETO: As colunas que guardam o dinheiro (Admin)
-    const idxValorCons = headers.indexOf("VALOR CONSIDERADO");
+
+    // MAPEAMENTO FINANCEIRO BLINDADO ADMIN
+    let idxProducao = headers.indexOf("PRODUÇÃO");
+    if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
+    if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
+
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
-    const idxValorComissao = headers.indexOf("VALOR"); // Coluna R
-    const idxValorLiquido = headers.indexOf("VALOR LIQUIDO"); 
+    const idxComissaoDinheiro = headers.indexOf("VALOR"); // A coluna R
+    const idxValorLiquido = headers.indexOf("VALOR LIQUIDO");
 
     if (idxChave === -1 || idxPromotor === -1 || idxMes === -1) {
       throw new Error("Colunas obrigatórias não encontradas na base de produção.");
@@ -121,113 +130,15 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
       const mesLinha = String(row[idxMes]).trim().padStart(2, '0');
       const mesBusca = String(mesFiltro).padStart(2, '0');
 
-      if (anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
-        const chave = row[idxChave] || "SEM_CHAVE";
-        const nomePromotor = row[idxPromotor] || "NÃO IDENTIFICADO";
-        
-        const vCons = formatNum(row[idxValorCons]);
-        const vBruto = formatNum(row[idxValorBruto]);
-        const vCom = formatNum(row[idxValorComissao]);
-        const vLiq = formatNum(row[idxValorLiquido]);
-
-        if (!resumoPorPromotor[chave]) {
-          resumoPorPromotor[chave] = {
-            chave: chave,
-            nome: nomePromotor,
-            qtdContratos: 0,
-            volumeConsiderado: 0,
-            valorBruto: 0,
-            comissaoPaga: 0,
-            valorLiquido: 0
-          };
-        }
-
-        resumoPorPromotor[chave].qtdContratos += 1;
-        resumoPorPromotor[chave].volumeConsiderado += vCons;
-        resumoPorPromotor[chave].valorBruto += vBruto;
-        resumoPorPromotor[chave].comissaoPaga += vCom;
-        resumoPorPromotor[chave].valorLiquido += vLiq;
-
-        globalContratos += 1;
-        globalVolume += vCons;
-        globalBruto += vBruto;
-        globalComissao += vCom;
-        globalLiquido += vLiq;
-      }
-    }
-
-    const arrayResumo = Object.values(resumoPorPromotor).sort((a, b) => b.volumeConsiderado - a.volumeConsiderado);
-
-    const totaisGlobais = {
-      contratos: globalContratos,
-      volume: globalVolume,
-      bruto: globalBruto,
-      comissao: globalComissao,
-      liquido: globalLiquido
-    };
-
-    return { sucesso: true, dados: arrayResumo, totaisGlobais: totaisGlobais };
-
-  } catch (e) {
-    return { sucesso: false, erro: e.message };
-  }
-}
-
-/**
- * Busca e consolida a produção de todos os promotores (Exclusivo para ADMIN)
- */
-function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
-  try {
-    const ss = getDatabaseConnection();
-    const sheet = ss.getSheetByName("bd_Producao");
-    if (!sheet) throw new Error("Aba 'bd_Producao' não encontrada.");
-
-    const data = sheet.getDataRange().getValues();
-    if (data.length <= 1) return { sucesso: true, dados: [], totaisGlobais: {} };
-
-    const headers = data[0].map(h => h.toString().trim().toUpperCase());
-    
-    // Mapeamento das colunas
-    const idxChave = headers.indexOf("CHAVE J");
-    const idxPromotor = headers.indexOf("PROMOTOR");
-    const idxAno = headers.indexOf("ANO");
-    const idxMes = headers.indexOf("MÊS");
-    const idxComissao = headers.indexOf("COMISSAO");
-    const idxValorBruto = headers.indexOf("VALOR BRUTO");
-    const idxProducao = headers.indexOf("PRODUCAO");
-    const idxValorLiquido = headers.indexOf("VALOR LIQUIDO"); // Lucro da empresa
-
-    if (idxChave === -1 || idxPromotor === -1 || idxMes === -1) {
-      throw new Error("Colunas obrigatórias não encontradas na base de produção.");
-    }
-
-    const resumoPorPromotor = {};
-    let globalVolume = 0;
-    let globalBruto = 0;
-    let globalComissao = 0;
-    let globalLiquido = 0;
-    let globalContratos = 0;
-
-    const formatNum = (val) => typeof val === 'number' ? val : 0;
-
-    for (let i = 1; i < data.length; i++) {
-      const row = data[i];
-      
-      const anoLinha = String(row[idxAno]).trim();
-      const mesLinha = String(row[idxMes]).trim().padStart(2, '0');
-      const mesBusca = String(mesFiltro).padStart(2, '0');
-
-      // Filtra pelo Mês e Ano
       if (anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
         const chave = row[idxChave] || "SEM_CHAVE";
         const nomePromotor = row[idxPromotor] || "NÃO IDENTIFICADO";
         
         const vCons = formatNum(row[idxProducao]);
         const vBruto = formatNum(row[idxValorBruto]);
-        const vCom = formatNum(row[idxComissao]);
+        const vCom = formatNum(row[idxComissaoDinheiro]);
         const vLiq = formatNum(row[idxValorLiquido]);
 
-        // Se o promotor ainda não existe no nosso objeto de resumo, criamos
         if (!resumoPorPromotor[chave]) {
           resumoPorPromotor[chave] = {
             chave: chave,
@@ -240,14 +151,12 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
           };
         }
 
-        // Soma os valores para este promotor específico
         resumoPorPromotor[chave].qtdContratos += 1;
         resumoPorPromotor[chave].volumeConsiderado += vCons;
         resumoPorPromotor[chave].valorBruto += vBruto;
         resumoPorPromotor[chave].comissaoPaga += vCom;
         resumoPorPromotor[chave].valorLiquido += vLiq;
 
-        // Soma os valores para a Empresa (Totais Globais)
         globalContratos += 1;
         globalVolume += vCons;
         globalBruto += vBruto;
@@ -256,7 +165,6 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
       }
     }
 
-    // Transforma o objeto em um Array e ordena do que vendeu mais para o que vendeu menos
     const arrayResumo = Object.values(resumoPorPromotor).sort((a, b) => b.volumeConsiderado - a.volumeConsiderado);
 
     const totaisGlobais = {
