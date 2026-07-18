@@ -35,7 +35,6 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     // Tenta encontrar "PRODUCAO", se não achar, procura "VALOR CONSIDERADO"
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
-    if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
     
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
     
@@ -104,7 +103,6 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     // MAPEAMENTO FINANCEIRO BLINDADO ADMIN
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
-    if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
 
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
     const idxComissaoDinheiro = headers.indexOf("VALOR"); // A coluna R
