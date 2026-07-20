@@ -1,6 +1,5 @@
 /**
- * Automatiza a importação dos arquivos de produção do Google Drive,
- * mapeando dinamicamente as colunas por nome e aplicando as regras de comissão.
+ * Automatiza a importação com logs de diagnóstico de cabeçalho.
  */
 function importarProducaoDoDrive() {
   try {
@@ -13,61 +12,42 @@ function importarProducaoDoDrive() {
     const arquivos = pastaProducao.getFiles();
     
     if (!arquivos.hasNext()) {
-      Logger.log("⚠️ AVISO: A pasta 'Producao' está totalmente vazia.");
-      return { sucesso: false, mensagem: "Nenhum arquivo encontrado na pasta de Produção." };
+      Logger.log("⚠️ A pasta 'Producao' está vazia.");
+      return { sucesso: false, mensagem: "Nenhum arquivo encontrado." };
     }
 
     let arquivosProcessados = 0;
     const ss = getDatabaseConnection();
     
-    // Carrega tabelas de apoio da base de dados em memória
     const dadosPromotores = ss.getSheetByName("Promotores").getDataRange().getValues();
     const dadosComissao = ss.getSheetByName("bdComissao").getDataRange().getValues();
     const dadosProdutos = ss.getSheetByName("Produto").getDataRange().getValues();
     
     const sheetProd = ss.getSheetByName("bd_Producao");
-    const sheetCliente = ss.getSheetByName("bd_Cliente");
     const dadosProducaoAtual = sheetProd.getLastRow() > 1 ? sheetProd.getRange(2, 1, sheetProd.getLastRow() - 1, sheetProd.getLastColumn()).getValues() : [];
-    
     const contratosExistentes = new Set(dadosProducaoAtual.map(row => String(row[4]).trim()));
 
     while (arquivos.hasNext()) {
       const arquivo = arquivos.next();
       const nomeArquivo = arquivo.getName();
-      const mimeType = arquivo.getMimeType();
-      
-      Logger.log(`📁 Analisando arquivo: ${nomeArquivo}`);
+      Logger.log(`📁 Analisando: ${nomeArquivo}`);
 
-      if (mimeType !== MimeType.MICROSOFT_EXCEL && 
-          mimeType !== MimeType.GOOGLE_SHEETS && 
-          !nomeArquivo.endsWith(".xlsx")) {
-        continue;
-      }
-
-      let abaDados;
-      let idArquivoTemp = null;
-
-      if (mimeType === MimeType.MICROSOFT_EXCEL) {
-        const resource = {
-          title: "[TEMP_IMPORT] " + nomeArquivo,
-          mimeType: MimeType.GOOGLE_SHEETS
-        };
-        const arquivoTemp = Drive.Files.insert(resource, arquivo, { convert: true });
-        idArquivoTemp = arquivoTemp.id;
-        const planilhaTemp = SpreadsheetApp.openById(idArquivoTemp);
-        abaDados = planilhaTemp.getSheets()[0];
-      } else {
-        abaDados = SpreadsheetApp.openById(arquivo.getId()).getSheets()[0];
-      }
-
+      const resource = {
+        title: "[TEMP_IMPORT] " + nomeArquivo,
+        mimeType: MimeType.GOOGLE_SHEETS
+      };
+      const arquivoTemp = Drive.Files.insert(resource, arquivo, { convert: true });
+      const planilhaTemp = SpreadsheetApp.openById(arquivoTemp.id);
+      const abaDados = planilhaTemp.getSheets()[0];
       const linhasBrutas = abaDados.getDataRange().getValues();
+
       if (linhasBrutas.length <= 1) {
-        if (idArquivoTemp) Drive.Files.remove(idArquivoTemp);
+        Drive.Files.remove(arquivoTemp.id);
         continue;
       }
 
-      // MAPEAMENTO DINÂMICO DOS CABEÇALHOS DO EXCEL IMPORTADO
       const headers = linhasBrutas[0].map(h => h.toString().trim().toUpperCase());
+      Logger.log(`🔍 Cabeçalhos detetados no Excel: ${JSON.stringify(headers)}`);
       
       const getCol = (nomesPossiveis) => {
         for (let nome of nomesPossiveis) {
@@ -77,9 +57,8 @@ function importarProducaoDoDrive() {
         return -1;
       };
 
-      // Identifica os índices dinamicamente na planilha de origem
-      const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV"]);
-      const idxChaveJ = getCol(["CHAVE J", "CHAVE_J", "CHAVE"]);
+      const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV", "DATA"]);
+      const idxChaveJ = getCol(["CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
       const idxContrato = getCol(["CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
       const idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO"]);
       const idxProduto = getCol(["PRODUTO", "COD PRODUTO", "CÓDIGO PRODUTO"]);
@@ -97,22 +76,32 @@ function importarProducaoDoDrive() {
       for (let i = 1; i < linhasBrutas.length; i++) {
         const linha = linhasBrutas[i];
         
-        const numContrato = idxContrato !== -1 ? String(linha[idxContrato] || "").trim() : "";
+        // Se a coluna de contrato foi encontrada, usa-a; senão, tenta pegar pelo índice fixo de segurança caso os cabeçalhos difiram
+        let numContrato = "";
+        if (idxContrato !== -1) {
+          numContrato = String(linha[idxContrato] || "").trim();
+        } else if (linha.length > 8) {
+          numContrato = String(linha[8] || "").trim(); // Posição padrão anterior
+        }
+
         if (!numContrato || contratosExistentes.has(numContrato)) continue;
 
-        const chaveJ = idxChaveJ !== -1 ? String(linha[idxChaveJ] || "").trim() : "";
-        
-        // Formata datas com segurança para evitar bugs de 1969
+        let chaveJ = "";
+        if (idxChaveJ !== -1) {
+          chaveJ = String(linha[idxChaveJ] || "").trim();
+        } else if (linha.length > 3) {
+          chaveJ = String(linha[3] || "").trim();
+        }
+
         const parseData = (val) => {
           if (!val) return "";
           let d = new Date(val);
           return isNaN(d.getTime()) ? "" : d;
         };
 
-        const dataMovimento = idxDataMov !== -1 ? parseData(linha[idxDataMov]) : "";
-        const dataContrato = idxDataCont !== -1 ? parseData(linha[idxDataCont]) : "";
+        const dataMovimento = idxDataMov !== -1 ? parseData(linha[idxDataMov]) : parseData(linha[1]);
+        const dataContrato = idxDataCont !== -1 ? parseData(linha[idxDataCont]) : parseData(linha[7]);
 
-        // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
         let perfilPromotor = "BLACK";
         
@@ -124,17 +113,16 @@ function importarProducaoDoDrive() {
           }
         }
 
-        const codProduto = idxProduto !== -1 ? linha[idxProduto] : "";
-        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : "";
-        const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : 0;
-        const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : 0;
-        const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : 0;
-        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : 0;
-        const cpfCliente = idxCpf !== -1 ? linha[idxCpf] : "";
-        const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : "";
-        const restricaoRcc = idxRestricao !== -1 ? linha[idxRestricao] : "Não";
+        const codProduto = idxProduto !== -1 ? linha[idxProduto] : linha[4];
+        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : linha[6];
+        const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : Number(linha[9]) || 0;
+        const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : Number(linha[10]) || 0;
+        const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : Number(linha[11]) || 0;
+        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : Number(linha[16]) || 0;
+        const cpfCliente = idxCpf !== -1 ? linha[idxCpf] : linha[22];
+        const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : linha[23];
+        const restricaoRcc = idxRestricao !== -1 ? linha[idxRestricao] : (linha[27] || "Não");
 
-        // 2. Resolve a descrição do produto baseado na aba Produto
         let grupoProduto = "CONSIGNADO INSS";
         let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
         for (let pr = 1; pr < dadosProdutos.length; pr++) {
@@ -145,7 +133,6 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // 3. Busca a comissão na tabela bdComissao
         let fatorComissao = 0;
         let observacaoComissao = "";
         let colunaPerfilIdx = 8; 
@@ -184,54 +171,35 @@ function importarProducaoDoDrive() {
         const valorComissaoReal = valorLiquido * fatorComissao;
 
         const novaLinha = [
-          dataMovimento, 
-          cpfCliente,                                    
-          "BANCO DO BRASIL",                             
-          convenio,                                      
-          numContrato,                                   
-          dataContrato,    
-          taxa,                                          
-          prazo,                                         
-          chaveJ,                                        
-          "",                                            
-          restricaoRcc,                                  
-          ano,                                           
-          mes,                                           
-          nomePromotor,                                  
-          codProduto,                                    
-          fatorComissao,                                 
-          perfilPromotor,                                
-          valorComissaoReal,                             
-          descProduto,                                   
-          valorBruto,                                    
-          valorLiquido,                                  
-          valorLiquido,                                  
-          "",                                            
-          "",                                            
-          grupoProduto,                                  
-          observacaoComissao,                            
-          ""                                             
+          dataMovimento, cpfCliente, "BANCO DO BRASIL", convenio, numContrato, 
+          dataContrato, taxa, prazo, chaveJ, "", restricaoRcc, ano, mes, 
+          nomePromotor, codProduto, fatorComissao, perfilPromotor, valorComissaoReal, 
+          descProduto, valorBruto, valorLiquido, valorLiquido, "", "", 
+          grupoProduto, observacaoComissao, ""
         ];
 
         novasLinhasParaInserir.push(novaLinha);
         contratosExistentes.add(numContrato); 
       }
 
+      Logger.log(`✨ Linhas mapeadas prontas para inserção: ${novasLinhasParaInserir.length}`);
+
       if (novasLinhasParaInserir.length > 0) {
         sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
-        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados com mapeamento dinâmico.`);
+        Logger.log(`✅ Sucesso absoluto: ${novasLinhasParaInserir.length} contratos gravados.`);
+      } else {
+        Logger.log(`⚠️ Nenhuma linha foi gravada (verifique se os contratos já existiam na base).`);
       }
 
-      if (idArquivoTemp) Drive.Files.remove(idArquivoTemp);
-      
+      Drive.Files.remove(arquivoTemp.id);
       arquivo.moveTo(pastaUsados);
       arquivosProcessados++;
     }
 
-    return { sucesso: true, mensagem: `${arquivosProcessados} arquivo(s) importado(s) com sucesso!` };
+    return { sucesso: true, mensagem: "Importação concluída!" };
 
   } catch (e) {
-    Logger.log(`❌ ERRO CRÍTICO: ${e.message}`);
+    Logger.log(`❌ ERRO: ${e.message}`);
     return { sucesso: false, erro: e.message };
   }
 }
