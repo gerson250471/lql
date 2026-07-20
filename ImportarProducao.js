@@ -1,5 +1,5 @@
 /**
- * Automatiza a importação dos arquivos .xlsx de produção do Google Drive,
+ * Automatiza a importação dos arquivos de produção do Google Drive,
  * aplicando regras de comissão (bdComissao) e promotores (Promotores).
  */
 function importarProducaoDoDrive() {
@@ -10,16 +10,18 @@ function importarProducaoDoDrive() {
     const pastaProducao = DriveApp.getFolderById(idPastaProducao);
     const pastaUsados = DriveApp.getFolderById(idPastaUsados);
     
-    const arquivos = pastaProducao.getFilesByType(MimeType.MICROSOFT_EXCEL);
+    // Lista todos os arquivos na pasta sem restrição estrita de MIME para diagnóstico
+    const arquivos = pastaProducao.getFiles();
     
     if (!arquivos.hasNext()) {
-      return { sucesso: false, mensagem: "Nenhum arquivo .xlsx encontrado na pasta de Produção." };
+      Logger.log("⚠️ AVISO: A pasta 'Producao' está totalmente vazia.");
+      return { sucesso: false, mensagem: "Nenhum arquivo encontrado na pasta de Produção." };
     }
 
     let arquivosProcessados = 0;
     const ss = getDatabaseConnection();
     
-    // Carrega tabelas de apoio da base de dados em memória para alta performance
+    // Carrega tabelas de apoio da base de dados em memória
     const dadosPromotores = ss.getSheetByName("Promotores").getDataRange().getValues();
     const dadosComissao = ss.getSheetByName("bdComissao").getDataRange().getValues();
     const dadosProdutos = ss.getSheetByName("Produto").getDataRange().getValues();
@@ -28,44 +30,61 @@ function importarProducaoDoDrive() {
     const sheetCliente = ss.getSheetByName("bd_Cliente");
     const dadosProducaoAtual = sheetProd.getLastRow() > 1 ? sheetProd.getRange(2, 1, sheetProd.getLastRow() - 1, sheetProd.getLastColumn()).getValues() : [];
     
-    // Índices de contratos já existentes para evitar duplicados (Coluna E / Índice 4 = Contrato)
     const contratosExistentes = new Set(dadosProducaoAtual.map(row => String(row[4]).trim()));
 
     while (arquivos.hasNext()) {
-      const arquivoExcel = arquivos.next();
-      const nomeArquivo = arquivoExcel.getName();
+      const arquivo = arquivos.next();
+      const nomeArquivo = arquivo.getName();
+      const mimeType = arquivo.getMimeType();
+      
+      Logger.log(`📁 Analisando arquivo: ${nomeArquivo} (Tipo: ${mimeType})`);
 
-      // Converte temporariamente para Google Sheets para leitura nativa
-      const resource = {
-        title: "[TEMP_IMPORT] " + nomeArquivo,
-        mimeType: MimeType.GOOGLE_SHEETS
-      };
-      const arquivoTemp = Drive.Files.insert(resource, arquivoExcel, { convert: true });
-      const planilhaTemp = SpreadsheetApp.openById(arquivoTemp.id);
-      const abaDados = planilhaTemp.getSheets()[0];
-      const linhasBrutas = abaDados.getDataRange().getValues();
-
-      if (linhasBrutas.length <= 1) {
-        Drive.Files.remove(arquivoTemp.id);
+      // Aceita tanto ficheiros Excel quanto Google Sheets convertidos
+      if (mimeType !== MimeType.MICROSOFT_EXCEL && 
+          mimeType !== MimeType.GOOGLE_SHEETS && 
+          !nomeArquivo.endsWith(".xlsx")) {
+        Logger.log(`⏭️ Ignorado (não é Excel compatível): ${nomeArquivo}`);
         continue;
       }
 
-      const cabecalhos = linhasBrutas[0];
+      let abaDados;
+      let idArquivoTemp = null;
+
+      if (mimeType === MimeType.MICROSOFT_EXCEL) {
+        // Converte o .xlsx para Google Sheets temporariamente
+        const resource = {
+          title: "[TEMP_IMPORT] " + nomeArquivo,
+          mimeType: MimeType.GOOGLE_SHEETS
+        };
+        const arquivoTemp = Drive.Files.insert(resource, arquivo, { convert: true });
+        idArquivoTemp = arquivoTemp.id;
+        const planilhaTemp = SpreadsheetApp.openById(idArquivoTemp);
+        abaDados = planilhaTemp.getSheets()[0];
+      } else {
+        // Se já for uma planilha nativa do Google
+        abaDados = SpreadsheetApp.openById(arquivo.getId()).getSheets()[0];
+      }
+
+      const linhasBrutas = abaDados.getDataRange().getValues();
+      Logger.log(`📊 Linhas encontradas no arquivo ${nomeArquivo}: ${linhasBrutas.length}`);
+
+      if (linhasBrutas.length <= 1) {
+        if (idArquivoTemp) Drive.Files.remove(idArquivoTemp);
+        continue;
+      }
+
       const novasLinhasParaInserir = [];
       const novosClientesParaInserir = [];
 
-      // Processa cada linha do arquivo importado (começando da linha 1)
       for (let i = 1; i < linhasBrutas.length; i++) {
         const linha = linhasBrutas[i];
         
-        // Mapeamento padrão compatível com a estrutura bruta do relatório
-        const dataMovimento = linha[1]; // Coluna B aproximada ou ajustada conforme layout
-        const chaveJ = String(linha[3] || "").trim(); // Chave J
-        const numContrato = String(linha[8] || "").trim(); // Contrato
+        const dataMovimento = linha[1]; 
+        const chaveJ = String(linha[3] || "").trim(); 
+        const numContrato = String(linha[8] || "").trim(); 
 
         if (!numContrato || contratosExistentes.has(numContrato)) continue;
 
-        // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
         let perfilPromotor = "BLACK";
         
@@ -77,19 +96,17 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // 2. Extrai dados financeiros e contratuais
         const dataContrato = linha[7];
         const codProduto = linha[4];
         const convenio = linha[6];
         const prazo = Number(linha[9]) || 0;
         const valorBruto = Number(linha[10]) || 0;
         const valorLiquido = Number(linha[11]) || 0;
-        const taxa = Number(linha[16]) || 0; // Taxa
+        const taxa = Number(linha[16]) || 0; 
         const cpfCliente = linha[22];
         const nomeCliente = linha[23];
         const restricaoRcc = linha[27];
 
-        // 3. Resolve a descrição do produto baseado na aba Produto
         let grupoProduto = "CONSIGNADO INSS";
         let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
         for (let pr = 1; pr < dadosProdutos.length; pr++) {
@@ -100,13 +117,11 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // 4. Busca a comissão na tabela bdComissao (Cruzando Grupo, Descrição, Taxa e Prazo)
         let fatorComissao = 0;
         let observacaoComissao = "";
-
-        // Identifica a coluna correta do perfil na tabela bdComissao (Cabeçalho da linha 0)
-        let colunaPerfilIdx = 8; // Default GESTOR/BLACK (ajustado conforme colunas da imagem)
+        let colunaPerfilIdx = 8; 
         const cabecalhoComissao = dadosComissao[0];
+        
         for (let c = 0; c < cabecalhoComissao.length; c++) {
           if (String(cabecalhoComissao[c]).trim().toUpperCase() === perfilPromotor) {
             colunaPerfilIdx = c;
@@ -139,59 +154,64 @@ function importarProducaoDoDrive() {
         const mes = dataMovimento ? new Date(dataMovimento).getMonth() + 1 : "";
         const valorComissaoReal = valorLiquido * fatorComissao;
 
-        // Monta a linha alinhada exatamente à estrutura de colunas do bd_Producao
         const novaLinha = [
-          dataMovimento ? new Date(dataMovimento) : "", // A: Data Movimento
-          cpfCliente,                                    // B: CPF
-          "BANCO DO BRASIL",                             // C: Banco
-          convenio,                                      // D: Convênio
-          numContrato,                                   // E: Contrato
-          dataContrato ? new Date(dataContrato) : "",    // F: Data Contrato
-          taxa,                                          // G: Taxa
-          prazo,                                         // H: Parcela
-          chaveJ,                                        // I: Chave J
-          "",                                            // J: Comissão PF
-          restricaoRcc,                                  // K: Restrição RCC
-          ano,                                           // L: Ano
-          mes,                                           // M: Mês
-          nomePromotor,                                  // N: Promotor
-          codProduto,                                    // O: Produto (Código)
-          fatorComissao,                                 // P: Comissão (%)
-          perfilPromotor,                                // Q: Perfil
-          valorComissaoReal,                             // R: Valor (Comissão em R$)
-          descProduto,                                   // S: Descrição
-          valorBruto,                                    // T: Valor Bruto
-          valorLiquido,                                  // U: Valor Líquido
-          valorLiquido,                                  // V: Valor Considerado / Produção
-          "",                                            // W: Agência
-          "",                                            // X: Empresa
-          grupoProduto,                                  // Y: Desc. Convênio
-          observacaoComissao,                            // Z: Observação
-          ""                                             // AA: Pago Em
+          dataMovimento ? new Date(dataMovimento) : "", 
+          cpfCliente,                                    
+          "BANCO DO BRASIL",                             
+          convenio,                                      
+          numContrato,                                   
+          dataContrato ? new Date(dataContrato) : "",    
+          taxa,                                          
+          prazo,                                         
+          chaveJ,                                        
+          "",                                            
+          restricaoRcc,                                  
+          ano,                                           
+          mes,                                           
+          nomePromotor,                                  
+          codProduto,                                    
+          fatorComissao,                                 
+          perfilPromotor,                                
+          valorComissaoReal,                             
+          descProduto,                                   
+          valorBruto,                                    
+          valorLiquido,                                  
+          valorLiquido,                                  
+          "",                                            
+          "",                                            
+          grupoProduto,                                  
+          observacaoComissao,                            
+          ""                                             
         ];
 
         novasLinhasParaInserir.push(novaLinha);
-        contratosExistentes.add(numContrato); // Evita duplicidade dentro do próprio lote
+        contratosExistentes.add(numContrato); 
 
-        // Prepara inclusão na base de clientes se não existir
         if (cpfCliente) {
           novosClientesParaInserir.push([cpfCliente, nomeCliente, "Banco do Brasil", new Date()]);
         }
       }
 
-      // Grava em lote na aba bd_Producao se houver novos dados
       if (novasLinhasParaInserir.length > 0) {
-        sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].setValues ? novasLinhasParaInserir[0].length : novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
+        sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
+        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados em 'bd_Producao'.`);
+      } else {
+        Logger.log(`⚠️ Nenhum contrato novo para inserir (podem já existir na base).`);
       }
 
-      Drive.Files.remove(arquivoTemp.id);
-      arquivoExcel.moveTo(pastaUsados);
+      if (idArquivoTemp) Drive.Files.remove(idArquivoTemp);
+      
+      // Move o arquivo original para a pasta de usados
+      arquivo.moveTo(pastaUsados);
+      Logger.log(`🚚 Arquivo movido para 'Arquivos_Usados'.`);
+      
       arquivosProcessados++;
     }
 
-    return { sucesso: true, mensagem: `${arquivosProcessados} arquivo(s) de produção importado(s) com sucesso!` };
+    return { sucesso: true, mensagem: `${arquivosProcessados} arquivo(s) importado(s) com sucesso!` };
 
   } catch (e) {
+    Logger.log(`❌ ERRO CRÍTICO: ${e.message}`);
     return { sucesso: false, erro: e.message };
   }
 }
