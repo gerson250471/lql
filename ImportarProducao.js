@@ -1,6 +1,6 @@
 /**
  * Automatiza a importação dos arquivos de produção do Google Drive,
- * aplicando regras de comissão (bdComissao) e promotores (Promotores).
+ * mapeando dinamicamente as colunas por nome e aplicando as regras de comissão.
  */
 function importarProducaoDoDrive() {
   try {
@@ -10,7 +10,6 @@ function importarProducaoDoDrive() {
     const pastaProducao = DriveApp.getFolderById(idPastaProducao);
     const pastaUsados = DriveApp.getFolderById(idPastaUsados);
     
-    // Lista todos os arquivos na pasta sem restrição estrita de MIME para diagnóstico
     const arquivos = pastaProducao.getFiles();
     
     if (!arquivos.hasNext()) {
@@ -37,13 +36,11 @@ function importarProducaoDoDrive() {
       const nomeArquivo = arquivo.getName();
       const mimeType = arquivo.getMimeType();
       
-      Logger.log(`📁 Analisando arquivo: ${nomeArquivo} (Tipo: ${mimeType})`);
+      Logger.log(`📁 Analisando arquivo: ${nomeArquivo}`);
 
-      // Aceita tanto ficheiros Excel quanto Google Sheets convertidos
       if (mimeType !== MimeType.MICROSOFT_EXCEL && 
           mimeType !== MimeType.GOOGLE_SHEETS && 
           !nomeArquivo.endsWith(".xlsx")) {
-        Logger.log(`⏭️ Ignorado (não é Excel compatível): ${nomeArquivo}`);
         continue;
       }
 
@@ -51,7 +48,6 @@ function importarProducaoDoDrive() {
       let idArquivoTemp = null;
 
       if (mimeType === MimeType.MICROSOFT_EXCEL) {
-        // Converte o .xlsx para Google Sheets temporariamente
         const resource = {
           title: "[TEMP_IMPORT] " + nomeArquivo,
           mimeType: MimeType.GOOGLE_SHEETS
@@ -61,30 +57,62 @@ function importarProducaoDoDrive() {
         const planilhaTemp = SpreadsheetApp.openById(idArquivoTemp);
         abaDados = planilhaTemp.getSheets()[0];
       } else {
-        // Se já for uma planilha nativa do Google
         abaDados = SpreadsheetApp.openById(arquivo.getId()).getSheets()[0];
       }
 
       const linhasBrutas = abaDados.getDataRange().getValues();
-      Logger.log(`📊 Linhas encontradas no arquivo ${nomeArquivo}: ${linhasBrutas.length}`);
-
       if (linhasBrutas.length <= 1) {
         if (idArquivoTemp) Drive.Files.remove(idArquivoTemp);
         continue;
       }
 
+      // MAPEAMENTO DINÂMICO DOS CABEÇALHOS DO EXCEL IMPORTADO
+      const headers = linhasBrutas[0].map(h => h.toString().trim().toUpperCase());
+      
+      const getCol = (nomesPossiveis) => {
+        for (let nome of nomesPossiveis) {
+          let idx = headers.indexOf(nome);
+          if (idx !== -1) return idx;
+        }
+        return -1;
+      };
+
+      // Identifica os índices dinamicamente na planilha de origem
+      const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV"]);
+      const idxChaveJ = getCol(["CHAVE J", "CHAVE_J", "CHAVE"]);
+      const idxContrato = getCol(["CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
+      const idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO"]);
+      const idxProduto = getCol(["PRODUTO", "COD PRODUTO", "CÓDIGO PRODUTO"]);
+      const idxConvenio = getCol(["CONVENIO", "CONVÊNIO"]);
+      const idxPrazo = getCol(["PARCELA", "PRAZO", "PARCELAS"]);
+      const idxBruto = getCol(["VALOR BRUTO", "BRUTO"]);
+      const idxLiquido = getCol(["VALOR LIQUIDO", "LIQUIDO", "VALOR LÍQUIDO", "VALOR"]);
+      const idxTaxa = getCol(["TAXA"]);
+      const idxCpf = getCol(["CPF", "CPF/CNPJ"]);
+      const idxNomeCliente = getCol(["CLIENTE", "NOME CLIENTE", "NOME"]);
+      const idxRestricao = getCol(["RESTRICAO_RCC", "RESTRICAO", "RESTRIÇÃO RCC"]);
+
       const novasLinhasParaInserir = [];
-      const novosClientesParaInserir = [];
 
       for (let i = 1; i < linhasBrutas.length; i++) {
         const linha = linhasBrutas[i];
         
-        const dataMovimento = linha[1]; 
-        const chaveJ = String(linha[3] || "").trim(); 
-        const numContrato = String(linha[8] || "").trim(); 
-
+        const numContrato = idxContrato !== -1 ? String(linha[idxContrato] || "").trim() : "";
         if (!numContrato || contratosExistentes.has(numContrato)) continue;
 
+        const chaveJ = idxChaveJ !== -1 ? String(linha[idxChaveJ] || "").trim() : "";
+        
+        // Formata datas com segurança para evitar bugs de 1969
+        const parseData = (val) => {
+          if (!val) return "";
+          let d = new Date(val);
+          return isNaN(d.getTime()) ? "" : d;
+        };
+
+        const dataMovimento = idxDataMov !== -1 ? parseData(linha[idxDataMov]) : "";
+        const dataContrato = idxDataCont !== -1 ? parseData(linha[idxDataCont]) : "";
+
+        // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
         let perfilPromotor = "BLACK";
         
@@ -96,17 +124,17 @@ function importarProducaoDoDrive() {
           }
         }
 
-        const dataContrato = linha[7];
-        const codProduto = linha[4];
-        const convenio = linha[6];
-        const prazo = Number(linha[9]) || 0;
-        const valorBruto = Number(linha[10]) || 0;
-        const valorLiquido = Number(linha[11]) || 0;
-        const taxa = Number(linha[16]) || 0; 
-        const cpfCliente = linha[22];
-        const nomeCliente = linha[23];
-        const restricaoRcc = linha[27];
+        const codProduto = idxProduto !== -1 ? linha[idxProduto] : "";
+        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : "";
+        const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : 0;
+        const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : 0;
+        const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : 0;
+        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : 0;
+        const cpfCliente = idxCpf !== -1 ? linha[idxCpf] : "";
+        const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : "";
+        const restricaoRcc = idxRestricao !== -1 ? linha[idxRestricao] : "Não";
 
+        // 2. Resolve a descrição do produto baseado na aba Produto
         let grupoProduto = "CONSIGNADO INSS";
         let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
         for (let pr = 1; pr < dadosProdutos.length; pr++) {
@@ -117,6 +145,7 @@ function importarProducaoDoDrive() {
           }
         }
 
+        // 3. Busca a comissão na tabela bdComissao
         let fatorComissao = 0;
         let observacaoComissao = "";
         let colunaPerfilIdx = 8; 
@@ -155,12 +184,12 @@ function importarProducaoDoDrive() {
         const valorComissaoReal = valorLiquido * fatorComissao;
 
         const novaLinha = [
-          dataMovimento ? new Date(dataMovimento) : "", 
+          dataMovimento, 
           cpfCliente,                                    
           "BANCO DO BRASIL",                             
           convenio,                                      
           numContrato,                                   
-          dataContrato ? new Date(dataContrato) : "",    
+          dataContrato,    
           taxa,                                          
           prazo,                                         
           chaveJ,                                        
@@ -186,25 +215,16 @@ function importarProducaoDoDrive() {
 
         novasLinhasParaInserir.push(novaLinha);
         contratosExistentes.add(numContrato); 
-
-        if (cpfCliente) {
-          novosClientesParaInserir.push([cpfCliente, nomeCliente, "Banco do Brasil", new Date()]);
-        }
       }
 
       if (novasLinhasParaInserir.length > 0) {
         sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
-        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados em 'bd_Producao'.`);
-      } else {
-        Logger.log(`⚠️ Nenhum contrato novo para inserir (podem já existir na base).`);
+        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados com mapeamento dinâmico.`);
       }
 
       if (idArquivoTemp) Drive.Files.remove(idArquivoTemp);
       
-      // Move o arquivo original para a pasta de usados
       arquivo.moveTo(pastaUsados);
-      Logger.log(`🚚 Arquivo movido para 'Arquivos_Usados'.`);
-      
       arquivosProcessados++;
     }
 
