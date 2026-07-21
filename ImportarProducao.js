@@ -68,7 +68,7 @@ function importarProducaoDoDrive() {
       
       const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
       const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
-      const idxPrazo = getCol(["PARCELA", "PARCELA", "PRAZO"]);
+      const idxPrazo = getCol(["PARCELAS", "PARCELA", "PRAZO"]);
       const idxBruto = getCol(["VALOR FINANCIADO", "VALOR BRUTO", "BRUTO"]);
       const idxLiquido = getCol(["VALOR FINANCIADO LÍQUIDO", "VALOR FINANCIADO LIQUIDO", "VALOR LIQUIDO", "LIQUIDO", "VALOR"]);
       const idxTaxa = getCol(["TAXA MENSAL DE JUROS", "TAXA"]);
@@ -152,20 +152,18 @@ function importarProducaoDoDrive() {
         }
 
         // ====================================================================
-        // 🚨 ARMADILHA DE DEBUG 🚨
-        // Vai capturar o exato momento em que a linha da Luciana ou da Roberta passar
-        if ((nomePromotor.includes("LUCIANA") && codProduto == 3100) || 
-            (nomePromotor.includes("ROBERTA") && codProduto == 2881)) {
+        // 🚨 NOVA ARMADILHA DE DEBUG - FORA DOS PARÂMETROS 🚨
+        if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
           
+          let debugGrupoProduto = grupoProduto;
+          let debugDescProduto = descProduto;
           let debugTaxa = taxa;
           let debugPrazo = prazo;
-          let debugGrupo = grupoProduto;
-          let debugDesc = descProduto;
           
-          Logger.log(`🛑 PARADA DEBUG: Promotor: ${nomePromotor} | Produto: ${codProduto}`);
-          Logger.log(`Valores do Arquivo -> Taxa: ${debugTaxa} | Prazo: ${debugPrazo}`);
+          Logger.log(`🛑 PARADA DEBUG: ROBERTA | Produto: 2881 | Valor: 550`);
+          Logger.log(`Procurando por -> Grupo: "${debugGrupoProduto}" | Descrição: "${debugDescProduto}"`);
           
-          // 👉 COLOQUE O PONTO VERMELHO (BREAKPOINT) NA LINHA ABAIXO 👈
+          // 👉 COLOQUE O NOVO PONTO VERMELHO (BREAKPOINT) NA LINHA ABAIXO 👈
           let inspecionarVariaveis = true; 
         }
         // ====================================================================
