@@ -64,8 +64,8 @@ function importarProducaoDoDrive() {
       const idxChaveJ = getCol(["CHAVEJ", "CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
       const idxContrato = getCol(["NÚMERO PROPOSTA", "NUMERO PROPOSTA", "CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
       let idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO", "DATA_PROPOSTA"]);
-      const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
-      const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
+      const codProduto = idxProduto !== -1 ? linha[idxProduto] : (linha[4] || "");
+      const convenio = idxConvenio !== -1 ? linha[idxConvenio] : (linha[6] || ""); // Fallback para a coluna 6
       const idxPrazo = getCol(["PARCELAS", "PARCELA", "PRAZO"]); // Prioridade corrigida
       const idxBruto = getCol(["VALOR FINANCIADO", "VALOR BRUTO", "BRUTO"]);
       const idxLiquido = getCol(["VALOR FINANCIADO LÍQUIDO", "VALOR FINANCIADO LIQUIDO", "VALOR LIQUIDO", "LIQUIDO", "VALOR"]);
@@ -140,7 +140,9 @@ function importarProducaoDoDrive() {
         // 2. Resolve o Convênio (Lê a nova aba para descobrir se é SP, INSS, etc)
         let descConvenio = "";
         for (let cv = 1; cv < dadosConvenio.length; cv++) {
-          if (String(dadosConvenio[cv][0]).trim() === String(convenio).trim()) {
+          // Compara como Texto E como Número para não falhar na formatação
+          if (String(dadosConvenio[cv][0]).trim() === String(convenio).trim() || 
+              Number(dadosConvenio[cv][0]) === Number(convenio)) {
             descConvenio = String(dadosConvenio[cv][1]).trim().toUpperCase();
             break;
           }
@@ -166,12 +168,13 @@ function importarProducaoDoDrive() {
         // 🚨 ARMADILHA DE DEBUG - VALIDAÇÃO DA JUNÇÃO DO CONVÊNIO 🚨
         if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
           
+          let debugCodigoConvenioBruto = convenio; // O que o script leu do Excel
           let debugConvenioLido = descConvenio;
           let debugGrupoFinal = grupoProduto;
-          let debugDescricaoFinal = descProduto;
           
           Logger.log(`🛑 PARADA DEBUG: ROBERTA | Produto: 2881 | Valor Líquido: 550`);
-          Logger.log(`🔍 Resultado da Junção -> Convênio: "${debugConvenioLido}" | Grupo Final: "${debugGrupoFinal}"`);
+          Logger.log(`👉 Código do Convênio lido do Excel: "${debugCodigoConvenioBruto}"`);
+          Logger.log(`🔍 Resultado -> Sigla Encontrada: "${debugConvenioLido}" | Grupo Final: "${debugGrupoFinal}"`);
           
           // 👉 COLOQUE O PONTO VERMELHO (BREAKPOINT) NESTA LINHA ABAIXO 👈
           let inspecionarVariaveis = true; 
