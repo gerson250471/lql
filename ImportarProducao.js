@@ -47,7 +47,7 @@ function importarProducaoDoDrive() {
         continue;
       }
 
-      // MAPEAMENTO DINÂMICO POR NOME DE CABEÇALHO (Garante que nunca erra a coluna)
+      // MAPEAMENTO DINÂMICO POR NOME DE CABEÇALHO
       const headers = linhasBrutas[0].map(h => h.toString().trim().toUpperCase());
       
       const getCol = (nomesPossiveis) => {
@@ -82,12 +82,11 @@ function importarProducaoDoDrive() {
 
         const chaveJ = idxChaveJ !== -1 ? String(linha[idxChaveJ] || "").trim() : "";
 
-        // Conversor seguro de datas que extrai Ano e Mês sem gerar erros de #NUM!
+        // Conversor seguro de datas, extraindo ano e mês sem duplicidade de variáveis
         const processarDataEValores = (val) => {
           if (!val) return { dataFormatada: "", ano: "", mes: "" };
           let d = new Date(val);
           if (isNaN(d.getTime())) {
-            // Tenta tratar caso venha em formato de texto brasileiro (DD/MM/YYYY)
             const partes = String(val).split("/");
             if (partes.length === 3) {
               d = new Date(partes[2], partes[1] - 1, partes[0]);
@@ -110,7 +109,8 @@ function importarProducaoDoDrive() {
         const ano = resDataMov.ano;
         const mes = resDataMov.mes;
 
-        const dataContrato = idxDataCont !== -1 ? processarDataEValores(linha[idxDataCont]).dataFormatada : "";
+        const resDataCont = processarDataEValores(idxDataCont !== -1 ? linha[idxDataCont] : "");
+        const dataContrato = resDataCont.dataFormatada;
 
         // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
@@ -129,7 +129,7 @@ function importarProducaoDoDrive() {
         const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : 0;
         const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : 0;
         const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : 0;
-        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : 0; // Taxa exata do relatório
+        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : 0; 
         const cpfCliente = idxCpf !== -1 ? linha[idxCpf] : "";
         const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : "";
         const restricaoRcc = idxRestricao !== -1 ? (linha[idxRestricao] || "Não") : "Não";
@@ -171,7 +171,6 @@ function importarProducaoDoDrive() {
           const prazoFin = Number(rowC[5]);
 
           if (grupoProduto.toUpperCase().includes(gFiltro) && descProduto.toUpperCase().includes(dFiltro)) {
-            // Arredonda para 4 casas decimais para evitar erros de ponto flutuante em JavaScript
             const tCheck = Math.round(taxa * 10000) / 10000;
             const tIniCheck = Math.round(taxaIni * 10000) / 10000;
             const tFinCheck = Math.round(taxaFin * 10000) / 10000;
@@ -186,15 +185,12 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // Preenchimento claro e idêntico ao VBA para a observação
         if (fatorComissao === 0) {
           if (probTx === 0) observacaoComissao = "Abaixo da Taxa Minima";
           else if (probParc === 0) observacaoComissao = "Fora do Prazo";
           else observacaoComissao = "Fora dos Parâmetros";
         }
 
-        const ano = dataMovimento ? new Date(dataMovimento).getFullYear() : "";
-        const mes = dataMovimento ? new Date(dataMovimento).getMonth() + 1 : "";
         const valorComissaoReal = valorLiquido * fatorComissao;
 
         const novaLinha = [
