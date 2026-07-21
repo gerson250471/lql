@@ -1,6 +1,6 @@
 {
   "name": "_lql",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "main": "index.js",
   "repository": "https://github.com/gerson250471/lql.git",
   "author": "Gerson Bernardo <gbds25@gmail.com>",
