@@ -68,7 +68,7 @@ function importarProducaoDoDrive() {
       
       const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
       const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
-      const idxPrazo = getCol(["PRAZO", "PARCELA", "PARCELAS"]);
+      const idxPrazo = getCol(["PARCELA", "PARCELA", "PRAZO"]);
       const idxBruto = getCol(["VALOR FINANCIADO", "VALOR BRUTO", "BRUTO"]);
       const idxLiquido = getCol(["VALOR FINANCIADO LÍQUIDO", "VALOR FINANCIADO LIQUIDO", "VALOR LIQUIDO", "LIQUIDO", "VALOR"]);
       const idxTaxa = getCol(["TAXA MENSAL DE JUROS", "TAXA"]);
