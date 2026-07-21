@@ -1,6 +1,6 @@
 /**
- * Importa a produção do Drive utilizando o mapeamento posicional exato (padrão VBA),
- * calculando comissões, perfis e evitando duplicidade por contrato.
+ * Importação otimizada com mapeamento dinâmico de cabeçalhos,
+ * correção exata de datas e cruzamento preciso de taxas e prazos.
  */
 function importarProducaoDoDrive() {
   try {
@@ -20,7 +20,6 @@ function importarProducaoDoDrive() {
     let arquivosProcessados = 0;
     const ss = getDatabaseConnection();
     
-    // Carrega tabelas de apoio da base de dados em memória
     const dadosPromotores = ss.getSheetByName("Promotores").getDataRange().getValues();
     const dadosComissao = ss.getSheetByName("bdComissao").getDataRange().getValues();
     const dadosProdutos = ss.getSheetByName("Produto").getDataRange().getValues();
@@ -48,28 +47,50 @@ function importarProducaoDoDrive() {
         continue;
       }
 
-      const novasLinhasParaInserir = [];
-      const novosClientesParaInserir = [];
+      // MAPEAMENTO DINÂMICO POR NOME DE CABEÇALHO (Garante que nunca erra a coluna)
+      const headers = linhasBrutas[0].map(h => h.toString().trim().toUpperCase());
+      
+      const getCol = (nomesPossiveis) => {
+        for (let nome of nomesPossiveis) {
+          let idx = headers.indexOf(nome);
+          if (idx !== -1) return idx;
+        }
+        return -1;
+      };
 
-      // Mapeamento posicional exato baseado na estrutura do seu VBA (MOD_A_0_PRODUCAO.vba)
+      const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV", "DATA"]);
+      const idxChaveJ = getCol(["CHAVEJ", "CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
+      const idxContrato = getCol(["NÚMERO PROPOSTA", "NUMERO PROPOSTA", "CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
+      const idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO"]);
+      const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
+      const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
+      const idxPrazo = getCol(["PRAZO", "PARCELA", "PARCELAS"]);
+      const idxBruto = getCol(["VALOR FINANCIADO", "VALOR BRUTO", "BRUTO"]);
+      const idxLiquido = getCol(["VALOR FINANCIADO LÍQUIDO", "VALOR FINANCIADO LIQUIDO", "VALOR LIQUIDO", "LIQUIDO", "VALOR"]);
+      const idxTaxa = getCol(["TAXA MENSAL DE JUROS", "TAXA"]);
+      const idxCpf = getCol(["CPF", "CPF/CNPJ"]);
+      const idxNomeCliente = getCol(["NOME CLIENTE", "CLIENTE", "NOME"]);
+      const idxRestricao = getCol(["INDICADOR RESTRIÇÃO SRCC", "INDICADOR RESTRICAO SRCC", "RESTRICAO_RCC", "RESTRICAO"]);
+
+      const novasLinhasParaInserir = [];
+
       for (let i = 1; i < linhasBrutas.length; i++) {
         const linha = linhasBrutas[i];
         
-        // Coluna E do VBA (Índice 4 no array = Contrato)
-        const numContrato = String(linha[8] || "").trim(); 
+        const numContrato = idxContrato !== -1 ? String(linha[idxContrato] || "").trim() : "";
         if (!numContrato || contratosExistentes.has(numContrato)) continue;
 
-        // Coluna I do VBA (Índice 8 no array = Chave J)
-        const chaveJ = String(linha[3] || "").trim(); 
+        const chaveJ = idxChaveJ !== -1 ? String(linha[idxChaveJ] || "").trim() : "";
 
+        // Conversor seguro de datas para evitar valores nulos ou 1969
         const parseData = (val) => {
           if (!val) return "";
           let d = new Date(val);
-          return isNaN(d.getTime()) ? "" : d;
+          return isNaN(d.getTime()) ? val : d;
         };
 
-        const dataMovimento = parseData(linha[1]); // Data Movimento
-        const dataContrato = parseData(linha[7]);  // Data Contrato
+        const dataMovimento = idxDataMov !== -1 ? parseData(linha[idxDataMov]) : "";
+        const dataContrato = idxDataCont !== -1 ? parseData(linha[idxDataCont]) : "";
 
         // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
@@ -83,31 +104,31 @@ function importarProducaoDoDrive() {
           }
         }
 
-        const codProduto = Number(linha[4]) || 0;     // Produto
-        const convenio = linha[6];                     // Convênio
-        const prazo = Number(linha[9]) || 0;           // Parcela / Prazo
-        const valorBruto = Number(linha[10]) || 0;     // Valor Bruto
-        const valorLiquido = Number(linha[11]) || 0;   // Valor Líquido
-        const taxa = Number(linha[16]) || 0;           // Taxa Mensal de Juros
-        const cpfCliente = linha[22];                  // CPF
-        const nomeCliente = linha[23];                 // Nome Cliente
-        const restricaoRcc = linha[27] || "Não";       // Restrição RCC
+        const codProduto = idxProduto !== -1 ? linha[idxProduto] : "";
+        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : "";
+        const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : 0;
+        const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : 0;
+        const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : 0;
+        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : 0; // Taxa exata do relatório
+        const cpfCliente = idxCpf !== -1 ? linha[idxCpf] : "";
+        const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : "";
+        const restricaoRcc = idxRestricao !== -1 ? (linha[idxRestricao] || "Não") : "Não";
 
         // 2. Resolve a descrição do produto baseado na aba Produto
         let grupoProduto = "CONSIGNADO INSS";
         let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
         for (let pr = 1; pr < dadosProdutos.length; pr++) {
-          if (Number(dadosProdutos[pr][0]) === codProduto) {
+          if (Number(dadosProdutos[pr][0]) === Number(codProduto)) {
             grupoProduto = dadosProdutos[pr][1];
             descProduto = dadosProdutos[pr][2];
             break;
           }
         }
 
-        // 3. Busca a comissão exata na tabela bdComissao (Cruzando faixas de taxa e prazo)
+        // 3. Busca a comissão na tabela bdComissao com arredondamento preciso de taxas
         let fatorComissao = 0;
         let observacaoComissao = "";
-        let colunaPerfilIdx = 8; // Índice padrão para GESTOR/BLACK
+        let colunaPerfilIdx = 8; 
         const cabecalhoComissao = dadosComissao[0];
         
         for (let c = 0; c < cabecalhoComissao.length; c++) {
@@ -130,17 +151,22 @@ function importarProducaoDoDrive() {
           const prazoFin = Number(rowC[5]);
 
           if (grupoProduto.toUpperCase().includes(gFiltro) && descProduto.toUpperCase().includes(dFiltro)) {
-            if (taxa >= taxaIni && taxa <= taxaFin) probTx++;
+            // Arredonda para 4 casas decimais para evitar erros de ponto flutuante em JavaScript
+            const tCheck = Math.round(taxa * 10000) / 10000;
+            const tIniCheck = Math.round(taxaIni * 10000) / 10000;
+            const tFinCheck = Math.round(taxaFin * 10000) / 10000;
+
+            if (tCheck >= tIniCheck && tCheck <= tFinCheck) probTx++;
             if (prazo >= prazoIni && prazo <= prazoFin) probParc++;
 
-            if (taxa >= taxaIni && taxa <= taxaFin && prazo >= prazoIni && prazo <= prazoFin) {
+            if (tCheck >= tIniCheck && tCheck <= tFinCheck && prazo >= prazoIni && prazo <= prazoFin) {
               fatorComissao = Number(rowC[colunaPerfilIdx]) || 0;
               break;
             }
           }
         }
 
-        // Regra idêntica ao VBA para preencher a observação de erro
+        // Preenchimento claro e idêntico ao VBA para a observação
         if (fatorComissao === 0) {
           if (probTx === 0) observacaoComissao = "Abaixo da Taxa Minima";
           else if (probParc === 0) observacaoComissao = "Fora do Prazo";
@@ -151,7 +177,6 @@ function importarProducaoDoDrive() {
         const mes = dataMovimento ? new Date(dataMovimento).getMonth() + 1 : "";
         const valorComissaoReal = valorLiquido * fatorComissao;
 
-        // Estrutura exata das colunas da aba bd_Producao
         const novaLinha = [
           dataMovimento,         // A: Data Movimento
           cpfCliente,            // B: CPF
@@ -188,14 +213,10 @@ function importarProducaoDoDrive() {
 
       if (novasLinhasParaInserir.length > 0) {
         sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
-        Logger.log(`✅ Sucesso absoluto: ${novasLinhasParaInserir.length} contratos gravados com precisão posicional.`);
-      } else {
-        Logger.log(`⚠️ Nenhuma linha nova gravada (verifique se os contratos já existiam).`);
+        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados com mapeamento dinâmico e taxas corrigidas.`);
       }
 
       Drive.Files.remove(arquivoTemp.id);
-      
-      // Move o ficheiro para a pasta de usados
       arquivo.moveTo(pastaUsados);
       arquivosProcessados++;
     }
