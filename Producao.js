@@ -19,7 +19,6 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
       throw new Error("As colunas 'CHAVE J', 'ANO' ou 'MÊS' não foram encontradas.");
     }
 
-    const idxDataMov = headers.indexOf("DATA MOVIMENTO");
     const idxConvenio = headers.indexOf("CONVENIO");
     const idxContrato = headers.indexOf("CONTRATO");
     const idxDataCont = headers.indexOf("DATA CONTRATO");
@@ -30,6 +29,10 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxProduto = headers.indexOf("PRODUTO");
     const idxDesc = headers.indexOf("DESCRIÇÃO DO PRODUTO");
     const idxPagoEm = headers.indexOf("PAGO EM");
+    
+    // MAPEAMENTO DA OBSERVAÇÃO
+    let idxObs = headers.indexOf("OBSERVAÇÃO");
+    if (idxObs === -1) idxObs = headers.indexOf("OBSERVACAO");
 
     // MAPEAMENTO FINANCEIRO BLINDADO
     let idxProducao = headers.indexOf("PRODUÇÃO");
@@ -38,10 +41,9 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
     
-    // CORREÇÃO AQUI: Procura o nome exato da Coluna R
     let idxValorComissao = headers.indexOf("VALOR COMISSÃO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
-    if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR"); // Fallback
+    if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR");
 
     const formatData = (val) => val instanceof Date ? Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy") : (val ? val.toString() : "-");
     const formatNum = (val) => typeof val === 'number' ? val : 0;
@@ -57,20 +59,19 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
 
       if (row[idxChave] === chavePromotor && anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
         producaoLimpa.push({
-          dataMovimento: formatData(row[idxDataMov]),
           convenio: row[idxConvenio] || "-",
           contrato: row[idxContrato] || "-",
-          dataContrato: formatData(row[idxDataCont]),
+          dataContrato: formatData(row[idxDataCont]), // Entra no lugar da Data Mov.
           taxa: row[idxTaxa] || "-",
-          parcela: formatNum(row[idxParcela]),
+          prazo: formatNum(row[idxParcela]), // Alterado de parcela para prazo
           restricao: row[idxRestricao] || "-",
           grupo: row[idxGrupo] || "-",
           produto: row[idxProduto] || "-",
           descricao: row[idxDesc] || "-",
-          
           producao: formatNum(row[idxProducao]),
           valorBruto: formatNum(row[idxValorBruto]),
-          comissao: formatNum(row[idxValorComissao]), // Puxa o dinheiro da comissão
+          comissao: formatNum(row[idxValorComissao]),
+          observacao: (idxObs !== -1 ? row[idxObs] : "") || "-", // Novo campo de Observação
           pagoEm: formatData(row[idxPagoEm])
         });
       }
