@@ -1,78 +1,74 @@
 Option Explicit
 
-Sub ColocarValoresComissao(Nm, Dc, Tx, Pr)
+Sub ColocarValoresComissao(nm As String, Dc As String, Tx As Double, Pr As Integer)
     'On Error GoTo Erro
-    Dim Tx1, Tx2, Parc, Parc1, Parc2            As Double
-    Dim Np1, Dp1                                As String
-    Dim Enc                                     As Boolean
-    Dim ProbTx, ProbParc                        As Variant
-    Dim TxBusca                                 As String
+    Dim Tx1         As Double, Tx2          As Double, Parc As Double, Parc1    As Double, Parc2    As Double
+    Dim Np1         As String, Dp1          As String, Laux As Long, L          As Long, C          As Long
+    Dim Enc         As Boolean, TxBusca     As String
+    Dim ProbTx      As Integer, ProbParc    As Integer
+    
     Laux = 2
     'Encontrar os Dados para Comissão
     Tx = CDbl(Replace(Tx, ".", ","))
     Parc = Pr
-    Laux = 2
-    Enc = False
-    Vlenc(12) = Empty
-    PontosParaCorrecao
-    While Enc = False
-        Np1 = P01.Cells(Laux, "A")
-        Dp1 = P01.Cells(Laux, "B")
-        Tx1 = Round(P01.Cells(Laux, "C") * 100, 4)
-        Tx2 = Round(P01.Cells(Laux, "D") * 100, 4)
-        Parc1 = P01.Cells(Laux, "E")
-        Parc2 = P01.Cells(Laux, "F")
+    Call PontosParaCorrecao(nm, Dc, Tx, Pr)
+    For L = 2 To UBound(tb_Comissao, 1)
+        Np1 = tb_Comissao(L, 1)
+        Dp1 = tb_Comissao(L, 2)
+        Tx1 = Round(tb_Comissao(L, 3) * 100, 4)
+        Tx2 = Round(tb_Comissao(L, 4) * 100, 4)
+        Parc1 = tb_Comissao(L, 5)
+        Parc2 = tb_Comissao(L, 6)
+
+        Vlenc(12) = Empty
+        
+        Np1 = tb_Comissao(L, 1)
+        Dp1 = tb_Comissao(L, 2)
+        Tx1 = Round(tb_Comissao(L, 3) * 100, 4)
+        Tx2 = Round(tb_Comissao(L, 4) * 100, 4)
+        Parc1 = tb_Comissao(L, 5)
+        Parc2 = tb_Comissao(L, 6)
         If Verificar = True Then
-            Stop
-            If Laux = 10 Then Stop
-        End If
-        If Nm = Np1 And Dc = Dp1 And Tx >= Tx1 And Tx <= Tx2 And Parc >= Parc1 And Parc <= Parc2 Then
-            If Trim(UCase(P01.Cells(1, "G"))) = UCase(Vlenc(6)) Then
-                Vlenc(5) = P01.Cells(Laux, "G")
-              ElseIf Trim(UCase(P01.Cells(1, "H"))) = UCase(Vlenc(6)) Then
-                Vlenc(5) = P01.Cells(Laux, "H")
-              ElseIf Trim(UCase(P01.Cells(1, "I"))) = UCase(Vlenc(6)) Then
-                Vlenc(5) = P01.Cells(Laux, "I")
-              ElseIf Trim(UCase(P01.Cells(1, "J"))) = UCase(Vlenc(6)) Then
-                Vlenc(5) = P01.Cells(Laux, "J")
+            If L = LinhaVerificar Then
+                Stop
+                Verificar = False
             End If
-            Enc = True
-          Else
-            Laux = Laux + 1
         End If
-        If P01.Cells(Laux, "I") = "" Then
-            Dim Averif  As Long
-            Dim QtVerif As Long
-            Dim Lverif  As Long
-            
-            ProbTx = 0
-            ProbParc = 0
-            Lverif = P01.Cells(P01.Rows.Count, "A").End(xlUp).Row
-            For Averif = 2 To Lverif
-                If P01.Cells(Averif, "A") = Nm And P01.Cells(Averif, "B") = Dc And P01.Cells(Averif, "C") <= Tx / 100 Then
-                    ProbTx = ProbTx + 1
-                End If
-            Next Averif
-            
-            For Averif = 2 To Lverif
-                If P01.Cells(Averif, "A") = Nm And P01.Cells(Averif, "B") = Dc And P01.Cells(Averif, "E") <= Parc Then
-                    ProbParc = ProbParc + 1
-                End If
-            Next Averif
-            
+        If nm = Np1 And Dc = Dp1 And Tx >= Tx1 And Tx <= Tx2 And Parc >= Parc1 And Parc <= Parc2 Then
+            If Trim(UCase(tb_Comissao(1, 7))) = UCase(Vlenc(6)) Then
+                Vlenc(5) = tb_Comissao(L, 7)
+                Exit For
+              ElseIf Trim(UCase(tb_Comissao(1, 8))) = UCase(Vlenc(6)) Then
+                Vlenc(5) = tb_Comissao(L, 8)
+                Exit For
+              ElseIf Trim(UCase(tb_Comissao(1, 9))) = UCase(Vlenc(6)) Then
+                Vlenc(5) = tb_Comissao(L, 9)
+                Exit For
+              ElseIf Trim(UCase(tb_Comissao(1, 10))) = UCase(Vlenc(6)) Then
+                Vlenc(5) = tb_Comissao(L, 10)
+                Exit For
+            End If
+            If tb_Comissao(L, 1) = nm And tb_Comissao(L, 2) = Dc And tb_Comissao(L, 3) <= Tx / 100 Then ProbTx = ProbTx + 1
+            If tb_Comissao(L, 1) = nm And tb_Comissao(L, 2) = Dc And tb_Comissao(L, 5) <= Parc Then ProbParc = ProbParc + 1
+            Exit For
+          ElseIf L = UBound(tb_Comissao, 1) Then
             If ProbTx = 0 Then
                 Verificar = True
-                Vlenc(12) = "Problema na Taxa"
+                Vlenc(12) = "Abaixo da Taxa Minima"
             End If
             If ProbParc = 0 Then
                 Verificar = True
-                Vlenc(12) = "Problema na Parcela"
+                Vlenc(12) = "Fora do Prazo"
             End If
             Vlenc(5) = 0
-            Enc = True
+          Else
+            If tb_Comissao(L, 1) = nm And tb_Comissao(L, 2) = Dc And tb_Comissao(L, 3) <= Tx / 100 Then ProbTx = ProbTx + 1
+            If tb_Comissao(L, 1) = nm And tb_Comissao(L, 2) = Dc And tb_Comissao(L, 5) <= Parc Then ProbParc = ProbParc + 1
         End If
-    Wend
+    Next L
+    
     Exit Sub
 Erro:
     Call Notificar("Houve um erro no Fechamento Mensal", "R")
 End Sub
+
