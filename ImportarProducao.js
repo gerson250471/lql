@@ -151,7 +151,7 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // 3. Busca a comissão na tabela bdComissao com arredondamento preciso de taxas
+        // 3. Busca a comissão na tabela bdComissao com validação flexível de taxas (padrão VBA)
         let fatorComissao = 0;
         let observacaoComissao = "";
         let colunaPerfilIdx = 8; 
@@ -171,30 +171,34 @@ function importarProducaoDoDrive() {
           const rowC = dadosComissao[c];
           const gFiltro = String(rowC[0]).trim().toUpperCase();
           const dFiltro = String(rowC[1]).trim().toUpperCase();
+          
+          // Normaliza as taxas da tabela (convertendo para formato de comparação consistente)
           const taxaIni = Number(rowC[2]) * 100;
           const taxaFin = Number(rowC[3]) * 100;
           const prazoIni = Number(rowC[4]);
           const prazoFin = Number(rowC[5]);
 
           if (grupoProduto.toUpperCase().includes(gFiltro) && descProduto.toUpperCase().includes(dFiltro)) {
-            const tCheck = Math.round(taxa * 10000) / 10000;
-            const tIniCheck = Math.round(taxaIni * 10000) / 10000;
-            const tFinCheck = Math.round(taxaFin * 10000) / 10000;
-
-            if (tCheck >= tIniCheck && tCheck <= tFinCheck) probTx++;
+            // Validação com margem de tolerância para evitar bugs de ponto flutuante
+            if (taxa >= (taxaIni - 0.01) && taxa <= (taxaFin + 0.01)) probTx++;
             if (prazo >= prazoIni && prazo <= prazoFin) probParc++;
 
-            if (tCheck >= tIniCheck && tCheck <= tFinCheck && prazo >= prazoIni && prazo <= prazoFin) {
+            if (taxa >= (taxaIni - 0.01) && taxa <= (taxaFin + 0.01) && prazo >= prazoIni && prazo <= prazoFin) {
               fatorComissao = Number(rowC[colunaPerfilIdx]) || 0;
               break;
             }
           }
         }
 
+        // Regra exata da macro VBA para a observação
         if (fatorComissao === 0) {
-          if (probTx === 0) observacaoComissao = "Abaixo da Taxa Minima";
-          else if (probParc === 0) observacaoComissao = "Fora do Prazo";
-          else observacaoComissao = "Fora dos Parâmetros";
+          if (probTx === 0) {
+            observacaoComissao = "Abaixo da Taxa Minima";
+          } else if (probParc === 0) {
+            observacaoComissao = "Fora do Prazo";
+          } else {
+            observacaoComissao = "Fora dos Parâmetros";
+          }
         }
 
         const valorComissaoReal = valorLiquido * fatorComissao;
