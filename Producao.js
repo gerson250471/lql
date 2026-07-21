@@ -23,7 +23,12 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxContrato = headers.indexOf("CONTRATO");
     const idxDataCont = headers.indexOf("DATA CONTRATO");
     const idxTaxa = headers.indexOf("TAXA");
-    const idxParcela = headers.indexOf("PARCELA");
+    
+    // CORREÇÃO: Procura por "PARCELAS", "PARCELA" ou "PRAZO"
+    let idxParcela = headers.indexOf("PARCELAS");
+    if (idxParcela === -1) idxParcela = headers.indexOf("PARCELA");
+    if (idxParcela === -1) idxParcela = headers.indexOf("PRAZO");
+
     const idxRestricao = headers.indexOf("RESTRICAO_RCC");
     const idxGrupo = headers.indexOf("GRUPO");
     const idxProduto = headers.indexOf("PRODUTO");
@@ -61,9 +66,9 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
         producaoLimpa.push({
           convenio: row[idxConvenio] || "-",
           contrato: row[idxContrato] || "-",
-          dataContrato: formatData(row[idxDataCont]), // Entra no lugar da Data Mov.
+          dataContrato: formatData(row[idxDataCont]),
           taxa: row[idxTaxa] || "-",
-          prazo: formatNum(row[idxParcela]), // Alterado de parcela para prazo
+          prazo: idxParcela !== -1 ? (Number(row[idxParcela]) || 0) : 0, // Extrai o número do prazo limpo
           restricao: row[idxRestricao] || "-",
           grupo: row[idxGrupo] || "-",
           produto: row[idxProduto] || "-",
@@ -71,7 +76,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
           producao: formatNum(row[idxProducao]),
           valorBruto: formatNum(row[idxValorBruto]),
           comissao: formatNum(row[idxValorComissao]),
-          observacao: (idxObs !== -1 ? row[idxObs] : "") || "-", // Novo campo de Observação
+          observacao: (idxObs !== -1 ? row[idxObs] : "") || "-",
           pagoEm: formatData(row[idxPagoEm])
         });
       }
