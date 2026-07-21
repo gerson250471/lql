@@ -58,10 +58,14 @@ function importarProducaoDoDrive() {
         return -1;
       };
 
+      // Mapeamento dinâmico com fallback estrito por índice (equivalente à coluna 8 do VBA)
       const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV", "DATA"]);
       const idxChaveJ = getCol(["CHAVEJ", "CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
       const idxContrato = getCol(["NÚMERO PROPOSTA", "NUMERO PROPOSTA", "CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
-      const idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO"]);
+      
+      // Procura a coluna de data de contrato por nome ou assume a coluna padrão 7/8 do layout original
+      let idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO", "DATA_PROPOSTA"]);
+      
       const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
       const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
       const idxPrazo = getCol(["PRAZO", "PARCELA", "PARCELAS"]);
@@ -109,7 +113,9 @@ function importarProducaoDoDrive() {
         const ano = resDataMov.ano;
         const mes = resDataMov.mes;
 
-        const resDataCont = processarDataEValores(idxDataCont !== -1 ? linha[idxDataCont] : "");
+       // Fallback robusto: se o índice dinâmico não achar, pega a coluna exata do layout original
+        const brutoDataContrato = idxDataCont !== -1 ? linha[idxDataCont] : (linha[7] || linha[5]);
+        const resDataCont = processarDataEValores(brutoDataContrato);
         const dataContrato = resDataCont.dataFormatada;
 
         // 1. Identifica Promotor e Perfil na aba Promotores
