@@ -24,7 +24,7 @@ function importarProducaoDoDrive() {
     const dadosPromotores = ss.getSheetByName("Promotores").getDataRange().getValues();
     const dadosComissao = ss.getSheetByName("bdComissao").getDataRange().getValues();
     const dadosProdutos = ss.getSheetByName("Produto").getDataRange().getValues();
-    const dadosConvenio = ss.getSheetByName("Convenio").getDataRange().getValues(); // <-- NOVA ABA CARREGADA
+    const dadosConvenio = ss.getSheetByName("Convenio").getDataRange().getValues(); // <-- ABA CONVÊNIO
     
     const sheetProd = ss.getSheetByName("bd_Producao");
     const dadosProducaoAtual = sheetProd.getLastRow() > 1 ? sheetProd.getRange(2, 1, sheetProd.getLastRow() - 1, sheetProd.getLastColumn()).getValues() : [];
@@ -49,7 +49,7 @@ function importarProducaoDoDrive() {
         continue;
       }
 
-      // MAPEAMENTO DINÂMICO POR NOME DE CABEÇALHO
+      // MAPEAMENTO DINÂMICO POR NOME DE CABEÇALHO (Fora do Loop)
       const headers = linhasBrutas[0].map(h => h.toString().trim().toUpperCase());
       
       const getCol = (nomesPossiveis) => {
@@ -64,9 +64,9 @@ function importarProducaoDoDrive() {
       const idxChaveJ = getCol(["CHAVEJ", "CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
       const idxContrato = getCol(["NÚMERO PROPOSTA", "NUMERO PROPOSTA", "CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
       let idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO", "DATA_PROPOSTA"]);
-      const codProduto = idxProduto !== -1 ? linha[idxProduto] : (linha[4] || "");
-      const convenio = idxConvenio !== -1 ? linha[idxConvenio] : (linha[6] || ""); // Fallback para a coluna 6
-      const idxPrazo = getCol(["PARCELAS", "PARCELA", "PRAZO"]); // Prioridade corrigida
+      const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
+      const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
+      const idxPrazo = getCol(["PARCELAS", "PARCELA", "PRAZO"]);
       const idxBruto = getCol(["VALOR FINANCIADO", "VALOR BRUTO", "BRUTO"]);
       const idxLiquido = getCol(["VALOR FINANCIADO LÍQUIDO", "VALOR FINANCIADO LIQUIDO", "VALOR LIQUIDO", "LIQUIDO", "VALOR"]);
       const idxTaxa = getCol(["TAXA MENSAL DE JUROS", "TAXA"]);
@@ -76,6 +76,7 @@ function importarProducaoDoDrive() {
 
       const novasLinhasParaInserir = [];
 
+      // LOOP LINHA A LINHA
       for (let i = 1; i < linhasBrutas.length; i++) {
         const linha = linhasBrutas[i];
         
@@ -94,16 +95,10 @@ function importarProducaoDoDrive() {
               d = new Date(partes[2], partes[1] - 1, partes[0]);
             }
           }
-          
           if (isNaN(d.getTime())) {
             return { dataFormatada: val, ano: "", mes: "" };
           }
-
-          return {
-            dataFormatada: d,
-            ano: d.getFullYear(),
-            mes: d.getMonth() + 1
-          };
+          return { dataFormatada: d, ano: d.getFullYear(), mes: d.getMonth() + 1 };
         };
 
         const resDataMov = processarDataEValores(idxDataMov !== -1 ? linha[idxDataMov] : "");
@@ -127,8 +122,9 @@ function importarProducaoDoDrive() {
           }
         }
 
-        const codProduto = idxProduto !== -1 ? linha[idxProduto] : "";
-        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : "";
+        // Variáveis de escopo da linha (Agora sim no lugar certo!)
+        const codProduto = idxProduto !== -1 ? linha[idxProduto] : (linha[4] || "");
+        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : (linha[6] || ""); // Fallback seguro
         const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : 0;
         const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : 0;
         const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : 0;
@@ -137,10 +133,9 @@ function importarProducaoDoDrive() {
         const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : "";
         const restricaoRcc = idxRestricao !== -1 ? (linha[idxRestricao] || "Não") : "Não";
 
-        // 2. Resolve o Convênio (Lê a nova aba para descobrir se é SP, INSS, etc)
+        // 2. Resolve o Convênio (Busca Blindada - Texto e Número)
         let descConvenio = "";
         for (let cv = 1; cv < dadosConvenio.length; cv++) {
-          // Compara como Texto E como Número para não falhar na formatação
           if (String(dadosConvenio[cv][0]).trim() === String(convenio).trim() || 
               Number(dadosConvenio[cv][0]) === Number(convenio)) {
             descConvenio = String(dadosConvenio[cv][1]).trim().toUpperCase();
@@ -159,16 +154,16 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // 💥 O PULO DO GATO: Concatena o Convênio ao Grupo de Produto se for Consignado!
+        // 💥 O PULO DO GATO: Concatena o Convênio
         if (grupoProduto === "CONSIGNADO" && descConvenio !== "") {
-          grupoProduto = grupoProduto + " " + descConvenio; // Fica "CONSIGNADO SP" ou "CONSIGNADO INSS"
+          grupoProduto = grupoProduto + " " + descConvenio;
         }
 
         // ====================================================================
         // 🚨 ARMADILHA DE DEBUG - VALIDAÇÃO DA JUNÇÃO DO CONVÊNIO 🚨
         if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
           
-          let debugCodigoConvenioBruto = convenio; // O que o script leu do Excel
+          let debugCodigoConvenioBruto = convenio;
           let debugConvenioLido = descConvenio;
           let debugGrupoFinal = grupoProduto;
           
