@@ -7,8 +7,22 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const sheet = ss.getSheetByName("bd_Producao");
     if (!sheet) throw new Error("Aba 'bd_Producao' não encontrada.");
 
-    const data = sheet.getDataRange().getValues();
-    if (data.length <= 1) return { sucesso: true, dados: [] };
+    const formatData = (val) => {
+      if (!val) return "-";
+      // Se já for um objeto de data do JavaScript
+      if (val instanceof Date) {
+        return Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy");
+      }
+      // Se for uma string no formato americano (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss...)
+      let strVal = String(val).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) {
+        let partes = strVal.split("T")[0].split("-");
+        if (partes.length === 3) {
+          return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+      }
+      return strVal;
+    };
 
     const headers = data[0].map(h => h.toString().trim().toUpperCase());
     const idxChave = headers.indexOf("CHAVE J");
@@ -50,7 +64,6 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR");
 
-    const formatData = (val) => val instanceof Date ? Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy") : (val ? val.toString() : "-");
     const formatNum = (val) => typeof val === 'number' ? val : 0;
 
     const producaoLimpa = [];
