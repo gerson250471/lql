@@ -152,7 +152,7 @@ function importarProducaoDoDrive() {
         }
 
         // ====================================================================
-        // 🚨 NOVA ARMADILHA DE DEBUG - FORA DOS PARÂMETROS 🚨
+        // 🚨 NOVA ARMADILHA DE DEBUG - FORA DOS PARÂMETROS PARA CORRIGIR 🚨
         if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
           
           let debugGrupoProduto = grupoProduto;
