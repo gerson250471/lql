@@ -151,9 +151,11 @@ function importarProducaoDoDrive() {
           }
         }
 
-        // 3. Busca a comissão na tabela bdComissao com validação flexível de taxas (padrão VBA)
+        // 3. Busca a comissão na tabela bdComissao com Mapeamento Exato e Taxa Inteligente (Padrão VBA)
         let fatorComissao = 0;
-        let observacaoComissao = "";
+        let observacaoComissao = "Fora dos Parâmetros"; // Fallback padrão
+        let matchEncontrado = false;
+        
         let colunaPerfilIdx = 8; 
         const cabecalhoComissao = dadosComissao[0];
         
@@ -164,41 +166,49 @@ function importarProducaoDoDrive() {
           }
         }
 
-        let probTx = 0;
-        let probParc = 0;
-
         for (let c = 1; c < dadosComissao.length; c++) {
           const rowC = dadosComissao[c];
           const gFiltro = String(rowC[0]).trim().toUpperCase();
           const dFiltro = String(rowC[1]).trim().toUpperCase();
-          
-          // Normaliza as taxas da tabela (convertendo para formato de comparação consistente)
-          const taxaIni = Number(rowC[2]) * 100;
-          const taxaFin = Number(rowC[3]) * 100;
-          const prazoIni = Number(rowC[4]);
-          const prazoFin = Number(rowC[5]);
 
-          if (grupoProduto.toUpperCase().includes(gFiltro) && descProduto.toUpperCase().includes(dFiltro)) {
-            // Validação com margem de tolerância para evitar bugs de ponto flutuante
-            if (taxa >= (taxaIni - 0.01) && taxa <= (taxaFin + 0.01)) probTx++;
-            if (prazo >= prazoIni && prazo <= prazoFin) probParc++;
+          // PESQUISA EXATA: Garante que o produto "CRÉDITO 13º" não cruze com a regra do "CRÉDITO SALÁRIO"
+          if (grupoProduto.trim().toUpperCase() === gFiltro && descProduto.trim().toUpperCase() === dFiltro) {
+            
+            // NORMALIZAÇÃO INTELIGENTE DE TAXA (Resolve o bug do Google Sheets vs VBA)
+            let rawIni = Number(rowC[2]) || 0;
+            let rawFin = Number(rowC[3]) || 0;
+            
+            // Se o valor for < 1 (ex: 0.0164), é percentagem do Sheets, multiplica-se por 100.
+            // Se for > 1 (ex: 1.64), o utilizador digitou o número direto, mantém-se.
+            let taxaIni = (rawIni > 0 && rawIni <= 1) ? rawIni * 100 : rawIni;
+            let taxaFin = (rawFin > 0 && rawFin <= 1) ? rawFin * 100 : rawFin;
+            
+            const prazoIni = Number(rowC[4]) || 0;
+            const prazoFin = Number(rowC[5]) || 0;
 
-            if (taxa >= (taxaIni - 0.01) && taxa <= (taxaFin + 0.01) && prazo >= prazoIni && prazo <= prazoFin) {
+            // Arredondamento para evitar falhas de ponto flutuante na comparação (ex: 1.82000000001)
+            const tCheck = Math.round(taxa * 10000) / 10000;
+            const tIniCheck = Math.round(taxaIni * 10000) / 10000;
+            const tFinCheck = Math.round(taxaFin * 10000) / 10000;
+
+            const matchTaxa = (tCheck >= tIniCheck - 0.001 && tCheck <= tFinCheck + 0.001);
+            const matchPrazo = (prazo >= prazoIni && prazo <= prazoFin);
+
+            if (matchTaxa && matchPrazo) {
               fatorComissao = Number(rowC[colunaPerfilIdx]) || 0;
-              break;
+              matchEncontrado = true;
+              observacaoComissao = ""; // Limpa a observação pois validou com sucesso
+              break; // Sai do loop, encontrou a comissão perfeita
+            } else if (!matchTaxa) {
+              observacaoComissao = "Abaixo da Taxa Minima"; // Memoriza a falha igual ao loop do VBA
+            } else if (!matchPrazo) {
+              observacaoComissao = "Fora do Prazo"; // Memoriza a falha de prazo
             }
           }
         }
 
-        // Regra exata da macro VBA para a observação
-        if (fatorComissao === 0) {
-          if (probTx === 0) {
-            observacaoComissao = "Abaixo da Taxa Minima";
-          } else if (probParc === 0) {
-            observacaoComissao = "Fora do Prazo";
-          } else {
-            observacaoComissao = "Fora dos Parâmetros";
-          }
+        if (fatorComissao === 0 && observacaoComissao === "") {
+             observacaoComissao = "Fora dos Parâmetros";
         }
 
         const valorComissaoReal = valorLiquido * fatorComissao;
