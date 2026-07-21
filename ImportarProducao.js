@@ -1,6 +1,6 @@
 /**
  * Importação otimizada com mapeamento dinâmico de cabeçalhos,
- * correção exata de datas e cruzamento preciso de taxas e prazos.
+ * integração da aba Convênio, correção exata de datas e cruzamento de taxas.
  */
 function importarProducaoDoDrive() {
   try {
@@ -20,9 +20,11 @@ function importarProducaoDoDrive() {
     let arquivosProcessados = 0;
     const ss = getDatabaseConnection();
     
+    // Carrega todas as tabelas de apoio para a memória
     const dadosPromotores = ss.getSheetByName("Promotores").getDataRange().getValues();
     const dadosComissao = ss.getSheetByName("bdComissao").getDataRange().getValues();
     const dadosProdutos = ss.getSheetByName("Produto").getDataRange().getValues();
+    const dadosConvenio = ss.getSheetByName("Convenio").getDataRange().getValues(); // <-- NOVA ABA CARREGADA
     
     const sheetProd = ss.getSheetByName("bd_Producao");
     const dadosProducaoAtual = sheetProd.getLastRow() > 1 ? sheetProd.getRange(2, 1, sheetProd.getLastRow() - 1, sheetProd.getLastColumn()).getValues() : [];
@@ -58,17 +60,13 @@ function importarProducaoDoDrive() {
         return -1;
       };
 
-      // Mapeamento dinâmico com fallback estrito por índice (equivalente à coluna 8 do VBA)
       const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV", "DATA"]);
       const idxChaveJ = getCol(["CHAVEJ", "CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
       const idxContrato = getCol(["NÚMERO PROPOSTA", "NUMERO PROPOSTA", "CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
-      
-      // Procura a coluna de data de contrato por nome ou assume a coluna padrão 7/8 do layout original
       let idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO", "DATA_PROPOSTA"]);
-      
       const idxProduto = getCol(["CÓDIGO PRODUTO", "CODIGO PRODUTO", "PRODUTO", "COD PRODUTO"]);
       const idxConvenio = getCol(["CÓDIGO CONVÊNIO", "CODIGO CONVENIO", "CONVENIO", "CONVÊNIO"]);
-      const idxPrazo = getCol(["PARCELAS", "PARCELA", "PRAZO"]);
+      const idxPrazo = getCol(["PARCELAS", "PARCELA", "PRAZO"]); // Prioridade corrigida
       const idxBruto = getCol(["VALOR FINANCIADO", "VALOR BRUTO", "BRUTO"]);
       const idxLiquido = getCol(["VALOR FINANCIADO LÍQUIDO", "VALOR FINANCIADO LIQUIDO", "VALOR LIQUIDO", "LIQUIDO", "VALOR"]);
       const idxTaxa = getCol(["TAXA MENSAL DE JUROS", "TAXA"]);
@@ -86,7 +84,7 @@ function importarProducaoDoDrive() {
 
         const chaveJ = idxChaveJ !== -1 ? String(linha[idxChaveJ] || "").trim() : "";
 
-        // Conversor seguro de datas, extraindo ano e mês sem duplicidade de variáveis
+        // Conversor seguro de datas
         const processarDataEValores = (val) => {
           if (!val) return { dataFormatada: "", ano: "", mes: "" };
           let d = new Date(val);
@@ -113,12 +111,11 @@ function importarProducaoDoDrive() {
         const ano = resDataMov.ano;
         const mes = resDataMov.mes;
 
-       // Fallback robusto: se o índice dinâmico não achar, pega a coluna exata do layout original
         const brutoDataContrato = idxDataCont !== -1 ? linha[idxDataCont] : (linha[7] || linha[5]);
         const resDataCont = processarDataEValores(brutoDataContrato);
         const dataContrato = resDataCont.dataFormatada;
 
-        // 1. Identifica Promotor e Perfil na aba Promotores
+        // 1. Identifica Promotor e Perfil
         let nomePromotor = "CADASTRO DESCONHECIDO";
         let perfilPromotor = "BLACK";
         
@@ -140,37 +137,34 @@ function importarProducaoDoDrive() {
         const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : "";
         const restricaoRcc = idxRestricao !== -1 ? (linha[idxRestricao] || "Não") : "Não";
 
-        // 2. Resolve a descrição do produto baseado na aba Produto
-        let grupoProduto = "CONSIGNADO INSS";
-        let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
-        for (let pr = 1; pr < dadosProdutos.length; pr++) {
-          if (Number(dadosProdutos[pr][0]) === Number(codProduto)) {
-            grupoProduto = dadosProdutos[pr][1];
-            descProduto = dadosProdutos[pr][2];
+        // 2. Resolve o Convênio (Lê a nova aba para descobrir se é SP, INSS, etc)
+        let descConvenio = "";
+        for (let cv = 1; cv < dadosConvenio.length; cv++) {
+          if (String(dadosConvenio[cv][0]).trim() === String(convenio).trim()) {
+            descConvenio = String(dadosConvenio[cv][1]).trim().toUpperCase();
             break;
           }
         }
 
-        // ====================================================================
-        // 🚨 NOVA ARMADILHA DE DEBUG - FORA DOS PARÂMETROS PARA CORRIGIR 🚨
-        if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
-          
-          let debugGrupoProduto = grupoProduto;
-          let debugDescProduto = descProduto;
-          let debugTaxa = taxa;
-          let debugPrazo = prazo;
-          
-          Logger.log(`🛑 PARADA DEBUG: ROBERTA | Produto: 2881 | Valor: 550`);
-          Logger.log(`Procurando por -> Grupo: "${debugGrupoProduto}" | Descrição: "${debugDescProduto}"`);
-          
-          // 👉 COLOQUE O NOVO PONTO VERMELHO (BREAKPOINT) NA LINHA ABAIXO 👈
-          let inspecionarVariaveis = true; 
+        // 3. Resolve a descrição do produto baseado na aba Produto
+        let grupoProduto = "CONSIGNADO INSS";
+        let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
+        for (let pr = 1; pr < dadosProdutos.length; pr++) {
+          if (String(dadosProdutos[pr][0]).trim() === String(codProduto).trim()) {
+            grupoProduto = String(dadosProdutos[pr][1]).trim().toUpperCase();
+            descProduto = String(dadosProdutos[pr][2]).trim().toUpperCase();
+            break;
+          }
         }
-        // ====================================================================
 
-        // 3. Busca a comissão na tabela bdComissao com Mapeamento Exato e Taxa Inteligente (Padrão VBA)
+        // 💥 O PULO DO GATO: Concatena o Convênio ao Grupo de Produto se for Consignado!
+        if (grupoProduto === "CONSIGNADO" && descConvenio !== "") {
+          grupoProduto = grupoProduto + " " + descConvenio; // Fica "CONSIGNADO SP" ou "CONSIGNADO INSS"
+        }
+
+        // 4. Busca a comissão na tabela bdComissao com Mapeamento Exato
         let fatorComissao = 0;
-        let observacaoComissao = "Fora dos Parâmetros"; // Fallback padrão
+        let observacaoComissao = "Fora dos Parâmetros";
         let matchEncontrado = false;
         
         let colunaPerfilIdx = 8; 
@@ -183,27 +177,25 @@ function importarProducaoDoDrive() {
           }
         }
 
+        let probTx = 0;
+        let probParc = 0;
+
         for (let c = 1; c < dadosComissao.length; c++) {
           const rowC = dadosComissao[c];
           const gFiltro = String(rowC[0]).trim().toUpperCase();
           const dFiltro = String(rowC[1]).trim().toUpperCase();
 
-          // PESQUISA EXATA: Garante que o produto "CRÉDITO 13º" não cruze com a regra do "CRÉDITO SALÁRIO"
-          if (grupoProduto.trim().toUpperCase() === gFiltro && descProduto.trim().toUpperCase() === dFiltro) {
+          if (grupoProduto.toUpperCase() === gFiltro && descProduto.toUpperCase() === dFiltro) {
             
-            // NORMALIZAÇÃO INTELIGENTE DE TAXA (Resolve o bug do Google Sheets vs VBA)
             let rawIni = Number(rowC[2]) || 0;
             let rawFin = Number(rowC[3]) || 0;
             
-            // Se o valor for < 1 (ex: 0.0164), é percentagem do Sheets, multiplica-se por 100.
-            // Se for > 1 (ex: 1.64), o utilizador digitou o número direto, mantém-se.
             let taxaIni = (rawIni > 0 && rawIni <= 1) ? rawIni * 100 : rawIni;
             let taxaFin = (rawFin > 0 && rawFin <= 1) ? rawFin * 100 : rawFin;
             
             const prazoIni = Number(rowC[4]) || 0;
             const prazoFin = Number(rowC[5]) || 0;
 
-            // Arredondamento para evitar falhas de ponto flutuante na comparação (ex: 1.82000000001)
             const tCheck = Math.round(taxa * 10000) / 10000;
             const tIniCheck = Math.round(taxaIni * 10000) / 10000;
             const tFinCheck = Math.round(taxaFin * 10000) / 10000;
@@ -214,12 +206,12 @@ function importarProducaoDoDrive() {
             if (matchTaxa && matchPrazo) {
               fatorComissao = Number(rowC[colunaPerfilIdx]) || 0;
               matchEncontrado = true;
-              observacaoComissao = ""; // Limpa a observação pois validou com sucesso
-              break; // Sai do loop, encontrou a comissão perfeita
+              observacaoComissao = ""; 
+              break; 
             } else if (!matchTaxa) {
-              observacaoComissao = "Abaixo da Taxa Minima"; // Memoriza a falha igual ao loop do VBA
+              observacaoComissao = "Abaixo da Taxa Minima";
             } else if (!matchPrazo) {
-              observacaoComissao = "Fora do Prazo"; // Memoriza a falha de prazo
+              observacaoComissao = "Fora do Prazo";
             }
           }
         }
@@ -231,33 +223,33 @@ function importarProducaoDoDrive() {
         const valorComissaoReal = valorLiquido * fatorComissao;
 
         const novaLinha = [
-          dataMovimento,         // A: Data Movimento
-          cpfCliente,            // B: CPF
-          "BANCO DO BRASIL",     // C: Banco
-          convenio,              // D: Convênio
-          numContrato,           // E: Contrato
-          dataContrato,          // F: Data Contrato
-          taxa,                  // G: Taxa
-          prazo,                 // H: Parcela
-          chaveJ,                // I: Chave J
-          "",                    // J: Comissão PF
-          restricaoRcc,          // K: Restrição RCC
-          ano,                   // L: Ano
-          mes,                   // M: Mês
-          nomePromotor,          // N: Promotor
-          codProduto,            // O: Produto
-          fatorComissao,         // P: Comissão (%)
-          perfilPromotor,        // Q: Perfil
-          valorComissaoReal,     // R: Valor (Comissão em R$)
-          descProduto,           // S: Descrição
-          valorBruto,            // T: Valor Bruto
-          valorLiquido,          // U: Valor Líquido
-          valorLiquido,          // V: Valor Considerado / Produção
-          "",                    // W: Agência
-          "",                    // X: Empresa
-          grupoProduto,          // Y: Desc. Convênio
-          observacaoComissao,    // Z: Observação
-          ""                     // AA: Pago Em
+          dataMovimento,         // A
+          cpfCliente,            // B
+          "BANCO DO BRASIL",     // C
+          convenio,              // D
+          numContrato,           // E
+          dataContrato,          // F
+          taxa,                  // G
+          prazo,                 // H
+          chaveJ,                // I
+          "",                    // J
+          restricaoRcc,          // K
+          ano,                   // L
+          mes,                   // M
+          nomePromotor,          // N
+          codProduto,            // O
+          fatorComissao,         // P
+          perfilPromotor,        // Q
+          valorComissaoReal,     // R
+          descProduto,           // S
+          valorBruto,            // T
+          valorLiquido,          // U
+          valorLiquido,          // V
+          "",                    // W
+          "",                    // X
+          grupoProduto,          // Y
+          observacaoComissao,    // Z
+          ""                     // AA
         ];
 
         novasLinhasParaInserir.push(novaLinha);
@@ -266,7 +258,7 @@ function importarProducaoDoDrive() {
 
       if (novasLinhasParaInserir.length > 0) {
         sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
-        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados com mapeamento dinâmico e taxas corrigidas.`);
+        Logger.log(`✅ Sucesso: ${novasLinhasParaInserir.length} contratos gravados.`);
       }
 
       Drive.Files.remove(arquivoTemp.id);
