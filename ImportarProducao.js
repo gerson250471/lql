@@ -176,7 +176,7 @@ function importarProducaoDoDrive() {
         // }
         // ====================================================================
 
-        // 4. Busca a comissão na tabela bdComissao com Mapeamento Exato
+        // 4. Busca a comissão na tabela bdComissao com Mapeamento Exato e Normalizado
         let fatorComissao = 0;
         let observacaoComissao = "Fora dos Parâmetros";
         let matchEncontrado = false;
@@ -199,7 +199,14 @@ function importarProducaoDoDrive() {
           const gFiltro = String(rowC[0]).trim().toUpperCase();
           const dFiltro = String(rowC[1]).trim().toUpperCase();
 
-          if (grupoProduto.toUpperCase() === gFiltro && descProduto.toUpperCase() === dFiltro) {
+          // 🛡️ O ÚLTIMO PULO DO GATO: Normalização de Texto
+          // Remove as siglas "INSS" e "SP" das descrições apenas para a comparação.
+          // Como o 'grupoProduto' já exige o convênio correto (ex: CONSIGNADO INSS === CONSIGNADO INSS),
+          // podemos ignorar a sigla na descrição para garantir o "match" perfeito.
+          let descLimpa = descProduto.toUpperCase().replace(/\bINSS\b/g, "").replace(/\bSP\b/g, "").replace(/\s+/g, " ").trim();
+          let filtroLimpo = dFiltro.replace(/\bINSS\b/g, "").replace(/\bSP\b/g, "").replace(/\s+/g, " ").trim();
+
+          if (grupoProduto.toUpperCase() === gFiltro && descLimpa === filtroLimpo) {
             
             let rawIni = Number(rowC[2]) || 0;
             let rawFin = Number(rowC[3]) || 0;
@@ -235,7 +242,7 @@ function importarProducaoDoDrive() {
         }
 
         const valorComissaoReal = valorLiquido * fatorComissao;
-
+        
         const novaLinha = [
           dataMovimento,         // A
           cpfCliente,            // B
