@@ -162,6 +162,22 @@ function importarProducaoDoDrive() {
           grupoProduto = grupoProduto + " " + descConvenio; // Fica "CONSIGNADO SP" ou "CONSIGNADO INSS"
         }
 
+        // ====================================================================
+        // 🚨 ARMADILHA DE DEBUG - VALIDAÇÃO DA JUNÇÃO DO CONVÊNIO 🚨
+        if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
+          
+          let debugConvenioLido = descConvenio;
+          let debugGrupoFinal = grupoProduto;
+          let debugDescricaoFinal = descProduto;
+          
+          Logger.log(`🛑 PARADA DEBUG: ROBERTA | Produto: 2881 | Valor Líquido: 550`);
+          Logger.log(`🔍 Resultado da Junção -> Convênio: "${debugConvenioLido}" | Grupo Final: "${debugGrupoFinal}"`);
+          
+          // 👉 COLOQUE O PONTO VERMELHO (BREAKPOINT) NESTA LINHA ABAIXO 👈
+          let inspecionarVariaveis = true; 
+        }
+        // ====================================================================
+
         // 4. Busca a comissão na tabela bdComissao com Mapeamento Exato
         let fatorComissao = 0;
         let observacaoComissao = "Fora dos Parâmetros";
