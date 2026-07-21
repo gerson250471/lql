@@ -1,5 +1,6 @@
 /**
- * Automatiza a importação com logs de diagnóstico de cabeçalho.
+ * Importa a produção do Drive utilizando o mapeamento posicional exato (padrão VBA),
+ * calculando comissões, perfis e evitando duplicidade por contrato.
  */
 function importarProducaoDoDrive() {
   try {
@@ -13,12 +14,13 @@ function importarProducaoDoDrive() {
     
     if (!arquivos.hasNext()) {
       Logger.log("⚠️ A pasta 'Producao' está vazia.");
-      return { sucesso: false, mensagem: "Nenhum arquivo encontrado." };
+      return { sucesso: false, mensagem: "Nenhum arquivo encontrado na pasta de Produção." };
     }
 
     let arquivosProcessados = 0;
     const ss = getDatabaseConnection();
     
+    // Carrega tabelas de apoio da base de dados em memória
     const dadosPromotores = ss.getSheetByName("Promotores").getDataRange().getValues();
     const dadosComissao = ss.getSheetByName("bdComissao").getDataRange().getValues();
     const dadosProdutos = ss.getSheetByName("Produto").getDataRange().getValues();
@@ -46,52 +48,19 @@ function importarProducaoDoDrive() {
         continue;
       }
 
-      const headers = linhasBrutas[0].map(h => h.toString().trim().toUpperCase());
-      Logger.log(`🔍 Cabeçalhos detetados no Excel: ${JSON.stringify(headers)}`);
-      
-      const getCol = (nomesPossiveis) => {
-        for (let nome of nomesPossiveis) {
-          let idx = headers.indexOf(nome);
-          if (idx !== -1) return idx;
-        }
-        return -1;
-      };
-
-      const idxDataMov = getCol(["DATA MOVIMENTO", "DATA_MOVIMENTO", "DATA MOV", "DATA"]);
-      const idxChaveJ = getCol(["CHAVE J", "CHAVE_J", "CHAVE", "PROMOTOR"]);
-      const idxContrato = getCol(["CONTRATO", "NUM CONTRATO", "NR CONTRATO"]);
-      const idxDataCont = getCol(["DATA CONTRATO", "DATA_CONTRATO"]);
-      const idxProduto = getCol(["PRODUTO", "COD PRODUTO", "CÓDIGO PRODUTO"]);
-      const idxConvenio = getCol(["CONVENIO", "CONVÊNIO"]);
-      const idxPrazo = getCol(["PARCELA", "PRAZO", "PARCELAS"]);
-      const idxBruto = getCol(["VALOR BRUTO", "BRUTO"]);
-      const idxLiquido = getCol(["VALOR LIQUIDO", "LIQUIDO", "VALOR LÍQUIDO", "VALOR"]);
-      const idxTaxa = getCol(["TAXA"]);
-      const idxCpf = getCol(["CPF", "CPF/CNPJ"]);
-      const idxNomeCliente = getCol(["CLIENTE", "NOME CLIENTE", "NOME"]);
-      const idxRestricao = getCol(["RESTRICAO_RCC", "RESTRICAO", "RESTRIÇÃO RCC"]);
-
       const novasLinhasParaInserir = [];
+      const novosClientesParaInserir = [];
 
+      // Mapeamento posicional exato baseado na estrutura do seu VBA (MOD_A_0_PRODUCAO.vba)
       for (let i = 1; i < linhasBrutas.length; i++) {
         const linha = linhasBrutas[i];
         
-        // Se a coluna de contrato foi encontrada, usa-a; senão, tenta pegar pelo índice fixo de segurança caso os cabeçalhos difiram
-        let numContrato = "";
-        if (idxContrato !== -1) {
-          numContrato = String(linha[idxContrato] || "").trim();
-        } else if (linha.length > 8) {
-          numContrato = String(linha[8] || "").trim(); // Posição padrão anterior
-        }
-
+        // Coluna E do VBA (Índice 4 no array = Contrato)
+        const numContrato = String(linha[8] || "").trim(); 
         if (!numContrato || contratosExistentes.has(numContrato)) continue;
 
-        let chaveJ = "";
-        if (idxChaveJ !== -1) {
-          chaveJ = String(linha[idxChaveJ] || "").trim();
-        } else if (linha.length > 3) {
-          chaveJ = String(linha[3] || "").trim();
-        }
+        // Coluna I do VBA (Índice 8 no array = Chave J)
+        const chaveJ = String(linha[3] || "").trim(); 
 
         const parseData = (val) => {
           if (!val) return "";
@@ -99,9 +68,10 @@ function importarProducaoDoDrive() {
           return isNaN(d.getTime()) ? "" : d;
         };
 
-        const dataMovimento = idxDataMov !== -1 ? parseData(linha[idxDataMov]) : parseData(linha[1]);
-        const dataContrato = idxDataCont !== -1 ? parseData(linha[idxDataCont]) : parseData(linha[7]);
+        const dataMovimento = parseData(linha[1]); // Data Movimento
+        const dataContrato = parseData(linha[7]);  // Data Contrato
 
+        // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
         let perfilPromotor = "BLACK";
         
@@ -113,29 +83,31 @@ function importarProducaoDoDrive() {
           }
         }
 
-        const codProduto = idxProduto !== -1 ? linha[idxProduto] : linha[4];
-        const convenio = idxConvenio !== -1 ? linha[idxConvenio] : linha[6];
-        const prazo = idxPrazo !== -1 ? Number(linha[idxPrazo]) || 0 : Number(linha[9]) || 0;
-        const valorBruto = idxBruto !== -1 ? Number(linha[idxBruto]) || 0 : Number(linha[10]) || 0;
-        const valorLiquido = idxLiquido !== -1 ? Number(linha[idxLiquido]) || 0 : Number(linha[11]) || 0;
-        const taxa = idxTaxa !== -1 ? Number(linha[idxTaxa]) || 0 : Number(linha[16]) || 0;
-        const cpfCliente = idxCpf !== -1 ? linha[idxCpf] : linha[22];
-        const nomeCliente = idxNomeCliente !== -1 ? linha[idxNomeCliente] : linha[23];
-        const restricaoRcc = idxRestricao !== -1 ? linha[idxRestricao] : (linha[27] || "Não");
+        const codProduto = Number(linha[4]) || 0;     // Produto
+        const convenio = linha[6];                     // Convênio
+        const prazo = Number(linha[9]) || 0;           // Parcela / Prazo
+        const valorBruto = Number(linha[10]) || 0;     // Valor Bruto
+        const valorLiquido = Number(linha[11]) || 0;   // Valor Líquido
+        const taxa = Number(linha[16]) || 0;           // Taxa Mensal de Juros
+        const cpfCliente = linha[22];                  // CPF
+        const nomeCliente = linha[23];                 // Nome Cliente
+        const restricaoRcc = linha[27] || "Não";       // Restrição RCC
 
+        // 2. Resolve a descrição do produto baseado na aba Produto
         let grupoProduto = "CONSIGNADO INSS";
         let descProduto = "CONSIGNADO INSS CORRENTISTA NOVO";
         for (let pr = 1; pr < dadosProdutos.length; pr++) {
-          if (Number(dadosProdutos[pr][0]) === Number(codProduto)) {
+          if (Number(dadosProdutos[pr][0]) === codProduto) {
             grupoProduto = dadosProdutos[pr][1];
             descProduto = dadosProdutos[pr][2];
             break;
           }
         }
 
+        // 3. Busca a comissão exata na tabela bdComissao (Cruzando faixas de taxa e prazo)
         let fatorComissao = 0;
         let observacaoComissao = "";
-        let colunaPerfilIdx = 8; 
+        let colunaPerfilIdx = 8; // Índice padrão para GESTOR/BLACK
         const cabecalhoComissao = dadosComissao[0];
         
         for (let c = 0; c < cabecalhoComissao.length; c++) {
@@ -144,6 +116,9 @@ function importarProducaoDoDrive() {
             break;
           }
         }
+
+        let probTx = 0;
+        let probParc = 0;
 
         for (let c = 1; c < dadosComissao.length; c++) {
           const rowC = dadosComissao[c];
@@ -155,6 +130,9 @@ function importarProducaoDoDrive() {
           const prazoFin = Number(rowC[5]);
 
           if (grupoProduto.toUpperCase().includes(gFiltro) && descProduto.toUpperCase().includes(dFiltro)) {
+            if (taxa >= taxaIni && taxa <= taxaFin) probTx++;
+            if (prazo >= prazoIni && prazo <= prazoFin) probParc++;
+
             if (taxa >= taxaIni && taxa <= taxaFin && prazo >= prazoIni && prazo <= prazoFin) {
               fatorComissao = Number(rowC[colunaPerfilIdx]) || 0;
               break;
@@ -162,41 +140,67 @@ function importarProducaoDoDrive() {
           }
         }
 
+        // Regra idêntica ao VBA para preencher a observação de erro
         if (fatorComissao === 0) {
-          observacaoComissao = "Abaixo da Taxa Minima / Fora do Prazo";
+          if (probTx === 0) observacaoComissao = "Abaixo da Taxa Minima";
+          else if (probParc === 0) observacaoComissao = "Fora do Prazo";
+          else observacaoComissao = "Fora dos Parâmetros";
         }
 
         const ano = dataMovimento ? new Date(dataMovimento).getFullYear() : "";
         const mes = dataMovimento ? new Date(dataMovimento).getMonth() + 1 : "";
         const valorComissaoReal = valorLiquido * fatorComissao;
 
+        // Estrutura exata das colunas da aba bd_Producao
         const novaLinha = [
-          dataMovimento, cpfCliente, "BANCO DO BRASIL", convenio, numContrato, 
-          dataContrato, taxa, prazo, chaveJ, "", restricaoRcc, ano, mes, 
-          nomePromotor, codProduto, fatorComissao, perfilPromotor, valorComissaoReal, 
-          descProduto, valorBruto, valorLiquido, valorLiquido, "", "", 
-          grupoProduto, observacaoComissao, ""
+          dataMovimento,         // A: Data Movimento
+          cpfCliente,            // B: CPF
+          "BANCO DO BRASIL",     // C: Banco
+          convenio,              // D: Convênio
+          numContrato,           // E: Contrato
+          dataContrato,          // F: Data Contrato
+          taxa,                  // G: Taxa
+          prazo,                 // H: Parcela
+          chaveJ,                // I: Chave J
+          "",                    // J: Comissão PF
+          restricaoRcc,          // K: Restrição RCC
+          ano,                   // L: Ano
+          mes,                   // M: Mês
+          nomePromotor,          // N: Promotor
+          codProduto,            // O: Produto
+          fatorComissao,         // P: Comissão (%)
+          perfilPromotor,        // Q: Perfil
+          valorComissaoReal,     // R: Valor (Comissão em R$)
+          descProduto,           // S: Descrição
+          valorBruto,            // T: Valor Bruto
+          valorLiquido,          // U: Valor Líquido
+          valorLiquido,          // V: Valor Considerado / Produção
+          "",                    // W: Agência
+          "",                    // X: Empresa
+          grupoProduto,          // Y: Desc. Convênio
+          observacaoComissao,    // Z: Observação
+          ""                     // AA: Pago Em
         ];
 
         novasLinhasParaInserir.push(novaLinha);
         contratosExistentes.add(numContrato); 
       }
 
-      Logger.log(`✨ Linhas mapeadas prontas para inserção: ${novasLinhasParaInserir.length}`);
-
       if (novasLinhasParaInserir.length > 0) {
         sheetProd.getRange(sheetProd.getLastRow() + 1, 1, novasLinhasParaInserir.length, novasLinhasParaInserir[0].length).setValues(novasLinhasParaInserir);
-        Logger.log(`✅ Sucesso absoluto: ${novasLinhasParaInserir.length} contratos gravados.`);
+        Logger.log(`✅ Sucesso absoluto: ${novasLinhasParaInserir.length} contratos gravados com precisão posicional.`);
       } else {
-        Logger.log(`⚠️ Nenhuma linha foi gravada (verifique se os contratos já existiam na base).`);
+        Logger.log(`⚠️ Nenhuma linha nova gravada (verifique se os contratos já existiam).`);
       }
 
       Drive.Files.remove(arquivoTemp.id);
+      
+      // Move o ficheiro para a pasta de usados
       arquivo.moveTo(pastaUsados);
       arquivosProcessados++;
     }
 
-    return { sucesso: true, mensagem: "Importação concluída!" };
+    return { sucesso: true, mensagem: "Importação concluída com sucesso!" };
 
   } catch (e) {
     Logger.log(`❌ ERRO: ${e.message}`);
