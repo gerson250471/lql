@@ -151,6 +151,25 @@ function importarProducaoDoDrive() {
           }
         }
 
+        // ====================================================================
+        // 🚨 ARMADILHA DE DEBUG 🚨
+        // Vai capturar o exato momento em que a linha da Luciana ou da Roberta passar
+        if ((nomePromotor.includes("LUCIANA") && codProduto == 3100) || 
+            (nomePromotor.includes("ROBERTA") && codProduto == 2881)) {
+          
+          let debugTaxa = taxa;
+          let debugPrazo = prazo;
+          let debugGrupo = grupoProduto;
+          let debugDesc = descProduto;
+          
+          Logger.log(`🛑 PARADA DEBUG: Promotor: ${nomePromotor} | Produto: ${codProduto}`);
+          Logger.log(`Valores do Arquivo -> Taxa: ${debugTaxa} | Prazo: ${debugPrazo}`);
+          
+          // 👉 COLOQUE O PONTO VERMELHO (BREAKPOINT) NA LINHA ABAIXO 👈
+          let inspecionarVariaveis = true; 
+        }
+        // ====================================================================
+
         // 3. Busca a comissão na tabela bdComissao com Mapeamento Exato e Taxa Inteligente (Padrão VBA)
         let fatorComissao = 0;
         let observacaoComissao = "Fora dos Parâmetros"; // Fallback padrão
