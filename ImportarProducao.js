@@ -161,19 +161,19 @@ function importarProducaoDoDrive() {
 
         // ====================================================================
         // 🚨 ARMADILHA DE DEBUG - VALIDAÇÃO DA JUNÇÃO DO CONVÊNIO 🚨
-        if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
+        // if (nomePromotor.includes("ROBERTA") && codProduto == 2881 && valorLiquido == 550) {
           
-          let debugCodigoConvenioBruto = convenio;
-          let debugConvenioLido = descConvenio;
-          let debugGrupoFinal = grupoProduto;
+        //   let debugCodigoConvenioBruto = convenio;
+        //   let debugConvenioLido = descConvenio;
+        //   let debugGrupoFinal = grupoProduto;
           
-          Logger.log(`🛑 PARADA DEBUG: ROBERTA | Produto: 2881 | Valor Líquido: 550`);
-          Logger.log(`👉 Código do Convênio lido do Excel: "${debugCodigoConvenioBruto}"`);
-          Logger.log(`🔍 Resultado -> Sigla Encontrada: "${debugConvenioLido}" | Grupo Final: "${debugGrupoFinal}"`);
+        //   Logger.log(`🛑 PARADA DEBUG: ROBERTA | Produto: 2881 | Valor Líquido: 550`);
+        //   Logger.log(`👉 Código do Convênio lido do Excel: "${debugCodigoConvenioBruto}"`);
+        //   Logger.log(`🔍 Resultado -> Sigla Encontrada: "${debugConvenioLido}" | Grupo Final: "${debugGrupoFinal}"`);
           
-          // 👉 COLOQUE O PONTO VERMELHO (BREAKPOINT) NESTA LINHA ABAIXO 👈
-          let inspecionarVariaveis = true; 
-        }
+        //   // 👉 COLOQUE O PONTO VERMELHO (BREAKPOINT) NESTA LINHA ABAIXO 👈
+        //   let inspecionarVariaveis = true; 
+        // }
         // ====================================================================
 
         // 4. Busca a comissão na tabela bdComissao com Mapeamento Exato
