@@ -7,13 +7,16 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const sheet = ss.getSheetByName("bd_Producao");
     if (!sheet) throw new Error("Aba 'bd_Producao' não encontrada.");
 
+    // 1. PRIMEIRO: Lê os dados da folha para a variável 'data' existir
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { sucesso: true, dados: [] };
+
+    // 2. SEGUNDO: Funções utilitárias que dependem ou não de 'data'
     const formatData = (val) => {
       if (!val) return "-";
-      // Se já for um objeto de data do JavaScript
       if (val instanceof Date) {
         return Utilities.formatDate(val, Session.getScriptTimeZone(), "dd/MM/yyyy");
       }
-      // Se for uma string no formato americano (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss...)
       let strVal = String(val).trim();
       if (/^\d{4}-\d{2}-\d{2}/.test(strVal)) {
         let partes = strVal.split("T")[0].split("-");
@@ -24,6 +27,9 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
       return strVal;
     };
 
+    const formatNum = (val) => typeof val === 'number' ? val : 0;
+
+    // 3. TERCEIRO: Mapeamento de cabeçalhos utilizando a variável 'data' já carregada
     const headers = data[0].map(h => h.toString().trim().toUpperCase());
     const idxChave = headers.indexOf("CHAVE J");
     const idxAno = headers.indexOf("ANO");
@@ -38,7 +44,6 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxDataCont = headers.indexOf("DATA CONTRATO");
     const idxTaxa = headers.indexOf("TAXA");
     
-    // CORREÇÃO: Procura por "PARCELAS", "PARCELA" ou "PRAZO"
     let idxParcela = headers.indexOf("PARCELAS");
     if (idxParcela === -1) idxParcela = headers.indexOf("PARCELA");
     if (idxParcela === -1) idxParcela = headers.indexOf("PRAZO");
@@ -49,11 +54,9 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     const idxDesc = headers.indexOf("DESCRIÇÃO DO PRODUTO");
     const idxPagoEm = headers.indexOf("PAGO EM");
     
-    // MAPEAMENTO DA OBSERVAÇÃO
     let idxObs = headers.indexOf("OBSERVAÇÃO");
     if (idxObs === -1) idxObs = headers.indexOf("OBSERVACAO");
 
-    // MAPEAMENTO FINANCEIRO BLINDADO
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
     if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
@@ -63,8 +66,6 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
     let idxValorComissao = headers.indexOf("VALOR COMISSÃO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR");
-
-    const formatNum = (val) => typeof val === 'number' ? val : 0;
 
     const producaoLimpa = [];
 
@@ -81,7 +82,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
           contrato: row[idxContrato] || "-",
           dataContrato: formatData(row[idxDataCont]),
           taxa: row[idxTaxa] || "-",
-          prazo: idxParcela !== -1 ? (Number(row[idxParcela]) || 0) : 0, // Extrai o número do prazo limpo
+          prazo: idxParcela !== -1 ? (Number(row[idxParcela]) || 0) : 0,
           restricao: row[idxRestricao] || "-",
           grupo: row[idxGrupo] || "-",
           produto: row[idxProduto] || "-",
@@ -121,14 +122,12 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     const idxAno = headers.indexOf("ANO");
     const idxMes = headers.indexOf("MÊS");
 
-    // MAPEAMENTO FINANCEIRO BLINDADO ADMIN
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
     if (idxProducao === -1) idxProducao = headers.indexOf("VALOR CONSIDERADO");
 
     const idxValorBruto = headers.indexOf("VALOR BRUTO");
     
-    // CORREÇÃO AQUI
     let idxValorComissao = headers.indexOf("VALOR COMISSÃO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR");
@@ -154,6 +153,10 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
       const anoLinha = String(row[idxAno]).trim();
       const mesLinha = String(row[idxMes]).trim().padStart(2, '0');
       const mesBusca = String(mesFiltro).padStart(2, '0');
+
+      if (anoLinha === String(anoFildro) || anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
+        // Correção de escopo aplicada abaixo
+      }
 
       if (anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
         const chave = row[idxChave] || "SEM_CHAVE";
