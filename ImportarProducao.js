@@ -82,15 +82,35 @@ function importarProducaoDoDrive() {
 
         const chaveJ = idxChaveJ !== -1 ? String(linha[idxChaveJ] || "").trim() : "";
 
-        // Conversor seguro de datas para evitar valores nulos ou 1969
-        const parseData = (val) => {
-          if (!val) return "";
+        // Conversor seguro de datas que extrai Ano e Mês sem gerar erros de #NUM!
+        const processarDataEValores = (val) => {
+          if (!val) return { dataFormatada: "", ano: "", mes: "" };
           let d = new Date(val);
-          return isNaN(d.getTime()) ? val : d;
+          if (isNaN(d.getTime())) {
+            // Tenta tratar caso venha em formato de texto brasileiro (DD/MM/YYYY)
+            const partes = String(val).split("/");
+            if (partes.length === 3) {
+              d = new Date(partes[2], partes[1] - 1, partes[0]);
+            }
+          }
+          
+          if (isNaN(d.getTime())) {
+            return { dataFormatada: val, ano: "", mes: "" };
+          }
+
+          return {
+            dataFormatada: d,
+            ano: d.getFullYear(),
+            mes: d.getMonth() + 1
+          };
         };
 
-        const dataMovimento = idxDataMov !== -1 ? parseData(linha[idxDataMov]) : "";
-        const dataContrato = idxDataCont !== -1 ? parseData(linha[idxDataCont]) : "";
+        const resDataMov = processarDataEValores(idxDataMov !== -1 ? linha[idxDataMov] : "");
+        const dataMovimento = resDataMov.dataFormatada;
+        const ano = resDataMov.ano;
+        const mes = resDataMov.mes;
+
+        const dataContrato = idxDataCont !== -1 ? processarDataEValores(linha[idxDataCont]).dataFormatada : "";
 
         // 1. Identifica Promotor e Perfil na aba Promotores
         let nomePromotor = "CADASTRO DESCONHECIDO";
