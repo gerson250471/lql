@@ -38,19 +38,21 @@ function saveSystemLog(logData) {
 }
 
 /**
- * Função 1: Carrega os dados para a tela do Administrador
- * Retorna os promotores ativos e os leads que estão sem promotor.
+ * Função: Carrega os dados para a tela do Administrador (Atribuição de Leads)
  */
 function getDadosPainelAdmin() {
   try {
-    const ss = getDatabaseConnection(); // Usando sua função de conexão existente
+    const ss = getDatabaseConnection();
 
     // --- 1. BUSCAR PROMOTORES ATIVOS ---
     const abaPromotores = ss.getSheetByName("Promotores");
     const dadosPromotores = abaPromotores.getDataRange().getValues();
     const headersPromotores = dadosPromotores[0].map(h => h.toString().trim().toUpperCase());
     
-    const idxChave = headersPromotores.indexOf("CHAVE J");
+    let idxChaveP = headersPromotores.indexOf("CHAVE J");
+    if (idxChaveP === -1) idxChaveP = headersPromotores.indexOf("CHAVE_J");
+    if (idxChaveP === -1) idxChaveP = headersPromotores.indexOf("CHAVE");
+
     const idxNomeP = headersPromotores.indexOf("NOME");
     const idxPerfil = headersPromotores.indexOf("PERFIL");
     const idxSituacao = headersPromotores.indexOf("SITUAÇÃO");
@@ -58,21 +60,18 @@ function getDadosPainelAdmin() {
     let listaPromotores = [];
     for (let i = 1; i < dadosPromotores.length; i++) {
       let row = dadosPromotores[i];
-      
-      // ESCUDO: Se a linha for completamente vazia (sem chave), pula.
-      if (!row[idxChave] || row[idxChave].toString().trim() === "") continue;
+      if (!row[idxChaveP] || row[idxChaveP].toString().trim() === "") continue;
 
-      // Pega apenas quem está ATIVO
       if (row[idxSituacao] && row[idxSituacao].toString().trim().toUpperCase() === "ATIVO") {
         listaPromotores.push({
-          chave: row[idxChave],
+          chave: row[idxChaveP],
           nome: row[idxNomeP],
           perfil: row[idxPerfil]
         });
       }
     }
 
-    // --- 2. BUSCAR LEADS LIVRES ---
+    // --- 2. BUSCAR LEADS LIVRES (Com busca dinâmica pelo novo layout de colunas) ---
     const abaLeads = ss.getSheetByName("Leads");
     const dadosLeads = abaLeads.getDataRange().getValues();
     const headersLeads = dadosLeads[0].map(h => h.toString().trim().toUpperCase());
@@ -86,16 +85,14 @@ function getDadosPainelAdmin() {
     for (let i = 1; i < dadosLeads.length; i++) {
       let row = dadosLeads[i];
       
-      // ESCUDO: Se a linha for fantasma (sem CPF), pula imediatamente.
       if (!row[idxCpf] || row[idxCpf].toString().trim() === "") continue;
       
-      // Verifica se a coluna Promotor está vazia (lead livre)
-      if (!row[idxPromotorLead] || row[idxPromotorLead].toString().trim() === "") {
+      // Se a coluna PROMOTOR estiver vazia, o lead está disponível para atribuição
+      if (idxPromotorLead === -1 || !row[idxPromotorLead] || row[idxPromotorLead].toString().trim() === "") {
         leadsLivres.push({
           cpf: row[idxCpf].toString().trim(),
-          nome: row[idxNomeL],
-          // Apenas lê o texto da faixa de renda como está na planilha
-          renda: row[idxRenda] ? row[idxRenda].toString().trim() : "N/I"
+          nome: row[idxNomeL] || "SEM NOME",
+          renda: idxRenda !== -1 && row[idxRenda] ? row[idxRenda].toString().trim() : "N/I"
         });
       }
     }
@@ -103,7 +100,7 @@ function getDadosPainelAdmin() {
     return { promotores: listaPromotores, leadsLivres: leadsLivres };
 
   } catch (e) {
-    throw new Error("Erro ao buscar dados do painel: " + e.message);
+    throw new Error("Erro ao buscar dados do painel admin: " + e.message);
   }
 }
 

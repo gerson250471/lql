@@ -1,34 +1,39 @@
 /**
  * FICHEIRO: Leads.js
- * Lógica do form/subform para higienização e histórico de base
+ * Lógica do form/subform para higienização, cadastro completo do Back-Office e histórico de base
  */
 
+/**
+ * Retorna a lista simples de Leads atribuídos a um promotor específico
+ */
 function getLeadsDoPromotor(chaveJ) {
   const ss = getDatabaseConnection(); 
   const sheet = ss.getSheetByName("Leads");
   if (!sheet) return [];
 
   const data = sheet.getDataRange().getValues();
+  if (data.length <= 1) return [];
+
   const headers = data[0].map(h => h.toString().trim().toUpperCase());
   
   const idxCpf = headers.indexOf("CPF");
   const idxNome = headers.indexOf("NOME");
   const idxCel1 = headers.indexOf("CEL1");
-  const idxCel2 = headers.indexOf("CEL2");
   const idxRenda = headers.indexOf("RENDA");
   const idxPromotor = headers.indexOf("PROMOTOR");
   const idxStatus = headers.indexOf("STATUS");
 
   const leads = [];
-  for(let i = 1; i < data.length; i++) {
+  const buscaPromotor = chaveJ.trim().toUpperCase();
+
+  for (let i = 1; i < data.length; i++) {
     let row = data[i];
-    if(row[idxPromotor] && row[idxPromotor].toString().trim().toUpperCase() === chaveJ.trim().toUpperCase()) {
+    if (row[idxPromotor] && row[idxPromotor].toString().trim().toUpperCase() === buscaPromotor) {
       leads.push({
-        cpf: row[idxCpf],
-        nome: row[idxNome],
-        cel1: row[idxCel1],
-        cel2: row[idxCel2],
-        renda: row[idxRenda],
+        cpf: row[idxCpf] ? row[idxCpf].toString().trim() : "-",
+        nome: row[idxNome] || "N/I",
+        cel1: row[idxCel1] || "-",
+        renda: row[idxRenda] || "N/I",
         status: row[idxStatus] || "NOVO"
       });
     }
@@ -48,26 +53,24 @@ function registrarInteracaoLead(payload) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0].map(h => h.toString().trim().toUpperCase());
 
-    // Se a aba estiver vazia (só com cabeçalhos), prepara uma nova linha vazia
     let novaLinha = new Array(headers.length).fill("");
 
     const idxData = headers.indexOf("DATA");
     const idxCpf = headers.indexOf("CPF");
     const idxPromotor = headers.indexOf("PROMOTOR");
     const idxAcao = headers.indexOf("AÇÃO");
-    const idxObs = headers.indexOf("OBS");
+    let idxObs = headers.indexOf("OBS");
+    if (idxObs === -1) idxObs = headers.indexOf("OBSERVACAO");
 
-    // Preenche os dados nos lugares certos
     if (idxData !== -1) novaLinha[idxData] = new Date();
     if (idxCpf !== -1) novaLinha[idxCpf] = payload.cpf;
     if (idxPromotor !== -1) novaLinha[idxPromotor] = payload.promotor;
     if (idxAcao !== -1) novaLinha[idxAcao] = payload.acao;
     if (idxObs !== -1) novaLinha[idxObs] = payload.obs;
 
-    // Adiciona a linha na planilha
     sheet.appendRow(novaLinha);
 
-    // BÔNUS: Atualiza o status geral do Lead na aba 'Leads'
+    // Atualiza o status geral do Lead na aba 'Leads'
     atualizarStatusLead(payload.cpf, payload.acao);
 
     return true;
@@ -77,11 +80,13 @@ function registrarInteracaoLead(payload) {
 }
 
 /**
- * Função Bônus: Muda o status na aba Leads de acordo com a ação
+ * Muda o status na aba Leads de acordo com a ação
  */
 function atualizarStatusLead(cpfAlvo, novaAcao) {
   const ss = getDatabaseConnection();
   const abaLeads = ss.getSheetByName("Leads");
+  if (!abaLeads) return;
+
   const dados = abaLeads.getDataRange().getValues();
   const headers = dados[0].map(h => h.toString().trim().toUpperCase());
   
@@ -99,76 +104,109 @@ function atualizarStatusLead(cpfAlvo, novaAcao) {
 }
 
 /**
- * Retorna os detalhes do Lead + Histórico dele para a tela
+ * Retorna os detalhes COMPLETOS do Lead (com a nova estrutura de Back-Office) + Histórico
  */
 function getDetalhesEHistoricoLead(cpfBusca, chavePromotor) {
   try {
     const ss = getDatabaseConnection();
     
-    // 1. Busca os detalhes do Lead
+    // 1. Busca os detalhes estendidos do Lead na aba 'Leads'
     const abaLeads = ss.getSheetByName("Leads");
     const dadosLeads = abaLeads.getDataRange().getValues();
     const headLeads = dadosLeads[0].map(h => h.toString().trim().toUpperCase());
     
     let leadEncontrado = {};
-    const idxCpf = headLeads.indexOf("CPF");
-    const idxNome = headLeads.indexOf("NOME");
-    const idxNasc = headLeads.indexOf("NASC");
-    const idxMae = headLeads.indexOf("NOME_MAE");
-    const idxRenda = headLeads.indexOf("RENDA");
-    const idxCel1 = headLeads.indexOf("CEL1");
-    const idxCel2 = headLeads.indexOf("CEL2");
+    
+    const getIdx = (nome) => headLeads.indexOf(nome);
+
+    const idxFonte = getIdx("FONTE");
+    const idxCpf = getIdx("CPF");
+    const idxNome = getIdx("NOME");
+    const idxMae = getIdx("NOME_MAE");
+    const idxSexo = getIdx("SEXO");
+    const idxNasc = getIdx("NASC");
+    const idxRenda = getIdx("RENDA");
+    const idxProduto = getIdx("PRODUTO");
+    const idxLogradouro = getIdx("LOGRADOURO");
+    const idxNumero = getIdx("NUMERO");
+    const idxBairro = getIdx("BAIRRO");
+    const idxCidade = getIdx("CIDADE");
+    const idxUf = getIdx("UF");
+    const idxCep = getIdx("CEP");
+    const idxCel1 = getIdx("CEL1");
+    const idxEmail1 = getIdx("EMAIL1");
 
     for (let i = 1; i < dadosLeads.length; i++) {
-      if (dadosLeads[i][idxCpf] && dadosLeads[i][idxCpf].toString().trim() === cpfBusca.toString().trim()) {
+      let cpfLinha = dadosLeads[i][idxCpf] ? dadosLeads[i][idxCpf].toString().trim() : "";
+      
+      if (cpfLinha === cpfBusca.toString().trim()) {
+        let rawNasc = dadosLeads[i][idxNasc];
+        let nascFormatado = "-";
+        if (rawNasc) {
+          nascFormatado = (rawNasc instanceof Date) 
+            ? Utilities.formatDate(rawNasc, Session.getScriptTimeZone(), "dd/MM/yyyy") 
+            : rawNasc.toString();
+        }
+
         leadEncontrado = {
-          cpf: dadosLeads[i][idxCpf].toString(),
-          nome: dadosLeads[i][idxNome],
-          // Formatação de data simples caso venha como objeto Date do Sheets
-          nasc: (dadosLeads[i][idxNasc] instanceof Date) ? Utilities.formatDate(dadosLeads[i][idxNasc], Session.getScriptTimeZone(), "dd/MM/yyyy") : dadosLeads[i][idxNasc],
-          nomeMae: dadosLeads[i][idxMae] || "-",
-          renda: dadosLeads[i][idxRenda] || "N/I",
-          cel1: dadosLeads[i][idxCel1] || "-",
-          cel2: dadosLeads[i][idxCel2] || ""
+          fonte: idxFonte !== -1 ? (dadosLeads[i][idxFonte] || "-") : "-",
+          cpf: cpfLinha,
+          nome: idxNome !== -1 ? (dadosLeads[i][idxNome] || "-") : "-",
+          nomeMae: idxMae !== -1 ? (dadosLeads[i][idxMae] || "-") : "-",
+          sexo: idxSexo !== -1 ? (dadosLeads[i][idxSexo] || "-") : "-",
+          nasc: nascFormatado,
+          renda: idxRenda !== -1 ? (dadosLeads[i][idxRenda] || "N/I") : "N/I",
+          produto: idxProduto !== -1 ? (dadosLeads[i][idxProduto] || "-") : "-",
+          logradouro: idxLogradouro !== -1 ? (dadosLeads[i][idxLogradouro] || "-") : "-",
+          numero: idxNumero !== -1 ? (dadosLeads[i][idxNumero] || "-") : "-",
+          bairro: idxBairro !== -1 ? (dadosLeads[i][idxBairro] || "-") : "-",
+          cidade: idxCidade !== -1 ? (dadosLeads[i][idxCidade] || "-") : "-",
+          uf: idxUf !== -1 ? (dadosLeads[i][idxUf] || "-") : "-",
+          cep: idxCep !== -1 ? (dadosLeads[i][idxCep] || "-") : "-",
+          cel1: idxCel1 !== -1 ? (dadosLeads[i][idxCel1] || "-") : "-",
+          email1: idxEmail1 !== -1 ? (dadosLeads[i][idxEmail1] || "-") : "-"
         };
         break;
       }
     }
 
-    // 2. Busca o Histórico
+    // 2. Busca o Histórico de interações
     const abaHist = ss.getSheetByName("HistoricoLeads");
-    const dadosHist = abaHist.getDataRange().getValues();
-    const headHist = dadosHist[0].map(h => h.toString().trim().toUpperCase());
-    
     let historicoArray = [];
-    const idH_Data = headHist.indexOf("DATA");
-    const idH_Cpf = headHist.indexOf("CPF");
-    const idH_Acao = headHist.indexOf("AÇÃO");
-    const idH_Obs = headHist.indexOf("OBS");
 
-    for (let i = 1; i < dadosHist.length; i++) {
-      if (dadosHist[i][idH_Cpf] && dadosHist[i][idH_Cpf].toString().trim() === cpfBusca.toString().trim()) {
-        
-        let dataFormatada = "-";
-        if (dadosHist[i][idH_Data]) {
-          let dataBruta = dadosHist[i][idH_Data];
-          dataFormatada = (dataBruta instanceof Date) 
-            ? Utilities.formatDate(dataBruta, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm") 
-            : dataBruta.toString();
+    if (abaHist) {
+      const dadosHist = abaHist.getDataRange().getValues();
+      const headHist = dadosHist[0].map(h => h.toString().trim().toUpperCase());
+      
+      const idH_Data = headHist.indexOf("DATA");
+      const idH_Cpf = headHist.indexOf("CPF");
+      const idH_Acao = headHist.indexOf("AÇÃO");
+      let idH_Obs = headHist.indexOf("OBS");
+      if (idH_Obs === -1) idH_Obs = headHist.indexOf("OBSERVACAO");
+
+      for (let i = 1; i < dadosHist.length; i++) {
+        let cpfHist = dadosHist[i][idH_Cpf] ? dadosHist[i][idH_Cpf].toString().trim() : "";
+        if (cpfHist === cpfBusca.toString().trim()) {
+          let dataFormatada = "-";
+          if (dadosHist[i][idH_Data]) {
+            let dataBruta = dadosHist[i][idH_Data];
+            dataFormatada = (dataBruta instanceof Date) 
+              ? Utilities.formatDate(dataBruta, Session.getScriptTimeZone(), "dd/MM/yyyy HH:mm") 
+              : dataBruta.toString();
+          }
+
+          historicoArray.push({
+            data: dataFormatada,
+            acao: idH_Acao !== -1 ? (dadosHist[i][idH_Acao] || "Ação Desconhecida") : "Ação Desconhecida",
+            obs: idH_Obs !== -1 ? (dadosHist[i][idH_Obs] || "-") : "-"
+          });
         }
-
-        historicoArray.push({
-          data: dataFormatada,
-          acao: dadosHist[i][idH_Acao] ? dadosHist[i][idH_Acao].toString() : "Ação Desconhecida",
-          obs: dadosHist[i][idH_Obs] ? dadosHist[i][idH_Obs].toString() : "-"
-        });
       }
     }
 
-    // Retorna a fusão dos dois para a tela (em ordem cronológica inversa)
     return { lead: leadEncontrado, historico: historicoArray.reverse() };
 
   } catch (e) {
-    throw new Error("Erro ao buscar detalhes: " + e.message);
+    throw new Error("Erro ao buscar detalhes do lead: " + e.message);
   }
 }
