@@ -39,60 +39,100 @@ function saveSystemLog(logData) {
 
 /**
  * Função: Carrega os dados para a tela do Administrador (Atribuição de Leads)
+ * Retorna os promotores ativos e os leads que estão sem promotor.
  */
 function getDadosPainelAdmin() {
   try {
     const ss = getDatabaseConnection();
 
+    // Função de apoio para ignorar acentos e maiúsculas/minúsculas
+    const normalizarTexto = (txt) => String(txt || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     // --- 1. BUSCAR PROMOTORES ATIVOS ---
     const abaPromotores = ss.getSheetByName("Promotores");
-    const dadosPromotores = abaPromotores.getDataRange().getValues();
-    const headersPromotores = dadosPromotores[0].map(h => h.toString().trim().toUpperCase());
-    
-    let idxChaveP = headersPromotores.indexOf("CHAVE J");
-    if (idxChaveP === -1) idxChaveP = headersPromotores.indexOf("CHAVE_J");
-    if (idxChaveP === -1) idxChaveP = headersPromotores.indexOf("CHAVE");
+    if (!abaPromotores) throw new Error("Aba 'Promotores' não encontrada.");
 
-    const idxNomeP = headersPromotores.indexOf("NOME");
-    const idxPerfil = headersPromotores.indexOf("PERFIL");
-    const idxSituacao = headersPromotores.indexOf("SITUAÇÃO");
+    const dadosPromotores = abaPromotores.getDataRange().getValues();
+    if (dadosPromotores.length <= 1) return { promotores: [], leadsLivres: [] };
+
+    const headersPromotores = dadosPromotores[0].map(h => normalizarTexto(h));
+
+    const getColIndexP = (nomesPossiveis) => {
+      for (let nome of nomesPossiveis) {
+        let idx = headersPromotores.indexOf(normalizarTexto(nome));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    const idxChaveP = getColIndexP(["CHAVE J", "CHAVE_J", "CHAVE"]);
+    const idxNomeP = getColIndexP(["NOME"]);
+    const idxPerfil = getColIndexP(["PERFIL"]);
+    const idxSituacao = getColIndexP(["SITUACAO", "STATUS", "SITUACÃO"]);
+
+    if (idxChaveP === -1 || idxNomeP === -1) {
+      throw new Error("Colunas 'CHAVE' ou 'NOME' não encontradas na aba Promotores.");
+    }
 
     let listaPromotores = [];
     for (let i = 1; i < dadosPromotores.length; i++) {
       let row = dadosPromotores[i];
-      if (!row[idxChaveP] || row[idxChaveP].toString().trim() === "") continue;
+      let chaveVal = row[idxChaveP] ? String(row[idxChaveP]).trim() : "";
+      
+      // Escudo anti-linha vazia
+      if (!chaveVal) continue;
 
-      if (row[idxSituacao] && row[idxSituacao].toString().trim().toUpperCase() === "ATIVO") {
+      let situacaoVal = idxSituacao !== -1 && row[idxSituacao] 
+        ? normalizarTexto(row[idxSituacao]) 
+        : "ATIVO";
+
+      // Aceita apenas quem estiver com Situação ATIVO
+      if (situacaoVal === "ATIVO") {
         listaPromotores.push({
-          chave: row[idxChaveP],
-          nome: row[idxNomeP],
-          perfil: row[idxPerfil]
+          chave: chaveVal,
+          nome: row[idxNomeP] ? String(row[idxNomeP]).trim() : "Promotor sem Nome",
+          perfil: idxPerfil !== -1 && row[idxPerfil] ? String(row[idxPerfil]).trim() : "BLACK"
         });
       }
     }
 
-    // --- 2. BUSCAR LEADS LIVRES (Com busca dinâmica pelo novo layout de colunas) ---
+    // --- 2. BUSCAR LEADS LIVRES ---
     const abaLeads = ss.getSheetByName("Leads");
+    if (!abaLeads) throw new Error("Aba 'Leads' não encontrada.");
+
     const dadosLeads = abaLeads.getDataRange().getValues();
-    const headersLeads = dadosLeads[0].map(h => h.toString().trim().toUpperCase());
-    
-    const idxCpf = headersLeads.indexOf("CPF");
-    const idxNomeL = headersLeads.indexOf("NOME");
-    const idxRenda = headersLeads.indexOf("RENDA");
-    const idxPromotorLead = headersLeads.indexOf("PROMOTOR"); 
+    const headersLeads = dadosLeads[0].map(h => normalizarTexto(h));
+
+    const getColIndexL = (nomesPossiveis) => {
+      for (let nome of nomesPossiveis) {
+        let idx = headersLeads.indexOf(normalizarTexto(nome));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    const idxCpf = getColIndexL(["CPF"]);
+    const idxNomeL = getColIndexL(["NOME"]);
+    const idxRenda = getColIndexL(["RENDA"]);
+    const idxPromotorLead = getColIndexL(["PROMOTOR"]); 
 
     let leadsLivres = [];
     for (let i = 1; i < dadosLeads.length; i++) {
       let row = dadosLeads[i];
+      let cpfVal = row[idxCpf] ? String(row[idxCpf]).trim() : "";
       
-      if (!row[idxCpf] || row[idxCpf].toString().trim() === "") continue;
+      if (!cpfVal) continue;
       
-      // Se a coluna PROMOTOR estiver vazia, o lead está disponível para atribuição
-      if (idxPromotorLead === -1 || !row[idxPromotorLead] || row[idxPromotorLead].toString().trim() === "") {
+      // Se a coluna PROMOTOR estiver vazia, o lead está livre
+      let promotorAssociado = idxPromotorLead !== -1 && row[idxPromotorLead] 
+        ? String(row[idxPromotorLead]).trim() 
+        : "";
+
+      if (!promotorAssociado) {
         leadsLivres.push({
-          cpf: row[idxCpf].toString().trim(),
-          nome: row[idxNomeL] || "SEM NOME",
-          renda: idxRenda !== -1 && row[idxRenda] ? row[idxRenda].toString().trim() : "N/I"
+          cpf: cpfVal,
+          nome: idxNomeL !== -1 && row[idxNomeL] ? String(row[idxNomeL]).trim() : "SEM NOME",
+          renda: idxRenda !== -1 && row[idxRenda] ? String(row[idxRenda]).trim() : "N/I"
         });
       }
     }
