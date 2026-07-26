@@ -3,33 +3,57 @@
  */
 function alterarSenhaUsuario(chaveUsuario, novaSenha) {
   try {
+    if (!chaveUsuario || !novaSenha) {
+      return { sucesso: false, erro: "Chave de usuário ou nova senha inválida." };
+    }
+
     const ss = getDatabaseConnection();
     const sheet = ss.getSheetByName("Promotores");
+    if (!sheet) throw new Error("Aba 'Promotores' não encontrada.");
+
     const data = sheet.getDataRange().getValues();
-    const headers = data[0].map(h => h.toString().trim().toUpperCase());
+    if (data.length <= 1) return { sucesso: false, erro: "Nenhum usuário cadastrado." };
 
-    const idxChave = headers.indexOf("CHAVE");
-    const idxSenha = headers.indexOf("SENHA");
-    let idxTrocarSenha = headers.indexOf("TROCAR_SENHA");
-    if (idxTrocarSenha === -1) idxTrocarSenha = headers.indexOf("TROCAR SENHA");
+    // Normalizador de cabeçalhos sem acentos
+    const normalizarTexto = (txt) => String(txt || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const headers = data[0].map(h => normalizarTexto(h));
 
-    // Converte a nova senha para Hash SHA-256 antes de salvar na planilha
+    const getColIndex = (nomesPossiveis) => {
+      for (let nome of nomesPossiveis) {
+        let idx = headers.indexOf(normalizarTexto(nome));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    const idxChave = getColIndex(["CHAVE J", "CHAVE_J", "CHAVE"]);
+    const idxSenha = getColIndex(["SENHA"]);
+    const idxTrocarSenha = getColIndex(["TROCAR_SENHA", "TROCAR SENHA"]);
+
+    if (idxChave === -1 || idxSenha === -1) {
+      throw new Error("Colunas obrigatórias (CHAVE e SENHA) não encontradas na aba Promotores.");
+    }
+
     const novoHash = gerarHashSHA256(novaSenha);
+    const chaveBusca = String(chaveUsuario).trim().toLowerCase();
 
     for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idxChave]).trim().toUpperCase() === String(chaveUsuario).trim().toUpperCase()) {
+      const chaveLinha = String(data[i][idxChave]).trim().toLowerCase();
 
-        // Atualiza a Senha em Hash SHA-256
+      if (chaveLinha === chaveBusca) {
+        // Grava o Hash SHA-256 da nova senha na coluna SENHA
         sheet.getRange(i + 1, idxSenha + 1).setValue(novoHash);
 
-        // Atualiza TROCAR_SENHA para "NÃO"
-        sheet.getRange(i + 1, idxTrocarSenha + 1).setValue("NÃO");
+        // Se a coluna TROCAR_SENHA existir, altera para "NÃO"
+        if (idxTrocarSenha !== -1) {
+          sheet.getRange(i + 1, idxTrocarSenha + 1).setValue("NÃO");
+        }
 
         return { sucesso: true, mensagem: "Senha alterada com sucesso!" };
       }
     }
 
-    return { sucesso: false, erro: "Usuário não encontrado." };
+    return { sucesso: false, erro: "Usuário não encontrado para alteração." };
 
   } catch (e) {
     return { sucesso: false, erro: e.message };
