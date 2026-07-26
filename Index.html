@@ -2869,13 +2869,16 @@
           return;
         }
 
-        // CORREÇÃO: Geramos o Hash SHA-256 no client antes de gravar no Sheets
-        // O backend alterarSenhaUsuario receberá a senha já em HASH
         google.script.run
           .withSuccessHandler(function (resposta) {
             if (resposta.sucesso) {
-              alert("Senha alterada com sucesso!");
+              // Fecha o modal imediatamente
               document.getElementById("modalTrocaSenha").style.display = "none";
+
+              // Exibe o Toast moderno de sucesso
+              showToast("Senha alterada com sucesso!", "success");
+
+              // Entra no sistema sem interrupção
               iniciarSessao(usuarioLogadoTemp);
             } else {
               divErro.innerText = resposta.erro;
