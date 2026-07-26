@@ -23,86 +23,89 @@
 
     <div
       id="app"
-      class="min-h-screen bg-slate-100 flex items-center justify-center p-4 pt-12"
+      class="w-full min-h-screen bg-slate-100 font-sans text-slate-800"
     >
-      <!-- TELA DE LOGIN -->
+      <!-- TELA DE LOGIN (Card Centralizado) -->
       <div
         id="boxLogin"
-        class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 p-4"
       >
-        <!-- LOGO DOURADA -->
         <div
-          class="w-20 h-20 mx-auto rounded-2xl border-2 border-yellow-500 overflow-hidden shadow-md"
+          class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
         >
-          <img
-            src="https://majb.online/shared/logo_LQL.jpg"
-            alt="Logo LQL"
-            class="w-full h-full object-cover"
-          />
-        </div>
-
-        <div>
-          <h1
-            class="text-2xl font-black text-slate-800 tracking-tight uppercase"
+          <div
+            class="w-20 h-20 mx-auto rounded-2xl border-2 border-yellow-500 overflow-hidden shadow-md"
           >
-            LQL SOLUÇÕES
-          </h1>
-          <p
-            class="text-xs font-bold text-slate-400 uppercase mt-1 tracking-widest"
-          >
-            Portal de Vendas & CRM
-          </p>
-        </div>
-
-        <div class="space-y-4 text-left">
-          <div>
-            <label
-              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
-              >Chave J ou E-mail</label
-            >
-            <input
-              type="text"
-              id="txtIdentificador"
-              placeholder="Ex: JJ826554 ou email@dominio.com"
-              autocomplete="username"
-              class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm uppercase"
+            <img
+              src="https://majb.online/shared/logo_LQL.jpg"
+              alt="Logo LQL"
+              class="w-full h-full object-cover"
             />
           </div>
 
           <div>
-            <label
-              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
-              >Senha</label
+            <h1
+              class="text-2xl font-black text-slate-800 tracking-tight uppercase"
             >
-            <input
-              type="password"
-              id="txtSenha"
-              placeholder="Digite sua senha"
-              autocomplete="current-password"
-              class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
-            />
+              LQL SOLUÇÕES
+            </h1>
+            <p
+              class="text-xs font-bold text-slate-400 uppercase mt-1 tracking-widest"
+            >
+              Portal de Vendas & CRM
+            </p>
           </div>
+
+          <div class="space-y-4 text-left">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Chave J ou E-mail</label
+              >
+              <input
+                type="text"
+                id="txtIdentificador"
+                placeholder="Ex: JJ826554 ou email@dominio.com"
+                autocomplete="username"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm uppercase"
+              />
+            </div>
+
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Senha</label
+              >
+              <input
+                type="password"
+                id="txtSenha"
+                placeholder="Digite sua senha"
+                autocomplete="current-password"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+              />
+            </div>
+          </div>
+
+          <button
+            id="btnLogin"
+            onclick="efetuarLogin()"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm active:scale-95"
+          >
+            ENTRAR
+          </button>
+
+          <div
+            id="msgErroLogin"
+            class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
+            style="display: none"
+          ></div>
         </div>
-
-        <button
-          id="btnLogin"
-          onclick="efetuarLogin()"
-          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2 active:scale-95"
-        >
-          ACESSAR O SISTEMA
-        </button>
-
-        <div
-          id="msgErroLogin"
-          class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
-          style="display: none"
-        ></div>
       </div>
 
-      <!-- MODAL/TELA DE PRIMEIRO ACESSO (TROCA DE SENHA) -->
+      <!-- MODAL DE PRIMEIRA TROCA DE SENHA -->
       <div
         id="modalTrocaSenha"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
         style="display: none"
       >
         <div
@@ -2936,6 +2939,7 @@
           email: dadosUsuario.email,
           nivelAcesso: dadosUsuario.nivelAcesso,
           perfil: dadosUsuario.perfil || "BLACK",
+          meta: dadosUsuario.meta || 0, // <-- RECEBE A META AQUI
         };
 
         initApp();

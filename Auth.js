@@ -104,7 +104,7 @@ function criptografarSenhasExistentes() {
 }
 
 /**
- * Valida o login aceitando E-mail ou CHAVE J, com busca flexível de cabeçalhos sem acentos
+ * Valida o login trazendo todos os campos do perfil, inclusive a META
  */
 function validarLogin(identificador, senhaDigitada) {
   try {
@@ -119,11 +119,9 @@ function validarLogin(identificador, senhaDigitada) {
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) return { sucesso: false, erro: "Nenhum promotor cadastrado." };
 
-    // Normaliza os cabeçalhos removendo acentos para evitar falhas de comparação
     const normalizarTexto = (txt) => String(txt || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const headers = data[0].map(h => normalizarTexto(h));
 
-    // Busca flexível de colunas (com ou sem acentos / com ou sem sublinhado)
     const getColIndex = (nomesPossiveis) => {
       for (let nome of nomesPossiveis) {
         let idx = headers.indexOf(normalizarTexto(nome));
@@ -138,11 +136,12 @@ function validarLogin(identificador, senhaDigitada) {
     const idxTrocarSenha = getColIndex(["TROCAR_SENHA", "TROCAR SENHA"]);
     const idxNome = getColIndex(["NOME"]);
     const idxNivel = getColIndex(["NIVEL DE ACESSO", "NIVEL_DE_ACESSO", "PERMISSAO"]);
-    const idxSituacao = getColIndex(["SITUACAO", "SITUACÃO", "STATUS"]);
+    const idxSituacao = getColIndex(["SITUACAO", "STATUS"]);
     const idxPerfil = getColIndex(["PERFIL"]);
+    const idxMeta = getColIndex(["META"]); // <-- CAPTURA DA COLUNA META
 
     if (idxChave === -1 || idxEmail === -1 || idxSenha === -1) {
-      throw new Error("Colunas obrigatórias (CHAVE, EMAIL, SENHA) não encontradas na aba Promotores.");
+      throw new Error("Colunas obrigatórias não encontradas na aba Promotores.");
     }
 
     const termoBusca = String(identificador).trim().toLowerCase();
@@ -154,7 +153,6 @@ function validarLogin(identificador, senhaDigitada) {
       const emailLinha = String(row[idxEmail]).trim().toLowerCase();
       const situacao = idxSituacao !== -1 ? normalizarTexto(row[idxSituacao]) : "ATIVO";
 
-      // Aceita CHAVE J ou E-MAIL
       if (termoBusca === chaveLinha || termoBusca === emailLinha) {
         
         if (situacao === "INATIVO" || situacao === "BLOQUEADO") {
@@ -163,7 +161,6 @@ function validarLogin(identificador, senhaDigitada) {
 
         const senhaSalva = String(row[idxSenha]).trim();
 
-        // Comparação por Hash SHA-256
         if (senhaSalva === hashDigitado) {
           return {
             sucesso: true,
@@ -173,6 +170,7 @@ function validarLogin(identificador, senhaDigitada) {
               email: row[idxEmail],
               perfil: idxPerfil !== -1 ? row[idxPerfil] : "BLACK",
               nivelAcesso: idxNivel !== -1 ? row[idxNivel] : "USUARIO",
+              meta: idxMeta !== -1 ? Number(row[idxMeta]) || 0 : 0, // <-- RETORNA A META DO BANCO
               trocarSenha: idxTrocarSenha !== -1 && normalizarTexto(row[idxTrocarSenha]) === "SIM"
             }
           };
@@ -182,7 +180,7 @@ function validarLogin(identificador, senhaDigitada) {
       }
     }
 
-    return { sucesso: false, erro: "Usuário ou e-mail não encontrado." };
+    return { sucesso: false, erro: "Usuário não encontrado." };
 
   } catch (e) {
     return { sucesso: false, erro: e.message };
