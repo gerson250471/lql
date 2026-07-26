@@ -80,7 +80,7 @@ function criptografarSenhasExistentes() {
 }
 
 /**
- * Valida o login aceitando E-mail ou CHAVE J, com senha em Hash SHA-256
+ * Valida o login aceitando E-mail ou CHAVE J, com busca flexível de cabeçalhos sem acentos
  */
 function validarLogin(identificador, senhaDigitada) {
   try {
@@ -95,18 +95,30 @@ function validarLogin(identificador, senhaDigitada) {
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) return { sucesso: false, erro: "Nenhum promotor cadastrado." };
 
-    const headers = data[0].map(h => h.toString().trim().toUpperCase());
+    // Normaliza os cabeçalhos removendo acentos para evitar falhas de comparação
+    const normalizarTexto = (txt) => String(txt || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const headers = data[0].map(h => normalizarTexto(h));
 
-    const idxChave = headers.indexOf("CHAVE");
-    const idxEmail = headers.indexOf("EMAIL");
-    const idxSenha = headers.indexOf("SENHA");
-    const idxTrocarSenha = headers.indexOf("TROCAR_SENHA");
-    const idxNome = headers.indexOf("NOME");
-    const idxNivel = headers.indexOf("NÍVEL DE ACESSO");
-    const idxSituacao = headers.indexOf("SITUAÇÃO");
+    // Busca flexível de colunas (com ou sem acentos / com ou sem sublinhado)
+    const getColIndex = (nomesPossiveis) => {
+      for (let nome of nomesPossiveis) {
+        let idx = headers.indexOf(normalizarTexto(nome));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    const idxChave = getColIndex(["CHAVE J", "CHAVE_J", "CHAVE"]);
+    const idxEmail = getColIndex(["EMAIL", "E-MAIL"]);
+    const idxSenha = getColIndex(["SENHA"]);
+    const idxTrocarSenha = getColIndex(["TROCAR_SENHA", "TROCAR SENHA"]);
+    const idxNome = getColIndex(["NOME"]);
+    const idxNivel = getColIndex(["NIVEL DE ACESSO", "NIVEL_DE_ACESSO", "PERMISSAO"]);
+    const idxSituacao = getColIndex(["SITUACAO", "SITUACÃO", "STATUS"]);
+    const idxPerfil = getColIndex(["PERFIL"]);
 
     if (idxChave === -1 || idxEmail === -1 || idxSenha === -1) {
-      throw new Error("Colunas obrigatórias não encontradas na aba Promotores.");
+      throw new Error("Colunas obrigatórias (CHAVE, EMAIL, SENHA) não encontradas na aba Promotores.");
     }
 
     const termoBusca = String(identificador).trim().toLowerCase();
@@ -116,7 +128,7 @@ function validarLogin(identificador, senhaDigitada) {
       const row = data[i];
       const chaveLinha = String(row[idxChave]).trim().toLowerCase();
       const emailLinha = String(row[idxEmail]).trim().toLowerCase();
-      const situacao = idxSituacao !== -1 ? String(row[idxSituacao]).trim().toUpperCase() : "ATIVO";
+      const situacao = idxSituacao !== -1 ? normalizarTexto(row[idxSituacao]) : "ATIVO";
 
       // Aceita CHAVE J ou E-MAIL
       if (termoBusca === chaveLinha || termoBusca === emailLinha) {
@@ -133,10 +145,11 @@ function validarLogin(identificador, senhaDigitada) {
             sucesso: true,
             usuario: {
               chave: row[idxChave],
-              nome: row[idxNome],
+              nome: idxNome !== -1 ? row[idxNome] : "Usuário",
               email: row[idxEmail],
+              perfil: idxPerfil !== -1 ? row[idxPerfil] : "BLACK",
               nivelAcesso: idxNivel !== -1 ? row[idxNivel] : "USUARIO",
-              trocarSenha: idxTrocarSenha !== -1 && String(row[idxTrocarSenha]).trim().toUpperCase() === "SIM"
+              trocarSenha: idxTrocarSenha !== -1 && normalizarTexto(row[idxTrocarSenha]) === "SIM"
             }
           };
         } else {
@@ -145,7 +158,7 @@ function validarLogin(identificador, senhaDigitada) {
       }
     }
 
-    return { sucesso: false, erro: "Usuário não encontrado." };
+    return { sucesso: false, erro: "Usuário ou e-mail não encontrado." };
 
   } catch (e) {
     return { sucesso: false, erro: e.message };
