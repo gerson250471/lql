@@ -2891,10 +2891,24 @@
           .alterarSenhaUsuario(usuarioLogadoTemp.chave, novaSenha);
       }
 
+      function iniciarSessao(dadosUsuario) {
+        user = {
+          chave: dadosUsuario.chave,
+          nome: dadosUsuario.nome,
+          email: dadosUsuario.email,
+          nivelAcesso: dadosUsuario.nivelAcesso,
+          perfil: dadosUsuario.perfil || "BLACK",
+          meta: dadosUsuario.meta || 0, // <-- RECEBE A META AQUI
+        };
+
+        initApp();
+      }
+
       function initApp() {
-        // Ajustado de loginScreen para boxLogin
         const boxLogin = document.getElementById("boxLogin");
-        if (boxLogin) boxLogin.style.display = "none";
+        if (boxLogin) {
+          boxLogin.classList.add("hidden"); // Oculta o container flex com segurança
+        }
 
         document.getElementById("mainScreen").classList.remove("hidden");
 
@@ -2932,33 +2946,31 @@
         carregarCombosProposta();
       }
 
-      function iniciarSessao(dadosUsuario) {
-        user = {
-          chave: dadosUsuario.chave,
-          nome: dadosUsuario.nome,
-          email: dadosUsuario.email,
-          nivelAcesso: dadosUsuario.nivelAcesso,
-          perfil: dadosUsuario.perfil || "BLACK",
-          meta: dadosUsuario.meta || 0, // <-- RECEBE A META AQUI
-        };
-
-        initApp();
-      }
-
       function logout() {
         user = null;
+
+        // Esconde a tela principal
         document.getElementById("mainScreen").classList.add("hidden");
 
+        // Restaura a exibição do boxLogin mantendo as classes flex da Tailwind
         const boxLogin = document.getElementById("boxLogin");
-        if (boxLogin) boxLogin.style.display = "block";
+        if (boxLogin) {
+          boxLogin.style.display = ""; // Limpa estilo inline
+          boxLogin.classList.remove("hidden"); // Garante a visibilidade mantendo o alinhamento flex
+        }
 
+        // Limpa os campos de entrada
         document.getElementById("txtIdentificador").value = "";
         document.getElementById("txtSenha").value = "";
-        document.getElementById("msgErroLogin").style.display = "none";
+
+        const divErro = document.getElementById("msgErroLogin");
+        if (divErro) divErro.style.display = "none";
 
         const btnLogin = document.getElementById("btnLogin");
-        btnLogin.disabled = false;
-        btnLogin.innerText = "Entrar";
+        if (btnLogin) {
+          btnLogin.disabled = false;
+          btnLogin.innerText = "ENTRAR";
+        }
 
         showToast("Sessão terminada com segurança.", "success");
       }
