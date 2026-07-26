@@ -21,61 +21,144 @@
       ⚠️ AMBIENTE DE HOMOLOGAÇÃO / TESTES - DADOS NÃO OFICIAIS
     </div>
 
-    <div id="app">
+    <div
+      id="app"
+      class="min-h-screen bg-slate-100 flex items-center justify-center p-4 pt-12"
+    >
       <!-- TELA DE LOGIN -->
-      <div id="boxLogin" class="card-login">
-        <h2>Acesso ao Sistema</h2>
-
-        <div class="form-group">
-          <label>Chave J ou E-mail</label>
-          <input
-            type="text"
-            id="txtIdentificador"
-            placeholder="Ex: JJ826554 ou email@dominio.com"
-            autocomplete="username"
+      <div
+        id="boxLogin"
+        class="bg-white p-8 md:p-10 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
+      >
+        <!-- LOGO DOURADA -->
+        <div
+          class="w-20 h-20 mx-auto rounded-2xl border-2 border-yellow-500 overflow-hidden shadow-md"
+        >
+          <img
+            src="https://majb.online/shared/logo_LQL.jpg"
+            alt="Logo LQL"
+            class="w-full h-full object-cover"
           />
         </div>
 
-        <div class="form-group">
-          <label>Senha</label>
-          <input
-            type="password"
-            id="txtSenha"
-            placeholder="Digite sua senha"
-            autocomplete="current-password"
-          />
+        <div>
+          <h1
+            class="text-2xl font-black text-slate-800 tracking-tight uppercase"
+          >
+            LQL SOLUÇÕES
+          </h1>
+          <p
+            class="text-xs font-bold text-slate-400 uppercase mt-1 tracking-widest"
+          >
+            Portal de Vendas & CRM
+          </p>
         </div>
 
-        <button id="btnLogin" onclick="efetuarLogin()">Entrar</button>
-        <div id="msgErroLogin" class="msg-erro" style="display: none"></div>
+        <div class="space-y-4 text-left">
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+              >Chave J ou E-mail</label
+            >
+            <input
+              type="text"
+              id="txtIdentificador"
+              placeholder="Ex: JJ826554 ou email@dominio.com"
+              autocomplete="username"
+              class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm uppercase"
+            />
+          </div>
+
+          <div>
+            <label
+              class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+              >Senha</label
+            >
+            <input
+              type="password"
+              id="txtSenha"
+              placeholder="Digite sua senha"
+              autocomplete="current-password"
+              class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+            />
+          </div>
+        </div>
+
+        <button
+          id="btnLogin"
+          onclick="efetuarLogin()"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm flex items-center justify-center gap-2 active:scale-95"
+        >
+          ACESSAR O SISTEMA
+        </button>
+
+        <div
+          id="msgErroLogin"
+          class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
+          style="display: none"
+        ></div>
       </div>
 
-      <!-- MODAL/TELA DEPRIMEIRO ACESSO (TROCA DE SENHA) -->
-      <div id="modalTrocaSenha" class="modal" style="display: none">
-        <div class="modal-content">
-          <h3>Primeiro Acesso - Cadastrar Nova Senha</h3>
-          <p>Por segurança, você precisa alterar sua senha inicial (123456).</p>
-
-          <div class="form-group">
-            <label>Nova Senha</label>
-            <input
-              type="password"
-              id="txtNovaSenha"
-              placeholder="Mínimo de 6 caracteres"
-            />
+      <!-- MODAL/TELA DE PRIMEIRO ACESSO (TROCA DE SENHA) -->
+      <div
+        id="modalTrocaSenha"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+        style="display: none"
+      >
+        <div
+          class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
+        >
+          <div>
+            <h3
+              class="text-xl font-black text-slate-800 uppercase tracking-tight"
+            >
+              Primeiro Acesso
+            </h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+              Por segurança, altere a sua senha inicial (123456).
+            </p>
           </div>
 
-          <div class="form-group">
-            <label>Confirmar Nova Senha</label>
-            <input
-              type="password"
-              id="txtConfirmaSenha"
-              placeholder="Repita a nova senha"
-            />
+          <div class="space-y-4 text-left">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Nova Senha</label
+              >
+              <input
+                type="password"
+                id="txtNovaSenha"
+                placeholder="Mínimo de 6 caracteres"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+              />
+            </div>
+
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Confirmar Nova Senha</label
+              >
+              <input
+                type="password"
+                id="txtConfirmaSenha"
+                placeholder="Repita a nova senha"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+              />
+            </div>
           </div>
 
-          <button onclick="salvarNovaSenha()">Atualizar Senha e Entrar</button>
-          <div id="msgErroTroca" class="msg-erro" style="display: none"></div>
+          <button
+            onclick="salvarNovaSenha()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm active:scale-95"
+          >
+            Atualizar Senha e Entrar
+          </button>
+
+          <div
+            id="msgErroTroca"
+            class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
+            style="display: none"
+          ></div>
         </div>
       </div>
 
@@ -174,7 +257,7 @@
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
                 <!-- Versão do Sistema -->
-                V: 1.2.0
+                V: 1.3.0
               </span>
               <button
                 onclick="logout()"
