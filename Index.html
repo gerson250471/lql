@@ -25,7 +25,7 @@
       id="app"
       class="w-full min-h-screen bg-slate-100 font-sans text-slate-800"
     >
-      <!-- TELA DE LOGIN (Card Centralizado) -->
+      <!-- TELA DE LOGIN -->
       <div
         id="boxLogin"
         class="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 p-4"
@@ -72,10 +72,19 @@
             </div>
 
             <div>
-              <label
-                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
-                >Senha</label
-              >
+              <div class="flex justify-between items-center mb-1.5">
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest"
+                  >Senha</label
+                >
+                <button
+                  type="button"
+                  onclick="abrirModalEsqueciSenha()"
+                  class="text-[10px] font-bold text-blue-600 hover:underline uppercase"
+                >
+                  Esqueci a senha
+                </button>
+              </div>
               <input
                 type="password"
                 id="txtSenha"
@@ -96,6 +105,66 @@
 
           <div
             id="msgErroLogin"
+            class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
+            style="display: none"
+          ></div>
+        </div>
+      </div>
+
+      <!-- MODAL ESQUECI A SENHA -->
+      <div
+        id="modalEsqueciSenha"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+        style="display: none"
+      >
+        <div
+          class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
+        >
+          <div>
+            <h3
+              class="text-xl font-black text-slate-800 uppercase tracking-tight"
+            >
+              Recuperar Acesso
+            </h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+              Informe a sua Chave J ou E-mail cadastrado para receber uma senha
+              temporária.
+            </p>
+          </div>
+
+          <div class="space-y-4 text-left">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Chave J ou E-mail</label
+              >
+              <input
+                type="text"
+                id="txtRecuperaIdentificador"
+                placeholder="Ex: JJ826554 ou email@dominio.com"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm uppercase"
+              />
+            </div>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              onclick="fecharModalEsqueciSenha()"
+              class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-xl transition-all uppercase text-xs"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btnEnviarRecuperacao"
+              onclick="enviarRecuperacaoSenha()"
+              class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase text-xs active:scale-95"
+            >
+              Enviar Senha
+            </button>
+          </div>
+
+          <div
+            id="msgErroRecupera"
             class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
             style="display: none"
           ></div>
@@ -3020,6 +3089,59 @@
             divErro.style.display = "block";
           })
           .validarLogin(identificador, senha);
+      }
+
+      function abrirModalEsqueciSenha() {
+        document.getElementById("txtRecuperaIdentificador").value =
+          document.getElementById("txtIdentificador").value;
+        document.getElementById("msgErroRecupera").style.display = "none";
+        document.getElementById("modalEsqueciSenha").style.display = "flex";
+      }
+
+      function fecharModalEsqueciSenha() {
+        document.getElementById("modalEsqueciSenha").style.display = "none";
+      }
+
+      function enviarRecuperacaoSenha() {
+        const identificador = document
+          .getElementById("txtRecuperaIdentificador")
+          .value.trim();
+        const divErro = document.getElementById("msgErroRecupera");
+        const btn = document.getElementById("btnEnviarRecuperacao");
+
+        divErro.style.display = "none";
+
+        if (!identificador) {
+          divErro.innerText = "Informe a Chave J ou E-mail.";
+          divErro.style.display = "block";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-1"></i> ENVIANDO...';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerText = "Enviar Senha";
+
+            if (res.sucesso) {
+              fecharModalEsqueciSenha();
+              showToast(res.mensagem, "success");
+            } else {
+              divErro.innerText = res.erro;
+              divErro.style.display = "block";
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerText = "Enviar Senha";
+            divErro.innerText =
+              "Erro ao comunicar com o servidor: " + err.message;
+            divErro.style.display = "block";
+          })
+          .solicitarRecuperacaoSenha(identificador);
       }
     </script>
   </body>

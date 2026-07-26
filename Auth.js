@@ -186,3 +186,102 @@ function validarLogin(identificador, senhaDigitada) {
     return { sucesso: false, erro: e.message };
   }
 }
+
+/**
+ * Solicitação de recuperação de senha: gera senha temporária, salva o Hash, marca TROCAR_SENHA="SIM" e envia e-mail.
+ */
+function solicitarRecuperacaoSenha(identificador) {
+  try {
+    if (!identificador) {
+      return { sucesso: false, erro: "Informe a Chave J ou E-mail." };
+    }
+
+    const ss = getDatabaseConnection();
+    const sheet = ss.getSheetByName("Promotores");
+    if (!sheet) throw new Error("Aba 'Promotores' não encontrada.");
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { sucesso: false, erro: "Nenhum usuário cadastrado." };
+
+    const normalizarTexto = (txt) => String(txt || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const headers = data[0].map(h => normalizarTexto(h));
+
+    const getColIndex = (nomesPossiveis) => {
+      for (let nome of nomesPossiveis) {
+        let idx = headers.indexOf(normalizarTexto(nome));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    const idxChave = getColIndex(["CHAVE J", "CHAVE_J", "CHAVE"]);
+    const idxEmail = getColIndex(["EMAIL", "E-MAIL"]);
+    const idxSenha = getColIndex(["SENHA"]);
+    const idxTrocarSenha = getColIndex(["TROCAR_SENHA", "TROCAR SENHA"]);
+    const idxNome = getColIndex(["NOME"]);
+
+    if (idxChave === -1 || idxEmail === -1 || idxSenha === -1) {
+      throw new Error("Colunas obrigatórias não encontradas na aba Promotores.");
+    }
+
+    const termoBusca = String(identificador).trim().toLowerCase();
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const chaveLinha = String(row[idxChave]).trim().toLowerCase();
+      const emailLinha = String(row[idxEmail]).trim().toLowerCase();
+
+      if (termoBusca === chaveLinha || termoBusca === emailLinha) {
+        const emailDestino = row[idxEmail];
+        const nomeUsuario = idxNome !== -1 ? row[idxNome] : "Promotor";
+
+        if (!emailDestino || !emailDestino.includes("@")) {
+          return { sucesso: false, erro: "O usuário não possui um e-mail válido cadastrado." };
+        }
+
+        // Gera uma senha temporária única (Ex: LQL-8F2D1K)
+        const senhaProvisoria = "LQL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const hashProvisorio = gerarHashSHA256(senhaProvisoria);
+
+        // Atualiza na planilha: Hash SHA-256 e marca para trocar no próximo acesso
+        sheet.getRange(i + 1, idxSenha + 1).setValue(hashProvisorio);
+        if (idxTrocarSenha !== -1) {
+          sheet.getRange(i + 1, idxTrocarSenha + 1).setValue("SIM");
+        }
+
+        // Envia o e-mail
+        const assunto = "LQL Soluções - Recuperação de Acesso";
+        const corpoHtml = `
+          <div style="font-family: Arial, sans-serif; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #e2e8f0; padding: 20px; rounded-radius: 10px;">
+            <h2 style="color: #1e3a8a; text-align: center;">LQL SOLUÇÕES</h2>
+            <p>Olá, <strong>${nomeUsuario}</strong>!</p>
+            <p>Recebemos uma solicitação de recuperação de senha para a sua conta.</p>
+            <p>A sua senha provisória de acesso é:</p>
+            <div style="background-color: #f1f5f9; padding: 12px; text-align: center; font-size: 20px; font-weight: bold; letter-spacing: 2px; color: #1e40af; border-radius: 8px;">
+              ${senhaProvisoria}
+            </div>
+            <p style="margin-top: 15px; font-size: 12px; color: #64748b;">
+              <strong>Atenção:</strong> Por motivos de segurança, ao efetuar o login com esta senha, você será solicitado a cadastrar uma nova senha definitiva.
+            </p>
+          </div>
+        `;
+
+        MailApp.sendEmail({
+          to: emailDestino,
+          subject: assunto,
+          htmlBody: corpoHtml
+        });
+
+        return { 
+          sucesso: true, 
+          mensagem: `Senha temporária enviada para o e-mail ${emailDestino.substring(0, 3)}***@***` 
+        };
+      }
+    }
+
+    return { sucesso: false, erro: "Usuário ou e-mail não encontrado." };
+
+  } catch (e) {
+    return { sucesso: false, erro: e.message };
+  }
+}
