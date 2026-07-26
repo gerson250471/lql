@@ -154,7 +154,7 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
       const mesLinha = String(row[idxMes]).trim().padStart(2, '0');
       const mesBusca = String(mesFiltro).padStart(2, '0');
 
-      if (anoLinha === String(anoFildro) || anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
+      if (anoLinha === String(anoFiltro) || anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
         // Correção de escopo aplicada abaixo
       }
 

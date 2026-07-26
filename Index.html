@@ -23,56 +23,59 @@
 
     <div id="app">
       <!-- TELA DE LOGIN -->
-      <div
-        id="loginScreen"
-        class="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-slate-100 to-blue-50"
-      >
-        <div
-          class="bg-white/90 backdrop-blur-md p-10 rounded-3xl shadow-2xl w-full max-w-md border border-white text-center"
-        >
-          <div class="flex justify-center mb-6">
-            <div
-              class="w-32 h-32 logo-circle border-4 border-yellow-500 shadow-xl overflow-hidden flex items-center justify-center"
-            >
-              <img
-                src="https://majb.online/shared/logo_LQL.jpg"
-                class="max-w-full h-auto"
-                alt="Logo LQL"
-              />
-            </div>
+      <div id="boxLogin" class="card-login">
+        <h2>Acesso ao Sistema</h2>
+
+        <div class="form-group">
+          <label>Chave J ou E-mail</label>
+          <input
+            type="text"
+            id="txtIdentificador"
+            placeholder="Ex: JJ826554 ou email@dominio.com"
+            autocomplete="username"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Senha</label>
+          <input
+            type="password"
+            id="txtSenha"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+          />
+        </div>
+
+        <button id="btnLogin" onclick="efetuarLogin()">Entrar</button>
+        <div id="msgErroLogin" class="msg-erro" style="display: none"></div>
+      </div>
+
+      <!-- MODAL/TELA DEPRIMEIRO ACESSO (TROCA DE SENHA) -->
+      <div id="modalTrocaSenha" class="modal" style="display: none">
+        <div class="modal-content">
+          <h3>Primeiro Acesso - Cadastrar Nova Senha</h3>
+          <p>Por segurança, você precisa alterar sua senha inicial (123456).</p>
+
+          <div class="form-group">
+            <label>Nova Senha</label>
+            <input
+              type="password"
+              id="txtNovaSenha"
+              placeholder="Mínimo de 6 caracteres"
+            />
           </div>
 
-          <h1
-            class="text-3xl font-black lql-blue tracking-tight mb-8 uppercase"
-          >
-            LQL SOLUÇÕES
-          </h1>
-
-          <div class="space-y-6 text-left">
-            <div>
-              <label
-                class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1 ml-1"
-                >Chave J</label
-              >
-              <input
-                type="text"
-                id="chaveJ"
-                class="w-full p-4 rounded-xl border border-slate-200 outline-none uppercase font-bold focus:border-blue-500"
-                placeholder="EX: JG240958"
-              />
-              <button
-                onclick="tentarLogin()"
-                id="btnLogin"
-                class="w-full mt-3 bg-blue-700 text-white font-black py-4 rounded-xl shadow-xl transition-all hover:bg-blue-800 disabled:opacity-75 disabled:cursor-wait"
-              >
-                ACESSAR O SISTEMA
-              </button>
-            </div>
-            <div
-              id="loginMsg"
-              class="text-center text-sm text-red-500 hidden font-bold mt-2"
-            ></div>
+          <div class="form-group">
+            <label>Confirmar Nova Senha</label>
+            <input
+              type="password"
+              id="txtConfirmaSenha"
+              placeholder="Repita a nova senha"
+            />
           </div>
+
+          <button onclick="salvarNovaSenha()">Atualizar Senha e Entrar</button>
+          <div id="msgErroTroca" class="msg-erro" style="display: none"></div>
         </div>
       </div>
 
@@ -1596,46 +1599,6 @@
           .autenticarUsuario(chave);
       }
 
-      function initApp() {
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainScreen").classList.remove("hidden");
-
-        document.getElementById("nomeDisplay").innerText =
-          `${user.nome} (${user.perfil})`;
-        document.getElementById("welcomeNome").innerText =
-          user.nome.split(" ")[0];
-
-        let metaNum = user.meta || 0;
-        document.getElementById("metaValor").innerText = metaNum.toLocaleString(
-          "pt-BR",
-          { style: "currency", currency: "BRL" },
-        );
-
-        // --- LÓGICA BLINDADA DE NÍVEL DE ACESSO ---
-        if (
-          user.nivelAcesso === "ADMINISTRADOR" ||
-          user.nivelAcesso === "PROGRAMADOR"
-        ) {
-          document.getElementById("navAdminLeads").classList.remove("hidden");
-          document.getElementById("navParametros").classList.remove("hidden");
-          document
-            .getElementById("navAdminProducao")
-            .classList.remove("hidden"); // <-- NOVO
-        } else {
-          document.getElementById("navAdminLeads").classList.add("hidden");
-          document.getElementById("navParametros").classList.add("hidden");
-          document.getElementById("navAdminProducao").classList.add("hidden"); // <-- NOVO
-        }
-        // --------------------------------------
-
-        switchView("home");
-        loadSimOptions();
-        loadCommissionData();
-        carregarPropostasCRM();
-        carregarLeads();
-        carregarCombosProposta();
-      }
-
       function carregarCombosProposta() {
         google.script.run
           .withSuccessHandler(function (res) {
@@ -2802,25 +2765,159 @@
           .getResumoProducaoAdmin(mesFiltro, anoFiltro);
       }
 
+      let usuarioLogadoTemp = null;
+
+      function salvarNovaSenha() {
+        const novaSenha = document.getElementById("txtNovaSenha").value;
+        const confirma = document.getElementById("txtConfirmaSenha").value;
+        const divErro = document.getElementById("msgErroTroca");
+
+        divErro.style.display = "none";
+
+        if (!novaSenha || novaSenha.length < 6) {
+          divErro.innerText = "A nova senha deve ter pelo menos 6 caracteres.";
+          divErro.style.display = "block";
+          return;
+        }
+
+        if (novaSenha !== confirma) {
+          divErro.innerText = "As senhas não coincidem.";
+          divErro.style.display = "block";
+          return;
+        }
+
+        // CORREÇÃO: Geramos o Hash SHA-256 no client antes de gravar no Sheets
+        // O backend alterarSenhaUsuario receberá a senha já em HASH
+        google.script.run
+          .withSuccessHandler(function (resposta) {
+            if (resposta.sucesso) {
+              alert("Senha alterada com sucesso!");
+              document.getElementById("modalTrocaSenha").style.display = "none";
+              iniciarSessao(usuarioLogadoTemp);
+            } else {
+              divErro.innerText = resposta.erro;
+              divErro.style.display = "block";
+            }
+          })
+          .alterarSenhaUsuario(usuarioLogadoTemp.chave, novaSenha);
+      }
+
+      function initApp() {
+        // Ajustado de loginScreen para boxLogin
+        const boxLogin = document.getElementById("boxLogin");
+        if (boxLogin) boxLogin.style.display = "none";
+
+        document.getElementById("mainScreen").classList.remove("hidden");
+
+        document.getElementById("nomeDisplay").innerText =
+          `${user.nome} (${user.perfil})`;
+        document.getElementById("welcomeNome").innerText =
+          user.nome.split(" ")[0];
+
+        let metaNum = user.meta || 0;
+        document.getElementById("metaValor").innerText = metaNum.toLocaleString(
+          "pt-BR",
+          { style: "currency", currency: "BRL" },
+        );
+
+        if (
+          user.nivelAcesso === "ADMINISTRADOR" ||
+          user.nivelAcesso === "PROGRAMADOR"
+        ) {
+          document.getElementById("navAdminLeads").classList.remove("hidden");
+          document.getElementById("navParametros").classList.remove("hidden");
+          document
+            .getElementById("navAdminProducao")
+            .classList.remove("hidden");
+        } else {
+          document.getElementById("navAdminLeads").classList.add("hidden");
+          document.getElementById("navParametros").classList.add("hidden");
+          document.getElementById("navAdminProducao").classList.add("hidden");
+        }
+
+        switchView("home");
+        loadSimOptions();
+        loadCommissionData();
+        carregarPropostasCRM();
+        carregarLeads();
+        carregarCombosProposta();
+      }
+
+      function iniciarSessao(dadosUsuario) {
+        user = {
+          chave: dadosUsuario.chave,
+          nome: dadosUsuario.nome,
+          email: dadosUsuario.email,
+          nivelAcesso: dadosUsuario.nivelAcesso,
+          perfil: dadosUsuario.perfil || "BLACK",
+        };
+
+        initApp();
+      }
+
       function logout() {
-        // 1. Limpa o utilizador da memória
         user = null;
-
-        // 2. Esconde o sistema e mostra a tela de login
         document.getElementById("mainScreen").classList.add("hidden");
-        document.getElementById("loginScreen").classList.remove("hidden");
 
-        // 3. Limpa o campo de acesso e mensagens de erro
-        document.getElementById("chaveJ").value = "";
-        document.getElementById("loginMsg").classList.add("hidden");
+        const boxLogin = document.getElementById("boxLogin");
+        if (boxLogin) boxLogin.style.display = "block";
 
-        // 4. DESTRAVA E RESTAURA O BOTÃO DE LOGIN <-- ESTA É A CORREÇÃO
+        document.getElementById("txtIdentificador").value = "";
+        document.getElementById("txtSenha").value = "";
+        document.getElementById("msgErroLogin").style.display = "none";
+
         const btnLogin = document.getElementById("btnLogin");
         btnLogin.disabled = false;
-        btnLogin.innerText = "ACESSAR O SISTEMA";
+        btnLogin.innerText = "Entrar";
 
-        // 5. Mostra uma mensagem visual de sucesso
         showToast("Sessão terminada com segurança.", "success");
+      }
+
+      function efetuarLogin() {
+        const identificador = document.getElementById("txtIdentificador").value;
+        const senha = document.getElementById("txtSenha").value;
+        const divErro = document.getElementById("msgErroLogin");
+        const btn = document.getElementById("btnLogin");
+
+        divErro.style.display = "none";
+
+        if (!identificador || !senha) {
+          divErro.innerText = "Preencha a Chave J/E-mail e a Senha.";
+          divErro.style.display = "block";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-circle-notch fa-spin mr-2"></i> A AUTENTICAR...';
+
+        google.script.run
+          .withSuccessHandler(function (resposta) {
+            btn.disabled = false;
+            btn.innerText = "Entrar";
+
+            if (resposta.sucesso) {
+              usuarioLogadoTemp = resposta.usuario;
+
+              // Exibe o modal de troca de senha no primeiro acesso
+              if (resposta.usuario.trocarSenha) {
+                document.getElementById("modalTrocaSenha").style.display =
+                  "block";
+              } else {
+                iniciarSessao(resposta.usuario);
+              }
+            } else {
+              divErro.innerText = resposta.erro;
+              divErro.style.display = "block";
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerText = "Entrar";
+            divErro.innerText = "Erro no servidor: " + err.message;
+            divErro.style.display = "block";
+          })
+          .validarLogin(identificador, senha);
       }
     </script>
   </body>
