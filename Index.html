@@ -317,6 +317,13 @@
               >
                 <i class="fas fa-chart-pie mr-1"></i> Resumo Produção
               </button>
+              <button
+                onclick="switchView('financeiro')"
+                id="navFinanceiro"
+                class="hidden px-3 py-2 rounded-lg text-[10px] font-black uppercase text-emerald-600 hover:bg-emerald-50 transition-all whitespace-nowrap"
+              >
+                <i class="fas fa-wallet mr-1"></i> Controle Financeiro
+              </button>
             </div>
           </div>
           <div class="text-right flex flex-col justify-center items-end">
@@ -1707,6 +1714,303 @@
           </div>
         </div>
       </div>
+      <!-- PÁGINA: CONTROLE FINANCEIRO -->
+      <div
+        id="viewFinanceiro"
+        class="view-content hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6"
+      >
+        <div
+          class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2"
+        >
+          <div>
+            <h1
+              class="text-3xl md:text-4xl font-black text-emerald-800 italic uppercase tracking-tighter"
+            >
+              <i class="fas fa-wallet mr-2"></i> Controle Financeiro
+            </h1>
+            <p class="text-slate-500 text-sm font-medium">
+              Gestão de entradas, saídas e fluxo de caixa.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <input
+              type="month"
+              id="filtroMesFinanceiro"
+              onchange="carregarDadosFinanceiros()"
+              class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-emerald-500 bg-slate-50 flex-1 md:w-48 cursor-pointer"
+            />
+            <button
+              onclick="abrirModalNovoLancamento()"
+              class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-colors shadow-md flex items-center gap-2 whitespace-nowrap"
+            >
+              <i class="fas fa-plus-circle"></i> Novo Lançamento
+            </button>
+          </div>
+        </div>
+
+        <!-- CARDS RESUMO FINANCEIRO -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div
+            class="bg-white border-b-4 border-emerald-500 p-5 rounded-2xl shadow-sm"
+          >
+            <p
+              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Total Entradas (Receitas)
+            </p>
+            <p
+              id="finTotalReceitas"
+              class="text-2xl font-black text-emerald-600"
+            >
+              R$ 0,00
+            </p>
+          </div>
+          <div
+            class="bg-white border-b-4 border-red-500 p-5 rounded-2xl shadow-sm"
+          >
+            <p
+              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Total Saídas (Despesas)
+            </p>
+            <p id="finTotalDespesas" class="text-2xl font-black text-red-600">
+              R$ 0,00
+            </p>
+          </div>
+          <div
+            class="bg-white border-b-4 border-blue-600 p-5 rounded-2xl shadow-sm"
+          >
+            <p
+              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+            >
+              Saldo do Mês
+            </p>
+            <p id="finSaldoMes" class="text-2xl font-black text-blue-600">
+              R$ 0,00
+            </p>
+          </div>
+        </div>
+
+        <!-- TABELA DE LANÇAMENTOS -->
+        <div
+          class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden"
+        >
+          <div class="overflow-x-auto pb-4">
+            <table class="w-full text-left border-collapse whitespace-nowrap">
+              <thead>
+                <tr
+                  class="bg-slate-800 text-[10px] uppercase text-slate-300 tracking-wider"
+                >
+                  <th class="p-4 border-b border-slate-700 font-black">Data</th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-center"
+                  >
+                    Tipo
+                  </th>
+                  <th class="p-4 border-b border-slate-700 font-black">
+                    Categoria
+                  </th>
+                  <th class="p-4 border-b border-slate-700 font-black">
+                    Descrição
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-right"
+                  >
+                    Valor
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-center"
+                  >
+                    Forma Pagto
+                  </th>
+                  <th
+                    class="p-4 border-b border-slate-700 font-black text-center"
+                  >
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="tabelaFinanceiroBody">
+                <tr>
+                  <td
+                    colspan="7"
+                    class="p-8 text-center text-slate-400 font-bold"
+                  >
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Carregando
+                    lançamentos...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODAL: FORMULÁRIO FINANCEIRO DA CLÁUDIA -->
+      <div
+        id="modalFinanceiro"
+        class="fixed inset-0 z-[70] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4"
+      >
+        <div
+          class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter"
+        >
+          <div
+            class="bg-slate-50 p-6 border-b border-slate-100 flex justify-between items-center"
+          >
+            <h2
+              class="text-xl font-black text-slate-800 uppercase tracking-tight"
+            >
+              <i class="fas fa-file-invoice-dollar mr-2 text-emerald-600"></i
+              >Lançamento Financeiro
+            </h2>
+            <button
+              onclick="fecharModalFinanceiro()"
+              class="text-slate-400 hover:text-red-500 transition-colors"
+            >
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <div class="p-6 space-y-4 text-left">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Tipo</label
+                >
+                <select
+                  id="finTipo"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="DESPESA">Saída (Despesa)</option>
+                  <option value="RECEITA">Entrada (Receita)</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Data</label
+                >
+                <input
+                  type="date"
+                  id="finData"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Categoria</label
+                >
+                <select
+                  id="finCategoria"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="COMISSAO PROMOTOR">Comissão Promotor</option>
+                  <option value="SISTEMA/SOFTWARES">Sistema / Softwares</option>
+                  <option value="OPERACIONAL">Custos Operacionais</option>
+                  <option value="IMPOSTOS/TAXAS">Impostos / Taxas</option>
+
+                  <option value="RECEITA VENDAS">Receita de Vendas</option>
+                  <option value="OUTROS">Outros</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Valor (R$)</label
+                >
+                <input
+                  type="number"
+                  step="0.01"
+                  id="finValor"
+                  placeholder="0.00"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Descrição</label
+                >
+                <input
+                  type="text"
+                  id="finDescricao"
+                  placeholder="Ex: Pgto Comissão..."
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Promotor (Opcional)</label
+                >
+                <input
+                  type="text"
+                  id="finPromotor"
+                  placeholder="Ex: JJ826554 ou Nome"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Forma de Pagto</label
+                >
+                <select
+                  id="finFormaPagto"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="PIX">PIX</option>
+                  <option value="TRANSFERENCIA">Transferência / TED</option>
+                  <option value="BOLETO">Boleto</option>
+                  <option value="CARTAO">Cartão</option>
+                  <option value="DINHEIRO">Dinheiro</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Status</label
+                >
+                <select
+                  id="finStatus"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="PAGO">Pago / Concluído</option>
+                  <option value="PENDENTE">Pendente</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+            <button
+              onclick="fecharModalFinanceiro()"
+              class="flex-1 py-3 px-4 bg-white border border-slate-300 text-slate-600 rounded-xl font-bold uppercase text-xs hover:bg-slate-100 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onclick="salvarLancamentoFinanceiro()"
+              id="btnSalvarFin"
+              class="flex-1 py-3 px-4 bg-emerald-600 text-white rounded-xl font-black uppercase text-xs hover:bg-emerald-700 transition-colors shadow-md"
+            >
+              Salvar Lançamento
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- CONTAINER DE NOTIFICAÇÕES (TOAST) -->
@@ -1814,6 +2118,7 @@
           "navProducao",
           "navAdminLeads",
           "navParametros", // <-- 1. ADICIONADO AQUI
+          "navFinanceiro",
         ];
 
         btns.forEach((id) => {
@@ -1832,6 +2137,7 @@
           producao: "navProducao",
           adminLeads: "navAdminLeads",
           parametros: "navParametros", // <-- 2. ADICIONADO AQUI
+          financeiro: "navFinanceiro",
         };
 
         if (activeMap[view]) {
@@ -1855,7 +2161,7 @@
           carregarProducao();
         } else if (view === "adminProducao") {
           carregarResumoAdmin();
-        }
+        } else if (view === "financeiro") carregarDadosFinanceiros();
       }
 
       // 1. Variável global para guardar os leads na memória sem precisar ir ao Google toda hora
@@ -3001,10 +3307,12 @@
           document
             .getElementById("navAdminProducao")
             .classList.remove("hidden");
+          document.getElementById("navFinanceiro").classList.remove("hidden"); // <-- LIBERA NAVEGAÇÃO
         } else {
           document.getElementById("navAdminLeads").classList.add("hidden");
           document.getElementById("navParametros").classList.add("hidden");
           document.getElementById("navAdminProducao").classList.add("hidden");
+          document.getElementById("navFinanceiro").classList.add("hidden");
         }
 
         switchView("home");
@@ -3142,6 +3450,158 @@
             divErro.style.display = "block";
           })
           .solicitarRecuperacaoSenha(identificador);
+      }
+
+      // No initApp(), libere a navegação do botão se for ADMIN ou PROGRAMADOR
+      if (
+        user.nivelAcesso === "ADMINISTRADOR" ||
+        user.nivelAcesso === "PROGRAMADOR"
+      ) {
+        document.getElementById("navAdminLeads").classList.remove("hidden");
+        document.getElementById("navParametros").classList.remove("hidden");
+        document.getElementById("navAdminProducao").classList.remove("hidden");
+        document.getElementById("navFinanceiro").classList.remove("hidden"); // <-- LIBERA NAVEGAÇÃO
+      }
+
+      // Funções do Módulo Financeiro
+      function abrirModalNovoLancamento() {
+        document.getElementById("finTipo").value = "DESPESA";
+        document.getElementById("finData").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("finCategoria").value = "OPERACIONAL";
+        document.getElementById("finValor").value = "";
+        document.getElementById("finDescricao").value = "";
+        document.getElementById("finPromotor").value = ""; // <-- ADICIONE ESTA LINHA
+        document.getElementById("finFormaPagto").value = "PIX";
+        document.getElementById("finStatus").value = "PAGO";
+
+        document.getElementById("modalFinanceiro").classList.remove("hidden");
+      }
+
+      function fecharModalFinanceiro() {
+        document.getElementById("modalFinanceiro").classList.add("hidden");
+      }
+
+      function salvarLancamentoFinanceiro() {
+        const tipo = document.getElementById("finTipo").value;
+        const data = document.getElementById("finData").value;
+        const categoria = document.getElementById("finCategoria").value;
+        const valor = parseFloat(document.getElementById("finValor").value);
+        const descricao = document.getElementById("finDescricao").value.trim();
+        const formaPagto = document.getElementById("finFormaPagto").value;
+        const status = document.getElementById("finStatus").value;
+
+        if (!data || !valor || !descricao) {
+          showToast("Preencha a Data, Valor e Descrição.", "error");
+          return;
+        }
+
+        const btn = document.getElementById("btnSalvarFin");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+
+        const payload = {
+          tipo: tipo,
+          data: data,
+          categoria: categoria,
+          valor: valor,
+          descricao: descricao,
+          promotor: promotor,
+          formaPagto: formaPagto,
+          status: status,
+          usuarioLancamento: user.chave,
+        };
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerText = "Salvar Lançamento";
+            if (res.sucesso) {
+              fecharModalFinanceiro();
+              showToast(res.mensagem, "success");
+              carregarDadosFinanceiros();
+            } else {
+              showToast(res.erro, "error");
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerText = "Salvar Lançamento";
+            showToast("Erro no servidor: " + err.message, "error");
+          })
+          .salvarLancamentoFinanceiro(payload);
+      }
+
+      function carregarDadosFinanceiros() {
+        const tbody = document.getElementById("tabelaFinanceiroBody");
+        const inputMes = document.getElementById("filtroMesFinanceiro");
+
+        if (!inputMes.value) {
+          const hoje = new Date();
+          const ano = hoje.getFullYear();
+          const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+          inputMes.value = `${ano}-${mes}`;
+        }
+
+        const [anoFiltro, mesFiltro] = inputMes.value.split("-");
+
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              return;
+            }
+
+            tbody.innerHTML = "";
+
+            const formataMoeda = (val) =>
+              val.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+
+            if (res.dados.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-slate-400">Nenhum lançamento registrado no mês <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
+            } else {
+              res.dados.forEach(function (item) {
+                let tipoCor =
+                  item.tipo === "RECEITA"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-red-100 text-red-700";
+                let valorCor =
+                  item.tipo === "RECEITA" ? "text-emerald-600" : "text-red-600";
+
+                tbody.innerHTML += `
+            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+              <td class="p-4 text-xs font-bold text-slate-600">${item.data}</td>
+              <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${tipoCor}">${item.tipo}</span></td>
+              <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.categoria}</td>
+              <td class="p-4 text-xs font-medium text-slate-600 uppercase">${item.descricao}</td>
+              <td class="p-4 text-xs font-black text-right ${valorCor}">${formataMoeda(item.valor)}</td>
+              <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
+              <td class="p-4 text-xs font-bold text-center text-slate-700 uppercase">${item.status}</td>
+            </tr>
+          `;
+              });
+            }
+
+            // Atualiza Cards de Resumo
+            document.getElementById("finTotalReceitas").innerText =
+              formataMoeda(res.resumo.receitas);
+            document.getElementById("finTotalDespesas").innerText =
+              formataMoeda(res.resumo.despesas);
+            document.getElementById("finSaldoMes").innerText = formataMoeda(
+              res.resumo.saldo,
+            );
+          })
+          .withFailureHandler(function (err) {
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Falha ao carregar: ${err.message}</td></tr>`;
+          })
+          .getLancamentosFinanceiros(mesFiltro, anoFiltro);
       }
     </script>
   </body>
