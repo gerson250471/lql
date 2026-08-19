@@ -29,16 +29,16 @@ function salvarLancamentoFinanceiro(dados) {
     const idxPromotor = getIdx("PROMOTOR");
     const idxUsuario = getIdx("USUARIO_LANCAMENTO");
     const idxFonte = getIdx("FONTE"); 
+    const idxObs = getIdx("OBSERVACAO"); // <-- NOVO CAMPO
 
     let isEdicao = false;
     let rowIndex = -1;
 
-    // Se veio um ID, é uma ATUALIZAÇÃO de um lançamento já existente
     if (dados.id && idxId !== -1) {
       for (let i = 1; i < dataRows.length; i++) {
         if (dataRows[i][idxId] === dados.id) {
           isEdicao = true;
-          rowIndex = i + 1; // +1 porque a planilha começa na linha 1
+          rowIndex = i + 1;
           break;
         }
       }
@@ -46,7 +46,6 @@ function salvarLancamentoFinanceiro(dados) {
 
     let novaLinha = new Array(headers.length).fill("");
 
-    // Preenchimento Seguro
     if (idxId !== -1) novaLinha[idxId] = isEdicao ? dados.id : "FIN-" + new Date().getTime();
     if (idxData !== -1) {
       if (dados.data) {
@@ -65,6 +64,7 @@ function salvarLancamentoFinanceiro(dados) {
     if (idxPromotor !== -1) novaLinha[idxPromotor] = String(dados.promotor || "").toUpperCase();
     if (idxUsuario !== -1) novaLinha[idxUsuario] = String(dados.usuarioLancamento || "").toUpperCase();
     if (idxFonte !== -1) novaLinha[idxFonte] = String(dados.fonte || "NÃO INFORMADA").toUpperCase(); 
+    if (idxObs !== -1) novaLinha[idxObs] = String(dados.obs || "").toUpperCase(); // <-- NOVO CAMPO
 
     if (isEdicao) {
       aba.getRange(rowIndex, 1, 1, headers.length).setValues([novaLinha]);
@@ -110,6 +110,7 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
     const idxStatus = getIdx("STATUS");
     const idxFonte = getIdx("FONTE"); 
     const idxPromotor = getIdx("PROMOTOR");
+    const idxObs = getIdx("OBSERVACAO"); // <-- NOVO CAMPO
 
     const lancamentos = [];
     let totReceitas = 0;
@@ -132,14 +133,13 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
         let status = String(row[idxStatus] || "PAGO").toUpperCase();
 
         if (status !== "CANCELADO") {
-          // CORREÇÃO: Agora reconhece "RECEITA" ou "ENTRADA" e "DESPESA" ou "SAIDA"
           if (tipo === "RECEITA" || tipo === "ENTRADA") totReceitas += valor;
           else if (tipo === "DESPESA" || tipo === "SAIDA" || tipo === "SAÍDA") totDespesas += valor;
         }
 
         lancamentos.push({
           id: row[idxId],
-          dataFormatoInput: Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd"), // Necessário para Edição
+          dataFormatoInput: Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd"), 
           data: Utilities.formatDate(d, Session.getScriptTimeZone(), "dd/MM/yyyy"),
           tipo: tipo,
           categoria: row[idxCategoria] || "-",
@@ -148,7 +148,8 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
           formaPagto: row[idxForma] || "-",
           status: status,
           fonte: idxFonte !== -1 ? (row[idxFonte] || "-") : "-",
-          promotor: idxPromotor !== -1 ? (row[idxPromotor] || "") : ""
+          promotor: idxPromotor !== -1 ? (row[idxPromotor] || "") : "",
+          obs: idxObs !== -1 ? (row[idxObs] || "") : "" // <-- NOVO CAMPO
         });
       }
     }

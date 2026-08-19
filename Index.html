@@ -2021,6 +2021,11 @@
                   <option value="PENDENTE">Pendente</option>
                 </select>
               </div>
+              <!-- NOVO: CAMPO DE OBSERVAÇÕES LOGO ABAIXO DA GRELHA -->
+              <div class="mt-2">
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Observações</label>
+                <textarea id="finObs" rows="2" placeholder="Informações adicionais, número de transação..." class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-emerald-500 resize-none"></textarea>
+              </div>
             </div>
           </div>
 
@@ -3504,6 +3509,7 @@
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
         document.getElementById("finPromotor").value = "";
+        document.getElementById("finObs").value = ""; // <-- ADICIONADO AQUI PARA LIMPAR
 
         if (listasFinanceirasAtuais) {
           if (listasFinanceirasAtuais.tipos && listasFinanceirasAtuais.tipos.length > 0) document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
@@ -3525,6 +3531,7 @@
         document.getElementById("finValor").value = item.valor;
         document.getElementById("finDescricao").value = item.descricao;
         document.getElementById("finPromotor").value = item.promotor;
+        document.getElementById("finObs").value = ""; // <-- ADICIONE ESTA LINHA
         
         // Atribui os selects
         document.getElementById("finTipo").value = item.tipo;
@@ -3536,6 +3543,7 @@
           document.getElementById("finFonte").value = item.fonte;
           document.getElementById("finFormaPagto").value = item.formaPagto;
           document.getElementById("finStatus").value = item.status;
+          document.getElementById("finObs").value = item.obs || ""; // <-- ADICIONE ESTA LINHA
         }, 50);
 
         document.getElementById("modalFinanceiro").classList.remove("hidden");
@@ -3546,7 +3554,7 @@
       }
 
       function salvarLancamentoFinanceiro() {
-        const idLancamento = document.getElementById("finLancamentoId").value; // NOVO: Captura o ID
+        const idLancamento = document.getElementById("finLancamentoId").value; 
         const tipo = document.getElementById("finTipo").value;
         const data = document.getElementById("finData").value;
         const categoria = document.getElementById("finCategoria").value;
@@ -3556,6 +3564,7 @@
         const fonte = document.getElementById("finFonte").value;
         const formaPagto = document.getElementById("finFormaPagto").value;
         const status = document.getElementById("finStatus").value;
+        const obs = document.getElementById("finObs").value.trim(); // <-- ADICIONADO AQUI PARA CAPTURAR
 
         if (!data || !valor || !descricao) {
           showToast("Preencha a Data, Valor e Descrição.", "error");
@@ -3567,7 +3576,7 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
 
         const payload = {
-          id: idLancamento, // Envia o ID para o Backend
+          id: idLancamento, 
           tipo: tipo,
           data: data,
           categoria: categoria,
@@ -3577,6 +3586,7 @@
           fonte: fonte,
           formaPagto: formaPagto,
           status: status,
+          obs: obs, 
           usuarioLancamento: user.chave,
         };
 
