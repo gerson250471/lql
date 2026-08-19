@@ -1207,45 +1207,68 @@
           </div>
         </div>
         <!-- PÁGINA: PARAMETROS -->
-        <div
-          id="viewParametros"
-          class="view-content hidden p-4 md:p-6 max-w-6xl mx-auto space-y-6"
-        >
-          <header
-            class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4"
-          >
-            <div>
-              <h1
-                class="text-3xl md:text-4xl font-black text-slate-800 italic uppercase tracking-tighter"
-              >
-                <i class="fas fa-sliders-h mr-2"></i> Parâmetros do Sistema
-              </h1>
-              <p class="text-slate-500 text-sm font-medium">
-                Gestão de multiplicadores e regras de negócio.
-              </p>
-            </div>
-            <button
-              onclick="salvarNovosParametros()"
-              id="btnSalvarParams"
-              class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-black uppercase text-sm transition-colors shadow-lg flex items-center justify-center gap-2"
-            >
-              <i class="fas fa-save"></i> Guardar Alterações
-            </button>
+        <div id="viewParametros" class="view-content hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6">
+          <header class="mb-4">
+            <h1 class="text-3xl md:text-4xl font-black text-slate-800 italic uppercase tracking-tighter">
+              <i class="fas fa-sliders-h mr-2"></i> Parâmetros do Sistema
+            </h1>
+            <p class="text-slate-500 text-sm font-medium">Gestão de repasses, categorias e regras de negócio.</p>
           </header>
 
-          <div
-            class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
-          >
-            <div
-              id="containerTabelaParametros"
-              class="p-10 text-center text-slate-400 font-bold"
-            >
-              <i class="fas fa-spinner fa-spin mr-2"></i> A carregar matriz de
-              parâmetros...
+          <div class="flex flex-col md:flex-row gap-6">
+            <!-- BARRA LATERAL (MENU) -->
+            <div class="w-full md:w-64 shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 h-fit">
+              <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4 border-b pb-2">Configurações</h3>
+              <ul class="space-y-2">
+                <li>
+                  <button onclick="mudarAbaParametros('comissoes')" id="btnAbaParamComissoes" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 transition-colors">
+                    <i class="fas fa-percent w-5 text-center mr-1"></i> Tabela Comissões
+                  </button>
+                </li>
+                <li>
+                  <button onclick="mudarAbaParametros('financeiro')" id="btnAbaParamFinanceiro" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-wallet w-5 text-center mr-1"></i> Opções Financeiras
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <!-- ÁREA DE CONTEÚDO (DIREITA) -->
+            <div class="flex-1">
+              
+              <!-- CONTEÚDO: COMISSÕES -->
+              <div id="paramAbaComissoes" class="space-y-4">
+                <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                  <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest">Multiplicadores de Repasse</h2>
+                  <button onclick="salvarNovosParametros()" id="btnSalvarParams" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-colors shadow-md flex items-center gap-2">
+                    <i class="fas fa-save"></i> Guardar
+                  </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="containerTabelaParametros">
+                  <div class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> A carregar matriz de repasses...</div>
+                </div>
+              </div>
+
+              <!-- CONTEÚDO: FINANCEIRO -->
+              <div id="paramAbaFinanceiro" class="space-y-4 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm gap-4">
+                  <div>
+                    <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest">Listas Auxiliares do Caixa</h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Coloque uma opção por linha nas caixas abaixo.</p>
+                  </div>
+                  <button onclick="salvarParametrosFinanceirosUI()" id="btnSalvarParamsFin" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-colors shadow-md flex items-center justify-center gap-2">
+                    <i class="fas fa-save"></i> Guardar Listas
+                  </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6" id="containerParamsFin">
+                  <!-- Renderizado via JS -->
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
-      </div>
+
       <!-- PÁGINA: RESUMO DA PRODUÇÃO (ADMIN) -->
       <div
         id="viewAdminProducao"
@@ -1883,12 +1906,8 @@
                   class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
                   >Tipo</label
                 >
-                <select
-                  id="finTipo"
-                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
-                >
-                  <option value="DESPESA">Saída (Despesa)</option>
-                  <option value="RECEITA">Entrada (Receita)</option>
+                <select id="finTipo" onchange="atualizarCategoriasFin()" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
+                  <option value="">A carregar...</option>
                 </select>
               </div>
               <div>
@@ -1910,17 +1929,8 @@
                   class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
                   >Categoria</label
                 >
-                <select
-                  id="finCategoria"
-                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
-                >
-                  <option value="COMISSAO PROMOTOR">Comissão Promotor</option>
-                  <option value="SISTEMA/SOFTWARES">Sistema / Softwares</option>
-                  <option value="OPERACIONAL">Custos Operacionais</option>
-                  <option value="IMPOSTOS/TAXAS">Impostos / Taxas</option>
-
-                  <option value="RECEITA VENDAS">Receita de Vendas</option>
-                  <option value="OUTROS">Outros</option>
+                <select id="finCategoria" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
+                  <option value="">Selecione o Tipo primeiro...</option>
                 </select>
               </div>
               <div>
@@ -1971,15 +1981,8 @@
                   class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
                   >Fonte / Conta</label
                 >
-                <select
-                  id="finFonte"
-                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
-                >
-                  <option value="BB PRINCIPAL">BB Principal</option>
-                  <option value="CAIXA ECONOMICA">Caixa Econômica</option>
-                  <option value="ITAU">Itaú</option>
-                  <option value="DINHEIRO">Dinheiro (Caixinha)</option>
-                  <option value="OUTRA">Outra</option>
+                <select id="finFonte" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
+                  <option value="">A carregar...</option>
                 </select>
               </div>
               <div>
@@ -3340,7 +3343,8 @@
         loadCommissionData();
         carregarPropostasCRM();
         carregarLeads();
-        carregarCombosProposta();
+        carregarCombosFinanceiro();
+        carregarCombosProposta()
       }
 
       function logout() {
@@ -3630,6 +3634,135 @@
           })
           .getLancamentosFinanceiros(mesFiltro, anoFiltro);
       }
+
+      // --- NOVO: LÓGICA DE PARÂMETROS DINÂMICOS (FINANCEIRO) ---
+
+let listasFinanceirasAtuais = null;
+
+// Dispara ao abrir o sistema para deixar os menus do Modal prontos
+function carregarCombosFinanceiro() {
+  google.script.run.withSuccessHandler(function(res) {
+    if (res.sucesso) {
+      listasFinanceirasAtuais = res.dados;
+      preencherSelectUI('finTipo', res.dados.tipos);
+      preencherSelectUI('finFonte', res.dados.fontes);
+      preencherSelectUI('finFormaPagto', res.dados.formasPagto);
+      preencherSelectUI('finStatus', res.dados.status);
+      atualizarCategoriasFin(); // Atualiza a categoria com base no Tipo inicial
+    }
+  }).getParametrosFinanceiros();
+}
+
+function preencherSelectUI(idElemento, arrayValores) {
+  const el = document.getElementById(idElemento);
+  if (!el) return;
+  el.innerHTML = "";
+  if (arrayValores.length === 0) {
+    el.innerHTML = '<option value="">Sem opções cadastradas</option>';
+  } else {
+    arrayValores.forEach(val => {
+      if (val) el.innerHTML += `<option value="${val}">${val}</option>`;
+    });
+  }
+}
+
+// Troca as categorias para ENTRADAS ou SAÍDAS dependendo da escolha
+function atualizarCategoriasFin() {
+  if (!listasFinanceirasAtuais) return;
+  const tipoSelecionado = document.getElementById('finTipo').value.toUpperCase();
+  
+  let listaCat = [];
+  if (tipoSelecionado === "RECEITA" || tipoSelecionado === "ENTRADA") {
+    listaCat = listasFinanceirasAtuais.categoriasEntrada;
+  } else {
+    listaCat = listasFinanceirasAtuais.categoriasSaida;
+  }
+  preencherSelectUI('finCategoria', listaCat);
+}
+
+// Controla as abas laterais dentro de Parâmetros
+function mudarAbaParametros(abaDesejada) {
+  // Oculta painéis
+  document.getElementById('paramAbaComissoes').classList.add('hidden');
+  document.getElementById('paramAbaFinanceiro').classList.add('hidden');
+  // Reseta cores botões laterais
+  document.getElementById('btnAbaParamComissoes').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors";
+  document.getElementById('btnAbaParamFinanceiro').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors";
+
+  if (abaDesejada === 'comissoes') {
+    document.getElementById('paramAbaComissoes').classList.remove('hidden');
+    document.getElementById('btnAbaParamComissoes').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 transition-colors";
+    carregarParametrosPadrao();
+  } else if (abaDesejada === 'financeiro') {
+    document.getElementById('paramAbaFinanceiro').classList.remove('hidden');
+    document.getElementById('btnAbaParamFinanceiro').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-emerald-50 text-emerald-700 transition-colors";
+    carregarParametrosFinEditor();
+  }
+}
+
+// Constrói visualmente as Caixas de Texto (Textareas) para a Cláudia digitar
+function carregarParametrosFinEditor() {
+  const container = document.getElementById("containerParamsFin");
+  container.innerHTML = '<div class="text-center font-bold text-slate-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Lendo listas do sistema...</div>';
+
+  google.script.run.withSuccessHandler(function(res) {
+    if (!res.sucesso) {
+      container.innerHTML = `<p class="text-red-500 font-bold p-10">${res.erro}</p>`;
+      return;
+    }
+    const d = res.dados;
+    
+    // Função auxiliar para desenhar a caixa de texto do Tailwind
+    const criarCaixa = (label, id, listaItens) => `
+      <div>
+        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">${label}</label>
+        <textarea id="${id}" rows="5" class="w-full p-3 border-2 border-slate-200 rounded-xl font-bold text-slate-600 bg-slate-50 outline-none focus:border-emerald-500 text-xs uppercase resize-none leading-relaxed transition-colors">${listaItens.join('\n')}</textarea>
+      </div>
+    `;
+
+    container.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        ${criarCaixa('Tipos (Rec/Desp)', 'edFinTipos', d.tipos)}
+        ${criarCaixa('Categorias de ENTRADA', 'edFinCatEnt', d.categoriasEntrada)}
+        ${criarCaixa('Categorias de SAÍDA', 'edFinCatSai', d.categoriasSaida)}
+        ${criarCaixa('Fontes / Bancos', 'edFinFontes', d.fontes)}
+        ${criarCaixa('Formas de Pagamento', 'edFinFormas', d.formasPagto)}
+        ${criarCaixa('Status', 'edFinStatus', d.status)}
+      </div>
+    `;
+  }).getParametrosFinanceiros();
+}
+
+// Salva as listas e atualiza a memória
+function salvarParametrosFinanceirosUI() {
+  const btn = document.getElementById("btnSalvarParamsFin");
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> A GRAVAR...';
+
+  // Extrai o texto, separa por linha (Enter) e ignora espaços vazios
+  const lerCaixa = (id) => document.getElementById(id).value.toUpperCase().split('\n').map(i => i.trim()).filter(i => i !== "");
+
+  const payload = {
+    tipos: lerCaixa('edFinTipos'),
+    categoriasEntrada: lerCaixa('edFinCatEnt'),
+    categoriasSaida: lerCaixa('edFinCatSai'),
+    fontes: lerCaixa('edFinFontes'),
+    formasPagto: lerCaixa('edFinFormas'),
+    status: lerCaixa('edFinStatus')
+  };
+
+  google.script.run.withSuccessHandler(function(res) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save mr-1"></i> Guardar Listas';
+    
+    if (res.sucesso) {
+      showToast("Listas financeiras atualizadas!", "success");
+      carregarCombosFinanceiro(); // Atualiza os menus do Modal Financeiro instantaneamente
+    } else {
+      showToast("Erro: " + res.erro, "error");
+    }
+  }).salvarParametrosFinanceiros(payload);
+}
     </script>
   </body>
 </html>
