@@ -2048,6 +2048,7 @@
       let simMode = "emprestimo";
       let leadAtualCpf = "";
       let mapaConvenioGlobal = {};
+      let listasFinanceirasAtuais = null; // <-- 1. ADICIONE ESTA LINHA AQUI!
 
       function tentarLogin() {
         const chave = document.getElementById("chaveJ").value;
@@ -3650,8 +3651,6 @@
       }
 
       // --- NOVO: LÓGICA DE PARÂMETROS DINÂMICOS (FINANCEIRO) ---
-
-let listasFinanceirasAtuais = null;
 
 // Dispara ao abrir o sistema para deixar os menus do Modal prontos
 function carregarCombosFinanceiro() {
