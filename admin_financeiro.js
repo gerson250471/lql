@@ -1,11 +1,12 @@
 /**
- * Busca todas as listas de opções financeiras da aba Parametros_Fin
+ * Busca todas as listas de opções financeiras da aba ParametrosFinanceiros
  */
 function getParametrosFinanceiros() {
   try {
     const ss = getDatabaseConnection();
-    const sheet = ss.getSheetByName("Parametros_Fin");
-    if (!sheet) throw new Error("Aba 'Parametros_Fin' não encontrada no Sheets.");
+    // 1. CORREÇÃO: Nome exato da aba conforme a sua imagem
+    const sheet = ss.getSheetByName("ParametrosFinanceiros"); 
+    if (!sheet) throw new Error("Aba 'ParametrosFinanceiros' não encontrada no Sheets.");
 
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) {
@@ -17,12 +18,22 @@ function getParametrosFinanceiros() {
 
     let params = { tipos: [], categoriasEntrada: [], categoriasSaida: [], fontes: [], formasPagto: [], status: [] };
 
-    const colTipo = headers.indexOf(normalizarTexto("TIPO"));
-    const colCatEnt = headers.indexOf(normalizarTexto("CATEGORIA ENTRADA"));
-    const colCatSai = headers.indexOf(normalizarTexto("CATEGORIA SAIDA"));
-    const colFonte = headers.indexOf(normalizarTexto("FONTE"));
-    const colForma = headers.indexOf(normalizarTexto("FORMA DE PAGTO"));
-    const colStatus = headers.indexOf(normalizarTexto("STATUS"));
+    // Função de apoio para encontrar colunas mesmo se houver variação no futuro
+    const getColIndex = (nomesPossiveis) => {
+      for (let nome of nomesPossiveis) {
+        let idx = headers.indexOf(normalizarTexto(nome));
+        if (idx !== -1) return idx;
+      }
+      return -1;
+    };
+
+    // 2. CORREÇÃO: Procurando pelos cabeçalhos exatos com _ (underscore)
+    const colTipo = getColIndex(["TIPO"]);
+    const colCatEnt = getColIndex(["CATEGORIA_ENTRADA", "CATEGORIA ENTRADA"]);
+    const colCatSai = getColIndex(["CATEGORIA_SAIDA", "CATEGORIA SAIDA"]);
+    const colFonte = getColIndex(["FONTE"]);
+    const colForma = getColIndex(["FORMA_PAGTO", "FORMA DE PAGTO"]);
+    const colStatus = getColIndex(["STATUS"]);
 
     // Coleta as opções ignorando células vazias
     for (let i = 1; i < data.length; i++) {
@@ -41,13 +52,14 @@ function getParametrosFinanceiros() {
 }
 
 /**
- * Salva as listas alteradas pela interface do utilizador
+ * Salva as listas alteradas pela interface da Cláudia
  */
 function salvarParametrosFinanceiros(params) {
   try {
     const ss = getDatabaseConnection();
-    let sheet = ss.getSheetByName("Parametros_Fin");
-    if (!sheet) throw new Error("Aba 'Parametros_Fin' não encontrada no Sheets.");
+    // 3. CORREÇÃO: Nome exato da aba para a gravação
+    let sheet = ss.getSheetByName("ParametrosFinanceiros");
+    if (!sheet) throw new Error("Aba 'ParametrosFinanceiros' não encontrada no Sheets.");
 
     // Limpa os dados antigos (preservando o cabeçalho)
     const lastRow = sheet.getLastRow();
