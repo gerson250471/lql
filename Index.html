@@ -1879,6 +1879,8 @@
         id="modalFinanceiro"
         class="fixed inset-0 z-[70] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4"
       >
+      <!-- NOVO: ID OCULTO PARA EDIÇÃO -->
+        <input type="hidden" id="finLancamentoId" value="" />
         <div
           class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter"
         >
@@ -3489,33 +3491,48 @@
       }
 
       // Funções do Módulo Financeiro
-     function abrirModalNovoLancamento() {
-        // 1. Limpa os campos de digitação e coloca a data de hoje
+      let lancamentosFinanceirosMemoria = []; // Guarda os lançamentos para edição rápida
+
+      function abrirModalNovoLancamento() {
+        document.getElementById("finLancamentoId").value = ""; // Limpa o ID (Significa NOVO)
         document.getElementById("finData").value = new Date().toISOString().split("T")[0];
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
         document.getElementById("finPromotor").value = "";
 
-        // 2. Seleciona dinamicamente a 1ª opção de cada lista cadastrada pela Cláudia
         if (listasFinanceirasAtuais) {
-          if (listasFinanceirasAtuais.tipos.length > 0) {
-            document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
-          }
-          if (listasFinanceirasAtuais.fontes.length > 0) {
-            document.getElementById("finFonte").value = listasFinanceirasAtuais.fontes[0];
-          }
-          if (listasFinanceirasAtuais.formasPagto.length > 0) {
-            document.getElementById("finFormaPagto").value = listasFinanceirasAtuais.formasPagto[0];
-          }
-          if (listasFinanceirasAtuais.status.length > 0) {
-            document.getElementById("finStatus").value = listasFinanceirasAtuais.status[0];
-          }
+          if (listasFinanceirasAtuais.tipos && listasFinanceirasAtuais.tipos.length > 0) document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
+          if (listasFinanceirasAtuais.fontes && listasFinanceirasAtuais.fontes.length > 0) document.getElementById("finFonte").value = listasFinanceirasAtuais.fontes[0];
+          if (listasFinanceirasAtuais.formasPagto && listasFinanceirasAtuais.formasPagto.length > 0) document.getElementById("finFormaPagto").value = listasFinanceirasAtuais.formasPagto[0];
+          if (listasFinanceirasAtuais.status && listasFinanceirasAtuais.status.length > 0) document.getElementById("finStatus").value = listasFinanceirasAtuais.status[0];
         }
 
-        // 3. Atualiza as categorias (Entrada ou Saída) consoante o Tipo selecionado acima
         atualizarCategoriasFin(); 
+        document.getElementById("modalFinanceiro").classList.remove("hidden");
+      }
 
-        // 4. Abre o modal na tela
+      function abrirModalEdicaoFinanceiro(id) {
+        const item = lancamentosFinanceirosMemoria.find(i => i.id === id);
+        if(!item) return;
+
+        document.getElementById("finLancamentoId").value = item.id; // Preenche o ID (Significa ATUALIZAÇÃO)
+        document.getElementById("finData").value = item.dataFormatoInput;
+        document.getElementById("finValor").value = item.valor;
+        document.getElementById("finDescricao").value = item.descricao;
+        document.getElementById("finPromotor").value = item.promotor;
+        
+        // Atribui os selects
+        document.getElementById("finTipo").value = item.tipo;
+        atualizarCategoriasFin(); // Força a atualização da lista de Categorias
+        
+        // Pequeno atraso (timeout) para garantir que o atualizarCategoriasFin carregou as options
+        setTimeout(() => {
+          document.getElementById("finCategoria").value = item.categoria;
+          document.getElementById("finFonte").value = item.fonte;
+          document.getElementById("finFormaPagto").value = item.formaPagto;
+          document.getElementById("finStatus").value = item.status;
+        }, 50);
+
         document.getElementById("modalFinanceiro").classList.remove("hidden");
       }
 
@@ -3524,11 +3541,10 @@
       }
 
       function salvarLancamentoFinanceiro() {
-        // As 3 linhas abaixo estavam faltando!
+        const idLancamento = document.getElementById("finLancamentoId").value; // NOVO: Captura o ID
         const tipo = document.getElementById("finTipo").value;
         const data = document.getElementById("finData").value;
         const categoria = document.getElementById("finCategoria").value;
-
         const valor = parseFloat(document.getElementById("finValor").value);
         const descricao = document.getElementById("finDescricao").value.trim();
         const promotor = document.getElementById("finPromotor").value.trim();
@@ -3543,10 +3559,10 @@
 
         const btn = document.getElementById("btnSalvarFin");
         btn.disabled = true;
-        btn.innerHTML =
-          '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
 
         const payload = {
+          id: idLancamento, // Envia o ID para o Backend
           tipo: tipo,
           data: data,
           categoria: categoria,
@@ -3592,64 +3608,61 @@
 
         const [anoFiltro, mesFiltro] = inputMes.value.split("-");
 
-        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+        // Atenção: Aumentei o colspan para 9 por causa do botão Editar
+        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
 
         google.script.run
           .withSuccessHandler(function (res) {
             if (!res.sucesso) {
-              tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
               return;
             }
 
             tbody.innerHTML = "";
+            lancamentosFinanceirosMemoria = res.dados; // Salva para uso na Edição
 
-            const formataMoeda = (val) =>
-              val.toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              });
+            const formataMoeda = (val) => val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
             if (res.dados.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-slate-400">Nenhum lançamento registrado no mês <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="9" class="p-10 text-center text-slate-400">Nenhum lançamento registrado no mês <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
             } else {
+              // Tabela do Financeiro agora renderizada com Botão de Ação
+              // OBS: Atualize o <thead...> do HTML para incluir <th class="... text-center">Ações</th> no final
               res.dados.forEach(function (item) {
-                let tipoCor =
-                  item.tipo === "RECEITA"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-red-100 text-red-700";
-                let valorCor =
-                  item.tipo === "RECEITA" ? "text-emerald-600" : "text-red-600";
+                let tipoCor = (item.tipo === "RECEITA" || item.tipo === "ENTRADA") ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700";
+                let valorCor = (item.tipo === "RECEITA" || item.tipo === "ENTRADA") ? "text-emerald-600" : "text-red-600";
 
                 tbody.innerHTML += `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
                   <td class="p-4 text-xs font-bold text-slate-600">${item.data}</td>
                   <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${tipoCor}">${item.tipo}</span></td>
-                  <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.fonte}</td> <!-- NOVO -->
+                  <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.fonte}</td>
                   <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.categoria}</td>
                   <td class="p-4 text-xs font-medium text-slate-600 uppercase">${item.descricao}</td>
                   <td class="p-4 text-xs font-black text-right ${valorCor}">${formataMoeda(item.valor)}</td>
                   <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
                   <td class="p-4 text-xs font-bold text-center text-slate-700 uppercase">${item.status}</td>
+                  <td class="p-4 text-center">
+                    <button onclick="abrirModalEdicaoFinanceiro('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-lg hover:bg-blue-100 transition-all shadow-sm">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </td>
                 </tr>
               `;
               });
             }
 
             // Atualiza Cards de Resumo
-            document.getElementById("finTotalReceitas").innerText =
-              formataMoeda(res.resumo.receitas);
-            document.getElementById("finTotalDespesas").innerText =
-              formataMoeda(res.resumo.despesas);
-            document.getElementById("finSaldoMes").innerText = formataMoeda(
-              res.resumo.saldo,
-            );
+            document.getElementById("finTotalReceitas").innerText = formataMoeda(res.resumo.receitas);
+            document.getElementById("finTotalDespesas").innerText = formataMoeda(res.resumo.despesas);
+            document.getElementById("finSaldoMes").innerText = formataMoeda(res.resumo.saldo);
           })
           .withFailureHandler(function (err) {
-            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Falha ao carregar: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-red-500 font-bold">Falha ao carregar: ${err.message}</td></tr>`;
           })
           .getLancamentosFinanceiros(mesFiltro, anoFiltro);
       }
-
+      
       // --- NOVO: LÓGICA DE PARÂMETROS DINÂMICOS (FINANCEIRO) ---
 
 // Dispara ao abrir o sistema para deixar os menus do Modal prontos
