@@ -3,9 +3,6 @@
  * Módulo de Controle Financeiro do Sistema
  */
 
-/**
- * Salva um novo lançamento financeiro na aba 'Financeiro'
- */
 function salvarLancamentoFinanceiro(dados) {
   try {
     const ss = getDatabaseConnection();
@@ -33,12 +30,13 @@ function salvarLancamentoFinanceiro(dados) {
     const idxStatus = getIdx("STATUS");
     const idxPromotor = getIdx("PROMOTOR");
     const idxUsuario = getIdx("USUARIO_LANCAMENTO");
+    const idxFonte = getIdx("FONTE"); // <-- NOVO CAMPO
 
     // Preenchimento Seguro
     if (idxId !== -1) novaLinha[idxId] = "FIN-" + new Date().getTime();
     if (idxData !== -1) {
       if (dados.data) {
-        const partes = dados.data.split("-"); // "YYYY-MM-DD"
+        const partes = dados.data.split("-"); 
         novaLinha[idxData] = new Date(partes[0], partes[1] - 1, partes[2]);
       } else {
         novaLinha[idxData] = new Date();
@@ -52,10 +50,10 @@ function salvarLancamentoFinanceiro(dados) {
     if (idxStatus !== -1) novaLinha[idxStatus] = String(dados.status).toUpperCase();
     if (idxPromotor !== -1) novaLinha[idxPromotor] = String(dados.promotor || "").toUpperCase();
     if (idxUsuario !== -1) novaLinha[idxUsuario] = String(dados.usuarioLancamento || "").toUpperCase();
+    if (idxFonte !== -1) novaLinha[idxFonte] = String(dados.fonte || "NÃO INFORMADA").toUpperCase(); // <-- NOVO CAMPO
 
     aba.appendRow(novaLinha);
 
-    // Registra no Log de Auditoria
     saveSystemLog({
       userKey: dados.usuarioLancamento,
       userProfile: "ADMIN",
@@ -70,9 +68,6 @@ function salvarLancamentoFinanceiro(dados) {
   }
 }
 
-/**
- * Busca os lançamentos do mês/ano filtrados para exibição
- */
 function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
   try {
     const ss = getDatabaseConnection();
@@ -95,6 +90,7 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
     const idxValor = getIdx("VALOR");
     const idxForma = getIdx("FORMA_PAGTO");
     const idxStatus = getIdx("STATUS");
+    const idxFonte = getIdx("FONTE"); // <-- NOVO CAMPO
 
     const lancamentos = [];
     let totReceitas = 0;
@@ -129,7 +125,8 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
           descricao: row[idxDescricao] || "-",
           valor: valor,
           formaPagto: row[idxForma] || "-",
-          status: status
+          status: status,
+          fonte: idxFonte !== -1 ? (row[idxFonte] || "-") : "-" // <-- NOVO CAMPO
         });
       }
     }

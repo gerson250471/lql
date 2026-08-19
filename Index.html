@@ -1809,6 +1809,10 @@
                     Tipo
                   </th>
                   <th class="p-4 border-b border-slate-700 font-black">
+                    Fonte / Conta
+                  </th>
+                  <!-- NOVO CAMPO -->
+                  <th class="p-4 border-b border-slate-700 font-black">
                     Categoria
                   </th>
                   <th class="p-4 border-b border-slate-700 font-black">
@@ -1834,7 +1838,7 @@
               <tbody id="tabelaFinanceiroBody">
                 <tr>
                   <td
-                    colspan="7"
+                    colspan="8"
                     class="p-8 text-center text-slate-400 font-bold"
                   >
                     <i class="fas fa-spinner fa-spin mr-2"></i> Carregando
@@ -1961,7 +1965,23 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Fonte / Conta</label
+                >
+                <select
+                  id="finFonte"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
+                >
+                  <option value="BB PRINCIPAL">BB Principal</option>
+                  <option value="CAIXA ECONOMICA">Caixa Econômica</option>
+                  <option value="ITAU">Itaú</option>
+                  <option value="DINHEIRO">Dinheiro (Caixinha)</option>
+                  <option value="OUTRA">Outra</option>
+                </select>
+              </div>
               <div>
                 <label
                   class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
@@ -3472,7 +3492,8 @@
         document.getElementById("finCategoria").value = "OPERACIONAL";
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
-        document.getElementById("finPromotor").value = ""; // <-- ADICIONE ESTA LINHA
+        document.getElementById("finPromotor").value = "";
+        document.getElementById("finFonte").value = "BB PRINCIPAL"; // <-- NOVO
         document.getElementById("finFormaPagto").value = "PIX";
         document.getElementById("finStatus").value = "PAGO";
 
@@ -3484,11 +3505,15 @@
       }
 
       function salvarLancamentoFinanceiro() {
+        // As 3 linhas abaixo estavam faltando!
         const tipo = document.getElementById("finTipo").value;
         const data = document.getElementById("finData").value;
         const categoria = document.getElementById("finCategoria").value;
+
         const valor = parseFloat(document.getElementById("finValor").value);
         const descricao = document.getElementById("finDescricao").value.trim();
+        const promotor = document.getElementById("finPromotor").value.trim();
+        const fonte = document.getElementById("finFonte").value;
         const formaPagto = document.getElementById("finFormaPagto").value;
         const status = document.getElementById("finStatus").value;
 
@@ -3509,6 +3534,7 @@
           valor: valor,
           descricao: descricao,
           promotor: promotor,
+          fonte: fonte,
           formaPagto: formaPagto,
           status: status,
           usuarioLancamento: user.chave,
@@ -3547,7 +3573,7 @@
 
         const [anoFiltro, mesFiltro] = inputMes.value.split("-");
 
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
 
         google.script.run
           .withSuccessHandler(function (res) {
@@ -3576,16 +3602,17 @@
                   item.tipo === "RECEITA" ? "text-emerald-600" : "text-red-600";
 
                 tbody.innerHTML += `
-            <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-              <td class="p-4 text-xs font-bold text-slate-600">${item.data}</td>
-              <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${tipoCor}">${item.tipo}</span></td>
-              <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.categoria}</td>
-              <td class="p-4 text-xs font-medium text-slate-600 uppercase">${item.descricao}</td>
-              <td class="p-4 text-xs font-black text-right ${valorCor}">${formataMoeda(item.valor)}</td>
-              <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
-              <td class="p-4 text-xs font-bold text-center text-slate-700 uppercase">${item.status}</td>
-            </tr>
-          `;
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                  <td class="p-4 text-xs font-bold text-slate-600">${item.data}</td>
+                  <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${tipoCor}">${item.tipo}</span></td>
+                  <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.fonte}</td> <!-- NOVO -->
+                  <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.categoria}</td>
+                  <td class="p-4 text-xs font-medium text-slate-600 uppercase">${item.descricao}</td>
+                  <td class="p-4 text-xs font-black text-right ${valorCor}">${formataMoeda(item.valor)}</td>
+                  <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
+                  <td class="p-4 text-xs font-bold text-center text-slate-700 uppercase">${item.status}</td>
+                </tr>
+              `;
               });
             }
 
