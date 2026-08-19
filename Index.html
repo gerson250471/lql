@@ -3488,19 +3488,33 @@
       }
 
       // Funções do Módulo Financeiro
-      function abrirModalNovoLancamento() {
-        document.getElementById("finTipo").value = "DESPESA";
-        document.getElementById("finData").value = new Date()
-          .toISOString()
-          .split("T")[0];
-        document.getElementById("finCategoria").value = "OPERACIONAL";
+     function abrirModalNovoLancamento() {
+        // 1. Limpa os campos de digitação e coloca a data de hoje
+        document.getElementById("finData").value = new Date().toISOString().split("T")[0];
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
         document.getElementById("finPromotor").value = "";
-        document.getElementById("finFonte").value = "BB PRINCIPAL"; // <-- NOVO
-        document.getElementById("finFormaPagto").value = "PIX";
-        document.getElementById("finStatus").value = "PAGO";
 
+        // 2. Seleciona dinamicamente a 1ª opção de cada lista cadastrada pela Cláudia
+        if (listasFinanceirasAtuais) {
+          if (listasFinanceirasAtuais.tipos.length > 0) {
+            document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
+          }
+          if (listasFinanceirasAtuais.fontes.length > 0) {
+            document.getElementById("finFonte").value = listasFinanceirasAtuais.fontes[0];
+          }
+          if (listasFinanceirasAtuais.formasPagto.length > 0) {
+            document.getElementById("finFormaPagto").value = listasFinanceirasAtuais.formasPagto[0];
+          }
+          if (listasFinanceirasAtuais.status.length > 0) {
+            document.getElementById("finStatus").value = listasFinanceirasAtuais.status[0];
+          }
+        }
+
+        // 3. Atualiza as categorias (Entrada ou Saída) consoante o Tipo selecionado acima
+        atualizarCategoriasFin(); 
+
+        // 4. Abre o modal na tela
         document.getElementById("modalFinanceiro").classList.remove("hidden");
       }
 
