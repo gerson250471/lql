@@ -2001,11 +2001,7 @@
                   id="finFormaPagto"
                   class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
                 >
-                  <option value="PIX">PIX</option>
-                  <option value="TRANSFERENCIA">Transferência / TED</option>
-                  <option value="BOLETO">Boleto</option>
-                  <option value="CARTAO">Cartão</option>
-                  <option value="DINHEIRO">Dinheiro</option>
+                  <option value="">A carregar...</option>
                 </select>
               </div>
               <div>
@@ -2017,15 +2013,14 @@
                   id="finStatus"
                   class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
                 >
-                  <option value="PAGO">Pago / Concluído</option>
-                  <option value="PENDENTE">Pendente</option>
+                  <option value="">A carregar...</option>
                 </select>
               </div>
-              <!-- NOVO: CAMPO DE OBSERVAÇÕES LOGO ABAIXO DA GRELHA -->
-              <div class="mt-2">
-                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Observações</label>
-                <textarea id="finObs" rows="2" placeholder="Informações adicionais, número de transação..." class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-emerald-500 resize-none"></textarea>
-              </div>
+            </div>
+            <!-- CAMPO DE OBSERVAÇÕES FICA SOZINHO AQUI (OCUPANDO 100% DA LARGURA) -->
+            <div class="mt-4">
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Observações</label>
+              <textarea id="finObs" rows="2" placeholder="Informações adicionais, número de transação..." class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-emerald-500 resize-none"></textarea>
             </div>
           </div>
 
