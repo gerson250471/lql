@@ -16,17 +16,18 @@ function salvarPromotorBase(dados) {
 
     const getIdx = (nome) => headers.indexOf(normalizarTexto(nome));
 
-    const idxChave = getIdx("CHAVE");
+    // CORREÇÃO: Nomes exatos da planilha
+    const idxChave = getIdx("CHAVE_J"); 
     const idxNome = getIdx("NOME");
     const idxEmail = getIdx("EMAIL");
     const idxSenha = getIdx("SENHA");
-    const idxNivel = getIdx("NIVEL_ACESSO");
+    const idxNivel = getIdx("NIVEL DE ACESSO");
     const idxPerfil = getIdx("PERFIL");
     const idxMeta = getIdx("META");
-    const idxStatus = getIdx("STATUS");
+    const idxStatus = getIdx("SITUACAO");
 
     if (idxChave === -1 || idxNome === -1) {
-      throw new Error("Colunas CHAVE ou NOME não encontradas na aba Promotores.");
+      throw new Error("Colunas CHAVE_J ou NOME não encontradas na aba Promotores.");
     }
 
     let isEdicao = false;
@@ -48,12 +49,10 @@ function salvarPromotorBase(dados) {
     if (idxNome !== -1) novaLinha[idxNome] = String(dados.nome).toUpperCase();
     if (idxEmail !== -1) novaLinha[idxEmail] = String(dados.email).toLowerCase();
     
-    // Se for um novo cadastro, define senha inicial. Se for edição, mantém a antiga.
     if (idxSenha !== -1) {
       novaLinha[idxSenha] = isEdicao ? dataRows[rowIndex - 1][idxSenha] : "123456"; 
     }
     
-    // Coluna para controlar se a pessoa precisa trocar a senha no 1º acesso (opcional)
     const idxTrocarSenha = getIdx("TROCAR_SENHA");
     if (idxTrocarSenha !== -1) {
         novaLinha[idxTrocarSenha] = isEdicao ? dataRows[rowIndex - 1][idxTrocarSenha] : "SIM";
@@ -94,15 +93,17 @@ function getTodosPromotores() {
     const headers = data[0].map(h => normalizarTexto(h));
 
     const getIdx = (nome) => headers.indexOf(normalizarTexto(nome));
-    const idxChave = getIdx("CHAVE");
+    
+    // CORREÇÃO: Nomes exatos da planilha
+    const idxChave = getIdx("CHAVE_J");
     const idxNome = getIdx("NOME");
     const idxEmail = getIdx("EMAIL");
     const idxPerfil = getIdx("PERFIL");
-    const idxNivel = getIdx("NIVEL_ACESSO");
-    const idxStatus = getIdx("STATUS");
+    const idxNivel = getIdx("NIVEL DE ACESSO");
+    const idxStatus = getIdx("SITUACAO");
     const idxMeta = getIdx("META");
 
-    if (idxChave === -1) throw new Error("Coluna CHAVE não encontrada.");
+    if (idxChave === -1) throw new Error("Coluna CHAVE_J não encontrada.");
 
     let promotores = [];
     for (let i = 1; i < data.length; i++) {

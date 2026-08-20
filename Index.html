@@ -3421,17 +3421,6 @@
           .solicitarRecuperacaoSenha(identificador);
       }
 
-      // No initApp(), libere a navegação do botão se for ADMIN ou PROGRAMADOR
-      if (
-        user.nivelAcesso === "ADMINISTRADOR" ||
-        user.nivelAcesso === "PROGRAMADOR"
-      ) {
-        document.getElementById("navAdminLeads").classList.remove("hidden");
-        document.getElementById("navParametros").classList.remove("hidden");
-        document.getElementById("navAdminProducao").classList.remove("hidden");
-        document.getElementById("navFinanceiro").classList.remove("hidden"); // <-- LIBERA NAVEGAÇÃO
-      }
-
       // Funções do Módulo Financeiro
       let lancamentosFinanceirosMemoria = []; // Guarda os lançamentos para edição rápida
 
