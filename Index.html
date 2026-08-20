@@ -1634,112 +1634,56 @@
           </div>
         </div>
 
-        <!-- CARDS RESUMO FINANCEIRO -->
+        <!-- CARDS RESUMO FINANCEIRO (GLOBAIS) -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div
-            class="bg-white border-b-4 border-emerald-500 p-5 rounded-2xl shadow-sm"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Total Entradas (Receitas)
-            </p>
-            <p
-              id="finTotalReceitas"
-              class="text-2xl font-black text-emerald-600"
-            >
-              R$ 0,00
-            </p>
+          <div class="bg-white border-b-4 border-emerald-500 p-5 rounded-2xl shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Entradas (Receitas)</p>
+            <p id="finTotalReceitas" class="text-2xl font-black text-emerald-600">R$ 0,00</p>
           </div>
-          <div
-            class="bg-white border-b-4 border-red-500 p-5 rounded-2xl shadow-sm"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Total Saídas (Despesas)
-            </p>
-            <p id="finTotalDespesas" class="text-2xl font-black text-red-600">
-              R$ 0,00
-            </p>
+          <div class="bg-white border-b-4 border-red-500 p-5 rounded-2xl shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Saídas (Despesas)</p>
+            <p id="finTotalDespesas" class="text-2xl font-black text-red-600">R$ 0,00</p>
           </div>
-          <div
-            class="bg-white border-b-4 border-blue-600 p-5 rounded-2xl shadow-sm"
-          >
-            <p
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Saldo do Mês
-            </p>
-            <p id="finSaldoMes" class="text-2xl font-black text-blue-600">
-              R$ 0,00
-            </p>
+          <div class="bg-white border-b-4 border-blue-600 p-5 rounded-2xl shadow-sm">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Saldo Geral</p>
+            <p id="finSaldoMes" class="text-2xl font-black text-blue-600">R$ 0,00</p>
           </div>
         </div>
 
+        <!-- NOVO: CARDS RESUMO POR FONTE -->
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-2 px-2">Saldos por Conta (Fonte)</h3>
+        <div id="containerSaldosFontes" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          <!-- Renderizado dinamicamente via JS -->
+        </div>
+
         <!-- TABELA DE LANÇAMENTOS -->
-        <div
-          class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden"
-        >
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
           <div class="overflow-x-auto pb-4">
             <table class="w-full text-left border-collapse whitespace-nowrap">
               <thead>
-                <tr
-                  class="bg-slate-800 text-[10px] uppercase text-slate-300 tracking-wider"
-                >
-                  <th class="p-4 border-b border-slate-700 font-black">Data</th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-center"
-                  >
-                    Tipo
-                  </th>
-                  <th class="p-4 border-b border-slate-700 font-black">
-                    Fonte / Conta
-                  </th>
-                  <!-- NOVO CAMPO -->
-                  <th class="p-4 border-b border-slate-700 font-black">
-                    Categoria
-                  </th>
-                  <th class="p-4 border-b border-slate-700 font-black">
-                    Descrição
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-right"
-                  >
-                    Valor
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-center"
-                  >
-                    Forma Pagto
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-center"
-                  >
-                    Status
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-center"
-                  >
-                    Ações
-                  </th>
+                <tr class="bg-slate-800 text-[10px] uppercase text-slate-300 tracking-wider">
+                  <th class="p-4 border-b border-slate-700 font-black">Vencimento</th>
+                  <th class="p-4 border-b border-slate-700 font-black">Data Pgto</th>
+                  <th class="p-4 border-b border-slate-700 font-black text-center">Tipo</th>
+                  <th class="p-4 border-b border-slate-700 font-black">Fonte</th>
+                  <th class="p-4 border-b border-slate-700 font-black">Categoria</th>
+                  <th class="p-4 border-b border-slate-700 font-black">Descrição</th>
+                  <th class="p-4 border-b border-slate-700 font-black text-right">Valor</th>
+                  <th class="p-4 border-b border-slate-700 font-black text-center">Forma</th>
+                  <th class="p-4 border-b border-slate-700 font-black text-center">Status</th>
+                  <th class="p-4 border-b border-slate-700 font-black text-center">Ações</th>
                 </tr>
               </thead>
               <tbody id="tabelaFinanceiroBody">
                 <tr>
-                  <td
-                    colspan="8"
-                    class="p-8 text-center text-slate-400 font-bold"
-                  >
-                    <i class="fas fa-spinner fa-spin mr-2"></i> Carregando
-                    lançamentos...
+                  <td colspan="10" class="p-8 text-center text-slate-400 font-bold">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Carregando lançamentos...
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
 
       <!-- MODAL: FORMULÁRIO FINANCEIRO DA CLÁUDIA -->
       <div
@@ -1780,15 +1724,8 @@
                 </select>
               </div>
               <div>
-                <label
-                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-                  >Data</label
-                >
-                <input
-                  type="date"
-                  id="finData"
-                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500"
-                />
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Venc.</label>
+                <input type="date" id="finDataVenc" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500" />
               </div>
             </div>
 
@@ -3422,15 +3359,15 @@
       }
 
       // Funções do Módulo Financeiro
-      let lancamentosFinanceirosMemoria = []; // Guarda os lançamentos para edição rápida
+      let lancamentosFinanceirosMemoria = []; 
 
       function abrirModalNovoLancamento() {
-        document.getElementById("finLancamentoId").value = ""; // Limpa o ID (Significa NOVO)
-        document.getElementById("finData").value = new Date().toISOString().split("T")[0];
+        document.getElementById("finLancamentoId").value = ""; 
+        document.getElementById("finDataVenc").value = new Date().toISOString().split("T")[0]; // ID Alterado
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
         document.getElementById("finPromotor").value = "";
-        document.getElementById("finObs").value = ""; // <-- ADICIONADO AQUI PARA LIMPAR
+        document.getElementById("finObs").value = ""; 
 
         if (listasFinanceirasAtuais) {
           if (listasFinanceirasAtuais.tipos && listasFinanceirasAtuais.tipos.length > 0) document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
@@ -3447,24 +3384,21 @@
         const item = lancamentosFinanceirosMemoria.find(i => i.id === id);
         if(!item) return;
 
-        document.getElementById("finLancamentoId").value = item.id; // Preenche o ID (Significa ATUALIZAÇÃO)
-        document.getElementById("finData").value = item.dataFormatoInput;
+        document.getElementById("finLancamentoId").value = item.id; 
+        document.getElementById("finDataVenc").value = item.dataFormatoInput; // ID Alterado
         document.getElementById("finValor").value = item.valor;
         document.getElementById("finDescricao").value = item.descricao;
         document.getElementById("finPromotor").value = item.promotor;
-        document.getElementById("finObs").value = ""; // <-- ADICIONE ESTA LINHA
+        document.getElementById("finObs").value = item.obs || ""; 
         
-        // Atribui os selects
         document.getElementById("finTipo").value = item.tipo;
-        atualizarCategoriasFin(); // Força a atualização da lista de Categorias
+        atualizarCategoriasFin(); 
         
-        // Pequeno atraso (timeout) para garantir que o atualizarCategoriasFin carregou as options
         setTimeout(() => {
           document.getElementById("finCategoria").value = item.categoria;
           document.getElementById("finFonte").value = item.fonte;
           document.getElementById("finFormaPagto").value = item.formaPagto;
           document.getElementById("finStatus").value = item.status;
-          document.getElementById("finObs").value = item.obs || ""; // <-- ADICIONE ESTA LINHA
         }, 50);
 
         document.getElementById("modalFinanceiro").classList.remove("hidden");
@@ -3477,7 +3411,7 @@
       function salvarLancamentoFinanceiro() {
         const idLancamento = document.getElementById("finLancamentoId").value; 
         const tipo = document.getElementById("finTipo").value;
-        const data = document.getElementById("finData").value;
+        const dataVencimento = document.getElementById("finDataVenc").value; // ID Alterado
         const categoria = document.getElementById("finCategoria").value;
         const valor = parseFloat(document.getElementById("finValor").value);
         const descricao = document.getElementById("finDescricao").value.trim();
@@ -3485,10 +3419,10 @@
         const fonte = document.getElementById("finFonte").value;
         const formaPagto = document.getElementById("finFormaPagto").value;
         const status = document.getElementById("finStatus").value;
-        const obs = document.getElementById("finObs").value.trim(); // <-- ADICIONADO AQUI PARA CAPTURAR
+        const obs = document.getElementById("finObs").value.trim(); 
 
-        if (!data || !valor || !descricao) {
-          showToast("Preencha a Data, Valor e Descrição.", "error");
+        if (!dataVencimento || !valor || !descricao) {
+          showToast("Preencha a Data de Vencimento, Valor e Descrição.", "error");
           return;
         }
 
@@ -3499,7 +3433,7 @@
         const payload = {
           id: idLancamento, 
           tipo: tipo,
-          data: data,
+          dataVencimento: dataVencimento, // Alterado
           categoria: categoria,
           valor: valor,
           descricao: descricao,
@@ -3544,42 +3478,54 @@
 
         const [anoFiltro, mesFiltro] = inputMes.value.split("-");
 
-        // Atenção: Aumentei o colspan para 9 por causa do botão Editar
-        tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro de ${mesFiltro}/${anoFiltro}...</td></tr>`;
 
         google.script.run
           .withSuccessHandler(function (res) {
             if (!res.sucesso) {
-              tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
               return;
             }
 
             tbody.innerHTML = "";
-            lancamentosFinanceirosMemoria = res.dados; // Salva para uso na Edição
+            lancamentosFinanceirosMemoria = res.dados; 
 
             const formataMoeda = (val) => val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
             if (res.dados.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="9" class="p-10 text-center text-slate-400">Nenhum lançamento registrado no mês <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="10" class="p-10 text-center text-slate-400">Nenhum lançamento registrado no mês <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
             } else {
-              // Tabela do Financeiro agora renderizada com Botão de Ação
-              // OBS: Atualize o <thead...> do HTML para incluir <th class="... text-center">Ações</th> no final
               res.dados.forEach(function (item) {
-                let tipoCor = (item.tipo === "RECEITA" || item.tipo === "ENTRADA") ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700";
+                let tipoCor = (item.tipo === "RECEITA" || item.tipo === "ENTRADA") ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700";
                 let valorCor = (item.tipo === "RECEITA" || item.tipo === "ENTRADA") ? "text-emerald-600" : "text-red-600";
 
+                // SISTEMA DE CORES INTELIGENTE (ALERTA DE VENCIMENTO)
+                let rowClass = "hover:bg-slate-50 transition-colors border-b border-slate-100";
+                let statusPillClass = "bg-slate-100 text-slate-700"; 
+                
+                if (item.alerta === 'red') {
+                  rowClass = "bg-red-50 hover:bg-red-100 transition-colors border-b border-red-100 border-l-4 border-l-red-500";
+                  statusPillClass = "bg-red-200 text-red-800";
+                } else if (item.alerta === 'yellow') {
+                  rowClass = "bg-yellow-50 hover:bg-yellow-100 transition-colors border-b border-yellow-100 border-l-4 border-l-yellow-500";
+                  statusPillClass = "bg-yellow-200 text-yellow-800";
+                } else if (item.status === 'PAGAMENTO REALIZADO') {
+                  statusPillClass = "bg-emerald-100 text-emerald-700";
+                }
+
                 tbody.innerHTML += `
-                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                  <td class="p-4 text-xs font-bold text-slate-600">${item.data}</td>
+                <tr class="${rowClass}">
+                  <td class="p-4 text-xs font-bold text-slate-600">${item.dataVencimento}</td>
+                  <td class="p-4 text-[10px] font-black text-emerald-600">${item.dataPagamento || '-'}</td>
                   <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${tipoCor}">${item.tipo}</span></td>
                   <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.fonte}</td>
                   <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.categoria}</td>
                   <td class="p-4 text-xs font-medium text-slate-600 uppercase">${item.descricao}</td>
                   <td class="p-4 text-xs font-black text-right ${valorCor}">${formataMoeda(item.valor)}</td>
                   <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
-                  <td class="p-4 text-xs font-bold text-center text-slate-700 uppercase">${item.status}</td>
+                  <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${statusPillClass}">${item.status}</span></td>
                   <td class="p-4 text-center">
-                    <button onclick="abrirModalEdicaoFinanceiro('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-lg hover:bg-blue-100 transition-all shadow-sm">
+                    <button onclick="abrirModalEdicaoFinanceiro('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-white p-2 rounded-lg border border-slate-200 hover:bg-blue-50 transition-all shadow-sm">
                       <i class="fas fa-edit"></i>
                     </button>
                   </td>
@@ -3588,13 +3534,28 @@
               });
             }
 
-            // Atualiza Cards de Resumo
+            // CARDS GLOBAIS
             document.getElementById("finTotalReceitas").innerText = formataMoeda(res.resumo.receitas);
             document.getElementById("finTotalDespesas").innerText = formataMoeda(res.resumo.despesas);
             document.getElementById("finSaldoMes").innerText = formataMoeda(res.resumo.saldo);
+
+            // RENDERIZAÇÃO DOS CARDS POR FONTE/CONTA BANCÁRIA
+            let htmlCardsFontes = '';
+            for (let f in res.resumoFontes) {
+              const saldoFonte = res.resumoFontes[f].saldo;
+              let corSaldo = saldoFonte >= 0 ? 'text-blue-600' : 'text-red-600';
+              htmlCardsFontes += `
+                <div class="bg-white border-b-2 border-slate-300 p-4 rounded-xl shadow-sm text-center">
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">${f}</p>
+                  <p class="text-lg font-black ${corSaldo}">${formataMoeda(saldoFonte)}</p>
+                </div>
+              `;
+            }
+            document.getElementById("containerSaldosFontes").innerHTML = htmlCardsFontes;
+
           })
           .withFailureHandler(function (err) {
-            tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-red-500 font-bold">Falha ao carregar: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500 font-bold">Falha ao carregar: ${err.message}</td></tr>`;
           })
           .getLancamentosFinanceiros(mesFiltro, anoFiltro);
       }
