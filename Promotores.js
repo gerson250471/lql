@@ -77,3 +77,50 @@ function salvarPromotorBase(dados) {
     return { sucesso: false, erro: e.message };
   }
 }
+
+/**
+ * Busca a lista de todos os promotores cadastrados para a tabela de Gestão
+ */
+function getTodosPromotores() {
+  try {
+    const ss = getDatabaseConnection();
+    const sheet = ss.getSheetByName("Promotores");
+    if (!sheet) throw new Error("Aba 'Promotores' não encontrada no banco de dados.");
+
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) return { sucesso: true, dados: [] };
+
+    const normalizarTexto = (txt) => String(txt || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const headers = data[0].map(h => normalizarTexto(h));
+
+    const getIdx = (nome) => headers.indexOf(normalizarTexto(nome));
+    const idxChave = getIdx("CHAVE");
+    const idxNome = getIdx("NOME");
+    const idxEmail = getIdx("EMAIL");
+    const idxPerfil = getIdx("PERFIL");
+    const idxNivel = getIdx("NIVEL_ACESSO");
+    const idxStatus = getIdx("STATUS");
+    const idxMeta = getIdx("META");
+
+    if (idxChave === -1) throw new Error("Coluna CHAVE não encontrada.");
+
+    let promotores = [];
+    for (let i = 1; i < data.length; i++) {
+      if (!data[i][idxChave]) continue; // Pula linhas vazias
+      
+      promotores.push({
+        chave: data[i][idxChave],
+        nome: idxNome !== -1 ? data[i][idxNome] : "-",
+        email: idxEmail !== -1 ? data[i][idxEmail] : "",
+        perfil: idxPerfil !== -1 ? data[i][idxPerfil] : "BLACK",
+        nivel: idxNivel !== -1 ? data[i][idxNivel] : "PROMOTOR",
+        status: idxStatus !== -1 ? data[i][idxStatus] : "ATIVO",
+        meta: idxMeta !== -1 ? Number(data[i][idxMeta]) : 0
+      });
+    }
+
+    return { sucesso: true, dados: promotores };
+  } catch (e) {
+    return { sucesso: false, erro: e.message };
+  }
+}

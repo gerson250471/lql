@@ -1221,8 +1221,8 @@
               <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4 border-b pb-2">Configurações</h3>
               <ul class="space-y-2">
                 <li>
-                  <button onclick="mudarAbaParametros('comissoes')" id="btnAbaParamComissoes" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 transition-colors">
-                    <i class="fas fa-percent w-5 text-center mr-1"></i> Tabela Comissões
+                  <button onclick="mudarAbaParametros('equipe')" id="btnAbaParamEquipe" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-users w-5 text-center mr-1"></i> Gestão de Equipe
                   </button>
                 </li>
                 <li>
@@ -1271,7 +1271,7 @@
                 </div>
               </div>
 
-              <!-- CONTEÚDO: GESTÃO DE EQUIPA (NOVO) -->
+              <!-- CONTEÚDO: GESTÃO DE EQUIPE -->
               <div id="paramAbaEquipe" class="space-y-4 hidden">
                 <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                   <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest">Cadastros e Acessos</h2>
@@ -1279,9 +1279,29 @@
                     <i class="fas fa-user-plus"></i> Novo Promotor
                   </button>
                 </div>
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
-                  <i class="fas fa-id-badge text-4xl text-slate-300 mb-4"></i>
-                  <p class="text-slate-400 font-bold text-sm uppercase">Utilize o botão acima para adicionar novos membros à equipa.</p>
+                
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                      <thead>
+                        <tr class="bg-slate-100 text-[10px] uppercase text-slate-500 tracking-wider">
+                          <th class="p-4 border-b border-slate-200 font-black">Chave / Nome</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center">Perfil</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center">Acesso</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-right">Meta (R$)</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center">Status</th>
+                          <th class="p-4 border-b border-slate-200 font-black text-center">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tabelaPromotoresBody">
+                        <tr>
+                          <td colspan="6" class="p-8 text-center text-slate-400 font-bold">
+                            <i class="fas fa-spinner fa-spin mr-2"></i> Carregando equipe...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
@@ -3835,6 +3855,7 @@ function mudarAbaParametros(abaDesejada) {
   } else if (abaDesejada === 'equipe') {
     document.getElementById('paramAbaEquipe').classList.remove('hidden');
     document.getElementById('btnAbaParamEquipe').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-purple-50 text-purple-700 transition-colors";
+    carregarListaPromotores();
     // (Futuro: Aqui podemos adicionar uma função para listar os promotores numa tabela)
   }
 }
@@ -3906,9 +3927,58 @@ function salvarParametrosFinanceirosUI() {
 // ==========================================
       // MÓDULO: CADASTRO DE PROMOTORES
       // ==========================================
+      let promotoresMemoria = []; // Guarda a lista para permitir edição rápida
+
+      function carregarListaPromotores() {
+        const tbody = document.getElementById("tabelaPromotoresBody");
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando equipe...</td></tr>`;
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              return;
+            }
+
+            promotoresMemoria = res.dados;
+            tbody.innerHTML = "";
+
+            if (res.dados.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Nenhum promotor cadastrado.</td></tr>`;
+              return;
+            }
+
+            res.dados.forEach(p => {
+              let statusColor = p.status === "ATIVO" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700";
+              let metaFormatada = (p.meta || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+              
+              tbody.innerHTML += `
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                  <td class="p-4 text-sm font-black text-slate-800">${p.nome}<br><span class="text-[10px] font-bold text-slate-400 uppercase"><i class="fas fa-id-badge mr-1"></i>${p.chave}</span></td>
+                  <td class="p-4 text-xs font-bold text-slate-600 text-center">${p.perfil}</td>
+                  <td class="p-4 text-xs font-bold text-slate-600 text-center">${p.nivel}</td>
+                  <td class="p-4 text-xs font-black text-emerald-600 text-right">${metaFormatada}</td>
+                  <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${statusColor}">${p.status}</span></td>
+                  <td class="p-4 text-center">
+                    <button onclick="editarPromotor('${p.chave}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 p-2 rounded-lg hover:bg-blue-100 transition-all shadow-sm">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </td>
+                </tr>
+              `;
+            });
+          })
+          .withFailureHandler(function (err) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Falha ao carregar: ${err.message}</td></tr>`;
+          })
+          .getTodosPromotores();
+      }
 
       function abrirModalPromotor() {
         document.getElementById("cadPromotorChave").value = "";
+        document.getElementById("cadPromotorChave").readOnly = false; // Libera digitação
+        document.getElementById("cadPromotorChave").classList.remove("bg-slate-100"); // Fundo branco
+        
         document.getElementById("cadPromotorNome").value = "";
         document.getElementById("cadPromotorEmail").value = "";
         document.getElementById("cadPromotorMeta").value = "";
@@ -3916,6 +3986,24 @@ function salvarParametrosFinanceirosUI() {
         document.getElementById("cadPromotorNivel").value = "PROMOTOR";
         document.getElementById("cadPromotorStatus").value = "ATIVO";
         
+        document.getElementById("modalPromotor").classList.remove("hidden");
+      }
+
+      function editarPromotor(chave) {
+        const p = promotoresMemoria.find(i => i.chave === chave);
+        if (!p) return;
+        
+        document.getElementById("cadPromotorChave").value = p.chave;
+        document.getElementById("cadPromotorChave").readOnly = true; // Impede alterar a chave
+        document.getElementById("cadPromotorChave").classList.add("bg-slate-100"); // Fundo cinza indicando bloqueio
+        
+        document.getElementById("cadPromotorNome").value = p.nome;
+        document.getElementById("cadPromotorEmail").value = p.email;
+        document.getElementById("cadPromotorPerfil").value = p.perfil;
+        document.getElementById("cadPromotorNivel").value = p.nivel;
+        document.getElementById("cadPromotorStatus").value = p.status;
+        document.getElementById("cadPromotorMeta").value = p.meta;
+
         document.getElementById("modalPromotor").classList.remove("hidden");
       }
 
@@ -3941,15 +4029,7 @@ function salvarParametrosFinanceirosUI() {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
 
-        const payload = {
-          chave: chave,
-          nome: nome,
-          email: email,
-          perfil: perfil,
-          nivel: nivel,
-          meta: meta,
-          status: status
-        };
+        const payload = { chave, nome, email, perfil, nivel, meta, status };
 
         google.script.run
           .withSuccessHandler(function (res) {
@@ -3959,6 +4039,7 @@ function salvarParametrosFinanceirosUI() {
             if (res.sucesso) {
               fecharModalPromotor();
               showToast(res.mensagem, "success");
+              carregarListaPromotores(); // ATUALIZA A TABELA AUTOMATICAMENTE!
             } else {
               showToast(res.erro, "error");
             }
