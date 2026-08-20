@@ -524,7 +524,7 @@
                 id="listaLeadsLivres"
               >
                 <p class="text-center text-slate-400 font-bold mt-10">
-                  <i class="fas fa-spinner fa-spin"></i> A carregar leads
+                  <i class="fas fa-spinner fa-spin"></i> Carregando leads
                   disponíveis...
                 </p>
               </div>
@@ -547,7 +547,7 @@
                     id="selectPromotorDestino"
                     class="w-full p-3 border-2 border-slate-200 rounded-xl font-bold text-slate-600 bg-white outline-none focus:border-red-500 transition-colors"
                   >
-                    <option value="">A carregar promotores...</option>
+                    <option value="">Carregando promotores...</option>
                   </select>
                 </div>
                 <div>
@@ -694,7 +694,7 @@
                 <i class="fas fa-chart-pie mr-2"></i> Resumo de Produção
               </h1>
               <p class="text-slate-500 text-sm font-medium">
-                Consolidado financeiro da equipa por mês/ano.
+                Consolidado financeiro da Equipe por mês/ano.
               </p>
             </div>
 
@@ -844,7 +844,7 @@
                       colspan="6"
                       class="p-8 text-center text-slate-400 font-bold"
                     >
-                      <i class="fas fa-spinner fa-spin mr-2"></i> A processar
+                      <i class="fas fa-spinner fa-spin mr-2"></i> Processando
                       relatórios de produção...
                     </td>
                   </tr>
@@ -975,7 +975,7 @@
                     class="w-full p-4 border-2 border-slate-200 rounded-xl font-bold text-slate-600 bg-white outline-none focus:border-blue-600"
                     onchange="calcSim()"
                   >
-                    <option value="">A carregar...</option>
+                    <option value="">Carregando...</option>
                   </select>
                 </div>
               </div>
@@ -992,7 +992,7 @@
                   <span
                     id="resTxt"
                     class="text-slate-400 font-bold uppercase tracking-widest text-sm"
-                    >A aguardar dados...</span
+                    >A aSalvar dados...</span
                   >
                 </div>
               </div>
@@ -1017,7 +1017,7 @@
             >
               <i class="fas fa-spinner fa-spin text-4xl text-blue-600"></i>
               <p class="text-slate-400 font-bold uppercase text-xs">
-                A procurar taxas em vigor...
+                Buscando taxas em vigor...
               </p>
             </div>
           </div>
@@ -1197,7 +1197,7 @@
                       colspan="14"
                       class="p-8 text-center text-slate-400 font-bold"
                     >
-                      <i class="fas fa-spinner fa-spin mr-2"></i> A carregar a
+                      <i class="fas fa-spinner fa-spin mr-2"></i> Carregando a
                       sua produção...
                     </td>
                   </tr>
@@ -1216,13 +1216,13 @@
           </header>
 
           <div class="flex flex-col md:flex-row gap-6">
-            <!-- BARRA LATERAL (MENU) -->
+            <!-- BARRA LATERAL (MENU CORRIGIDO) -->
             <div class="w-full md:w-64 shrink-0 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 h-fit">
               <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-4 border-b pb-2">Configurações</h3>
               <ul class="space-y-2">
                 <li>
-                  <button onclick="mudarAbaParametros('equipe')" id="btnAbaParamEquipe" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                    <i class="fas fa-users w-5 text-center mr-1"></i> Gestão de Equipe
+                  <button onclick="mudarAbaParametros('comissoes')" id="btnAbaParamComissoes" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 transition-colors">
+                    <i class="fas fa-percent w-5 text-center mr-1"></i> Tabela Comissões
                   </button>
                 </li>
                 <li>
@@ -1230,10 +1230,9 @@
                     <i class="fas fa-wallet w-5 text-center mr-1"></i> Opções Financeiras
                   </button>
                 </li>
-                <!-- NOVO BOTÃO: GESTÃO DE EQUIPA -->
                 <li>
                   <button onclick="mudarAbaParametros('equipe')" id="btnAbaParamEquipe" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
-                    <i class="fas fa-users w-5 text-center mr-1"></i> Gestão de Equipa
+                    <i class="fas fa-users w-5 text-center mr-1"></i> Gestão de Equipe
                   </button>
                 </li>
               </ul>
@@ -1241,17 +1240,16 @@
 
             <!-- ÁREA DE CONTEÚDO (DIREITA) -->
             <div class="flex-1">
-              
               <!-- CONTEÚDO: COMISSÕES -->
               <div id="paramAbaComissoes" class="space-y-4">
                 <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                   <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest">Multiplicadores de Repasse</h2>
                   <button onclick="salvarNovosParametros()" id="btnSalvarParams" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-colors shadow-md flex items-center gap-2">
-                    <i class="fas fa-save"></i> Guardar
+                    <i class="fas fa-save"></i> Salvar Alterações
                   </button>
                 </div>
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" id="containerTabelaParametros">
-                  <div class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> A carregar matriz de repasses...</div>
+                  <div class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando matriz de repasses...</div>
                 </div>
               </div>
 
@@ -1263,7 +1261,7 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Coloque uma opção por linha nas caixas abaixo.</p>
                   </div>
                   <button onclick="salvarParametrosFinanceirosUI()" id="btnSalvarParamsFin" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-colors shadow-md flex items-center justify-center gap-2">
-                    <i class="fas fa-save"></i> Guardar Listas
+                    <i class="fas fa-save"></i> Salvar Listas
                   </button>
                 </div>
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6" id="containerParamsFin">
@@ -1271,7 +1269,7 @@
                 </div>
               </div>
 
-              <!-- CONTEÚDO: GESTÃO DE EQUIPE -->
+              <!-- CONTEÚDO: GESTÃO DE EQUIPE (COM A TABELA) -->
               <div id="paramAbaEquipe" class="space-y-4 hidden">
                 <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                   <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest">Cadastros e Acessos</h2>
@@ -1308,181 +1306,6 @@
           </div>
         </div>
 
-      <!-- PÁGINA: RESUMO DA PRODUÇÃO (ADMIN) -->
-      <div
-        id="viewAdminProducao"
-        class="view-content hidden p-4 md:p-6 max-w-7xl mx-auto space-y-6"
-      >
-        <div
-          class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-2"
-        >
-          <div>
-            <h1
-              class="text-3xl md:text-4xl font-black text-indigo-800 italic uppercase tracking-tighter"
-            >
-              <i class="fas fa-chart-pie mr-2"></i> Resumo de Produção
-            </h1>
-            <p class="text-slate-500 text-sm font-medium">
-              Consolidado financeiro da equipa por mês/ano.
-            </p>
-          </div>
-
-          <div
-            class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto"
-          >
-            <label
-              class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2"
-              >Mês/Ano:</label
-            >
-            <input
-              type="month"
-              id="filtroMesAdmin"
-              onchange="carregarResumoAdmin()"
-              class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 bg-slate-50 flex-1 md:w-48 cursor-pointer"
-            />
-            <button
-              onclick="carregarResumoAdmin()"
-              class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition-colors"
-              title="Atualizar"
-            >
-              <i class="fas fa-sync-alt"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- CARDS TOTAIS DA EMPRESA -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-          <div
-            class="bg-white border-b-4 border-indigo-500 p-4 rounded-xl shadow-sm"
-          >
-            <p
-              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Volume Considerado
-            </p>
-            <p
-              id="adminTotalVolume"
-              class="text-xl md:text-2xl font-black text-indigo-700"
-            >
-              R$ 0,00
-            </p>
-          </div>
-          <div
-            class="bg-white border-b-4 border-slate-500 p-4 rounded-xl shadow-sm"
-          >
-            <p
-              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Valor Bruto Total
-            </p>
-            <p
-              id="adminTotalBruto"
-              class="text-xl md:text-2xl font-black text-slate-700"
-            >
-              R$ 0,00
-            </p>
-          </div>
-          <div
-            class="bg-white border-b-4 border-emerald-500 p-4 rounded-xl shadow-sm"
-          >
-            <p
-              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Total Comissões Pagas
-            </p>
-            <p
-              id="adminTotalComissao"
-              class="text-xl md:text-2xl font-black text-emerald-600"
-            >
-              R$ 0,00
-            </p>
-          </div>
-          <div
-            class="bg-white border-b-4 border-amber-500 p-4 rounded-xl shadow-sm"
-          >
-            <p
-              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Lucro Estimado (Líquido)
-            </p>
-            <p
-              id="adminTotalLiquido"
-              class="text-xl md:text-2xl font-black text-amber-600"
-            >
-              R$ 0,00
-            </p>
-          </div>
-          <div
-            class="bg-white border-b-4 border-blue-400 p-4 rounded-xl shadow-sm text-center"
-          >
-            <p
-              class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-            >
-              Contratos
-            </p>
-            <p
-              id="adminTotalContratos"
-              class="text-3xl font-black text-blue-600 mt-1"
-            >
-              0
-            </p>
-          </div>
-        </div>
-
-        <div
-          class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden"
-        >
-          <div class="overflow-x-auto pb-4">
-            <table class="w-full text-left border-collapse whitespace-nowrap">
-              <thead>
-                <tr
-                  class="bg-slate-800 text-[10px] uppercase text-slate-300 tracking-wider"
-                >
-                  <th class="p-4 border-b border-slate-700 font-black">
-                    Promotor
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-center"
-                  >
-                    Qtd Contratos
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-right text-indigo-300"
-                  >
-                    Volume Considerado
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-right"
-                  >
-                    Valor Bruto
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-right text-emerald-400"
-                  >
-                    Comissão (Custo)
-                  </th>
-                  <th
-                    class="p-4 border-b border-slate-700 font-black text-right text-amber-400"
-                  >
-                    Líquido (Empresa)
-                  </th>
-                </tr>
-              </thead>
-              <tbody id="tabelaAdminProducaoBody">
-                <tr>
-                  <td
-                    colspan="6"
-                    class="p-8 text-center text-slate-400 font-bold"
-                  >
-                    <i class="fas fa-spinner fa-spin mr-2"></i> A processar
-                    relatórios de produção...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
       <!-- MODAL: NOVA PROPOSTA -->
       <div
         id="modalNovaProposta"
@@ -1571,7 +1394,7 @@
                   id="crmProduto"
                   class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase bg-white"
                 >
-                  <option value="">A carregar...</option>
+                  <option value="">Carregando...</option>
                 </select>
               </div>
             </div>
@@ -1586,7 +1409,7 @@
                   onchange="atualizarOrgaos()"
                   class="w-full p-3 rounded-lg border border-slate-300 outline-none focus:border-blue-500 font-bold text-slate-700 text-sm uppercase bg-white"
                 >
-                  <option value="">A carregar...</option>
+                  <option value="">Carregando...</option>
                 </select>
               </div>
               <div>
@@ -1629,7 +1452,7 @@
               id="btnSalvarCrm"
               class="flex-1 py-3 px-4 bg-blue-700 text-white rounded-xl font-black uppercase text-xs hover:bg-blue-800 transition-colors shadow-md"
             >
-              Guardar Proposta
+              Salvar Proposta
             </button>
           </div>
         </div>
@@ -1768,7 +1591,7 @@
                 class="space-y-3 max-h-48 overflow-y-auto pr-2"
               >
                 <p class="text-center text-xs text-slate-400 py-4">
-                  <i class="fas fa-spinner fa-spin mr-1"></i> A carregar
+                  <i class="fas fa-spinner fa-spin mr-1"></i> Carregando
                   histórico...
                 </p>
               </div>
@@ -1953,7 +1776,7 @@
                   >Tipo</label
                 >
                 <select id="finTipo" onchange="atualizarCategoriasFin()" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
-                  <option value="">A carregar...</option>
+                  <option value="">Carregando...</option>
                 </select>
               </div>
               <div>
@@ -2028,7 +1851,7 @@
                   >Fonte / Conta</label
                 >
                 <select id="finFonte" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
-                  <option value="">A carregar...</option>
+                  <option value="">Carregando...</option>
                 </select>
               </div>
               <div>
@@ -2040,7 +1863,7 @@
                   id="finFormaPagto"
                   class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
                 >
-                  <option value="">A carregar...</option>
+                  <option value="">Carregando...</option>
                 </select>
               </div>
               <div>
@@ -2052,7 +1875,7 @@
                   id="finStatus"
                   class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
                 >
-                  <option value="">A carregar...</option>
+                  <option value="">Carregando...</option>
                 </select>
               </div>
             </div>
@@ -2300,7 +2123,7 @@
         } else if (view === "comissoes") {
           // <-- CORREÇÃO: Força o sistema a ir buscar os dados frescos ao servidor!
           document.getElementById("commCont").innerHTML =
-            "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> A processar matriz de comissões...</p>";
+            "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> Processando matriz de comissões...</p>";
           loadCommissionData();
         } else if (view === "producao") {
           carregarProducao();
@@ -2309,13 +2132,13 @@
         } else if (view === "financeiro") carregarDadosFinanceiros();
       }
 
-      // 1. Variável global para guardar os leads na memória sem precisar ir ao Google toda hora
+      // 1. Variável global para Salvar os leads na memória sem precisar ir ao Google toda hora
       let todosOsLeadsDoPromotor = [];
 
       // 2. Busca os dados no Google UMA VEZ
       function carregarLeads() {
         const container = document.getElementById("containerLeads");
-        container.innerHTML = `<div class="col-span-full p-10 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>A procurar a sua carteira...</div>`;
+        container.innerHTML = `<div class="col-span-full p-10 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>Buscando a sua carteira...</div>`;
 
         google.script.run
           .withSuccessHandler(function (leads) {
@@ -2342,7 +2165,7 @@
         // Separa o valor "YYYY-MM" em Ano e Mês
         const [anoFiltro, mesFiltro] = inputMes.value.split("-");
 
-        tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A processar produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Processando produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
 
         // Zera os cards enquanto carrega
         document.getElementById("resumoComissao").innerText = "R$ 0,00";
@@ -2481,7 +2304,7 @@
         leadAtualCpf = cpf;
         document.getElementById("modalLead").classList.remove("hidden");
         document.getElementById("leadTimeline").innerHTML =
-          `<p class="text-center text-xs text-slate-400 py-4"><i class="fas fa-spinner fa-spin mr-1"></i> A carregar dados...</p>`;
+          `<p class="text-center text-xs text-slate-400 py-4"><i class="fas fa-spinner fa-spin mr-1"></i> Carregando dados...</p>`;
 
         google.script.run
           .withSuccessHandler(function (dados) {
@@ -2563,7 +2386,7 @@
             }
           })
           .withFailureHandler(function (err) {
-            showToast("Erro ao guardar histórico: " + err.message, "error");
+            showToast("Erro ao Salvar histórico: " + err.message, "error");
             btn.innerHTML = '<i class="fas fa-check"></i>';
             btn.disabled = false;
           })
@@ -2576,7 +2399,7 @@
         document.getElementById("crmPropostaId").value = "";
         document.getElementById("modalPropostaTitulo").innerText =
           "Nova Proposta CRM";
-        document.getElementById("btnSalvarCrm").innerText = "Guardar Proposta";
+        document.getElementById("btnSalvarCrm").innerText = "Salvar Proposta";
 
         document.getElementById("crmCliente").value = nomePre;
         document.getElementById("crmCpf").value = cpfPre;
@@ -2620,7 +2443,7 @@
 
         const btn = document.getElementById("btnSalvarCrm");
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A GUARDAR...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A Salvar...';
 
         const dados = {
           id: idExistente, // Transmite o ID (vazio ou preenchido)
@@ -2646,7 +2469,7 @@
             btn.disabled = false;
             btn.innerHTML = idExistente
               ? "Atualizar Proposta"
-              : "Guardar Proposta";
+              : "Salvar Proposta";
             if (res.sucesso) {
               fecharModalNovaProposta();
               showToast(
@@ -2662,7 +2485,7 @@
             btn.disabled = false;
             btn.innerHTML = idExistente
               ? "Atualizar Proposta"
-              : "Guardar Proposta";
+              : "Salvar Proposta";
             showToast("Erro no servidor: " + err.message, "error");
           })
           [funcaoServidor](dados); // Executa dinamicamente a função correta
@@ -2670,7 +2493,7 @@
 
       function carregarPropostasCRM() {
         const tbody = document.getElementById("tabelaPropostasBody");
-        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A carregar as suas propostas...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando as suas propostas...</td></tr>`;
 
         google.script.run
           .withSuccessHandler(function (propostas) {
@@ -2771,7 +2594,7 @@
 
       function resetSimResult() {
         const resTxt = document.getElementById("resTxt");
-        resTxt.innerText = "A aguardar dados...";
+        resTxt.innerText = "A aSalvar dados...";
         resTxt.className =
           "text-slate-400 font-bold uppercase tracking-widest text-sm";
       }
@@ -2864,12 +2687,12 @@
           .getDadosComissao(user.perfil);
       }
 
-      // Variável para guardar os CPFs selecionados pelo Admin
+      // Variável para Salvar os CPFs selecionados pelo Admin
       let leadsSelecionadosParaAtribuicao = [];
 
-      // Função para carregar os Leads livres e os Promotores na tela do Admin
+      // Função parCarregando os Leads livres e os Promotores na tela do Admin
 
-      // Função para carregar os Leads livres e os Promotores na tela do Admin
+      // Função parCarregando os Leads livres e os Promotores na tela do Admin
       function carregarPainelAdmin() {
         // Só carrega se a pessoa for ADMIN ou PROGRAMADOR
         if (
@@ -2881,9 +2704,9 @@
         leadsSelecionadosParaAtribuicao = [];
         document.getElementById("qtdSelecionados").innerText = "0";
         document.getElementById("listaLeadsLivres").innerHTML =
-          '<p class="text-center text-slate-400 font-bold mt-10"><i class="fas fa-spinner fa-spin"></i> A carregar base...</p>';
+          '<p class="text-center text-slate-400 font-bold mt-10"><i class="fas fa-spinner fa-spin"></i> Carregando base...</p>';
         document.getElementById("selectPromotorDestino").innerHTML =
-          '<option value="">A carregar promotores...</option>';
+          '<option value="">Carregando promotores...</option>';
 
         // Chama o backend para buscar as informações
         google.script.run
@@ -2967,7 +2790,7 @@
         }
 
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A PROCESSAR...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
 
         google.script.run
           .withSuccessHandler(function () {
@@ -3025,7 +2848,7 @@
       }
 
       function abrirModalParaEdicao(idProposta) {
-        showToast("A carregar dados da proposta...", "success");
+        showToast("Carregando dados da proposta...", "success");
 
         google.script.run
           .withSuccessHandler(function (res) {
@@ -3084,7 +2907,7 @@
       function carregarTabelaConsolidadaAdmin() {
         const container = document.getElementById("commCont");
         container.innerHTML =
-          "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> A processar matriz de comissões...</p>";
+          "<p class='text-center text-slate-400 font-bold p-10'><i class='fas fa-spinner fa-spin mr-2'></i> Processando matriz de comissões...</p>";
 
         google.script.run
           .withSuccessHandler(function (res) {
@@ -3198,7 +3021,7 @@
       function carregarParametrosPadrao() {
         const container = document.getElementById("containerTabelaParametros");
         container.innerHTML =
-          '<div class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> A carregar matriz de repasses...</div>';
+          '<div class="p-10 text-center text-slate-400 font-bold"><i class="fas fa-spinner fa-spin mr-2"></i> Carregando matriz de repasses...</div>';
 
         google.script.run
           .withSuccessHandler(function (res) {
@@ -3277,7 +3100,7 @@
           .withSuccessHandler(function (res) {
             btn.disabled = false;
             btn.innerHTML =
-              '<i class="fas fa-save mr-2"></i> Guardar Alterações';
+              '<i class="fas fa-save mr-2"></i> Salvar Alterações';
             if (res.sucesso) {
               showToast("Parâmetros atualizados com sucesso!", "success");
             } else {
@@ -3287,7 +3110,7 @@
           .withFailureHandler(function (err) {
             btn.disabled = false;
             btn.innerHTML =
-              '<i class="fas fa-save mr-2"></i> Guardar Alterações';
+              '<i class="fas fa-save mr-2"></i> Salvar Alterações';
             showToast(
               "Falha ao comunicar com o servidor: " + err.message,
               "error",
@@ -3309,7 +3132,7 @@
 
         const [anoFiltro, mesFiltro] = inputMes.value.split("-");
 
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> A consolidar produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Consolidando produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
 
         // Zera os cards
         document.getElementById("adminTotalVolume").innerText = "R$ 0,00";
@@ -3913,7 +3736,7 @@ function salvarParametrosFinanceirosUI() {
 
   google.script.run.withSuccessHandler(function(res) {
     btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-save mr-1"></i> Guardar Listas';
+    btn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar Listas';
     
     if (res.sucesso) {
       showToast("Listas financeiras atualizadas!", "success");
