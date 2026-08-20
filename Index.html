@@ -336,7 +336,7 @@
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
                 <!-- Versão do Sistema -->
-                V: 1.4.1
+                V: 1.5.0
               </span>
               <button
                 onclick="logout()"
@@ -1230,6 +1230,12 @@
                     <i class="fas fa-wallet w-5 text-center mr-1"></i> Opções Financeiras
                   </button>
                 </li>
+                <!-- NOVO BOTÃO: GESTÃO DE EQUIPA -->
+                <li>
+                  <button onclick="mudarAbaParametros('equipe')" id="btnAbaParamEquipe" class="w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <i class="fas fa-users w-5 text-center mr-1"></i> Gestão de Equipa
+                  </button>
+                </li>
               </ul>
             </div>
 
@@ -1265,6 +1271,19 @@
                 </div>
               </div>
 
+              <!-- CONTEÚDO: GESTÃO DE EQUIPA (NOVO) -->
+              <div id="paramAbaEquipe" class="space-y-4 hidden">
+                <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                  <h2 class="text-sm font-black text-slate-700 uppercase tracking-widest">Cadastros e Acessos</h2>
+                  <button onclick="abrirModalPromotor()" class="bg-slate-800 hover:bg-slate-900 text-yellow-400 px-5 py-2.5 rounded-xl font-black uppercase text-xs transition-colors shadow-md flex items-center gap-2">
+                    <i class="fas fa-user-plus"></i> Novo Promotor
+                  </button>
+                </div>
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+                  <i class="fas fa-id-badge text-4xl text-slate-300 mb-4"></i>
+                  <p class="text-slate-400 font-bold text-sm uppercase">Utilize o botão acima para adicionar novos membros à equipa.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2041,8 +2060,83 @@
           </div>
         </div>
       </div>
+      <!-- MODAL: CADASTRO DE PROMOTOR -->
+        <div id="modalPromotor" class="fixed inset-0 z-[80] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+          <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden modal-enter">
+            <div class="bg-slate-800 p-6 border-b border-slate-700 flex justify-between items-center text-white">
+              <h2 class="text-xl font-black uppercase tracking-tight">
+                <i class="fas fa-user-plus mr-2 text-yellow-400"></i>Cadastro de Promotor
+              </h2>
+              <button onclick="fecharModalPromotor()" class="text-slate-400 hover:text-red-400 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+  
+            <div class="p-6 space-y-4 text-left">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Chave J / Matrícula</label>
+                  <input type="text" id="cadPromotorChave" placeholder="Ex: JJ826554" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</label>
+                  <select id="cadPromotorStatus" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500 bg-white">
+                    <option value="ATIVO">ATIVO</option>
+                    <option value="INATIVO">INATIVO</option>
+                  </select>
+                </div>
+              </div>
+  
+              <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Nome Completo</label>
+                <input type="text" id="cadPromotorNome" placeholder="Nome do promotor" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm uppercase outline-none focus:border-blue-500" />
+              </div>
+  
+              <div>
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">E-mail (Opcional)</label>
+                <input type="email" id="cadPromotorEmail" placeholder="email@dominio.com" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500" />
+              </div>
+  
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Perfil (Comissões)</label>
+                  <select id="cadPromotorPerfil" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500 bg-white">
+                    <option value="BLACK">BLACK</option>
+                    <option value="GOLD">GOLD</option>
+                    <option value="TOP">TOP</option>
+                    <option value="GESTOR">GESTOR</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Acesso</label>
+                  <select id="cadPromotorNivel" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500 bg-white">
+                    <option value="PROMOTOR">PROMOTOR</option>
+                    <option value="ADMINISTRADOR">ADMIN</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Meta (€/R$)</label>
+                  <input type="number" id="cadPromotorMeta" placeholder="0.00" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              
+              <p class="text-[9px] text-slate-400 font-bold uppercase mt-4 border-t pt-2 border-slate-100">
+                <i class="fas fa-info-circle mr-1"></i> A senha padrão no 1º acesso será: <span class="text-slate-600">123456</span>
+              </p>
+            </div>
+  
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+              <button onclick="fecharModalPromotor()" class="flex-1 py-3 px-4 bg-white border border-slate-300 text-slate-600 rounded-xl font-bold uppercase text-xs hover:bg-slate-100 transition-colors">
+                Cancelar
+              </button>
+              <button onclick="enviarCadastroPromotor()" id="btnSalvarPromotor" class="flex-1 py-3 px-4 bg-slate-800 text-yellow-400 rounded-xl font-black uppercase text-xs hover:bg-slate-900 transition-colors shadow-md">
+                Salvar Promotor
+              </button>
+            </div>
+          </div>
+        </div>
     </div>
-
+    
     <!-- CONTAINER DE NOTIFICAÇÕES (TOAST) -->
     <div
       id="toastContainer"
@@ -3718,13 +3812,18 @@ function atualizarCategoriasFin() {
 
 // Controla as abas laterais dentro de Parâmetros
 function mudarAbaParametros(abaDesejada) {
-  // Oculta painéis
+  // 1. Oculta todos os painéis
   document.getElementById('paramAbaComissoes').classList.add('hidden');
   document.getElementById('paramAbaFinanceiro').classList.add('hidden');
-  // Reseta cores botões laterais
-  document.getElementById('btnAbaParamComissoes').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors";
-  document.getElementById('btnAbaParamFinanceiro').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors";
+  document.getElementById('paramAbaEquipe').classList.add('hidden'); // <-- NOVO
+  
+  // 2. Reseta cores de todos os botões laterais
+  const classeInativa = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors";
+  document.getElementById('btnAbaParamComissoes').className = classeInativa;
+  document.getElementById('btnAbaParamFinanceiro').className = classeInativa;
+  document.getElementById('btnAbaParamEquipe').className = classeInativa; // <-- NOVO
 
+  // 3. Ativa o painel e o botão corretos
   if (abaDesejada === 'comissoes') {
     document.getElementById('paramAbaComissoes').classList.remove('hidden');
     document.getElementById('btnAbaParamComissoes').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-blue-50 text-blue-700 transition-colors";
@@ -3733,6 +3832,10 @@ function mudarAbaParametros(abaDesejada) {
     document.getElementById('paramAbaFinanceiro').classList.remove('hidden');
     document.getElementById('btnAbaParamFinanceiro').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-emerald-50 text-emerald-700 transition-colors";
     carregarParametrosFinEditor();
+  } else if (abaDesejada === 'equipe') {
+    document.getElementById('paramAbaEquipe').classList.remove('hidden');
+    document.getElementById('btnAbaParamEquipe').className = "w-full text-left px-4 py-3 rounded-xl text-sm font-bold bg-purple-50 text-purple-700 transition-colors";
+    // (Futuro: Aqui podemos adicionar uma função para listar os promotores numa tabela)
   }
 }
 
@@ -3799,6 +3902,74 @@ function salvarParametrosFinanceirosUI() {
     }
   }).salvarParametrosFinanceiros(payload);
 }
+
+// ==========================================
+      // MÓDULO: CADASTRO DE PROMOTORES
+      // ==========================================
+
+      function abrirModalPromotor() {
+        document.getElementById("cadPromotorChave").value = "";
+        document.getElementById("cadPromotorNome").value = "";
+        document.getElementById("cadPromotorEmail").value = "";
+        document.getElementById("cadPromotorMeta").value = "";
+        document.getElementById("cadPromotorPerfil").value = "BLACK";
+        document.getElementById("cadPromotorNivel").value = "PROMOTOR";
+        document.getElementById("cadPromotorStatus").value = "ATIVO";
+        
+        document.getElementById("modalPromotor").classList.remove("hidden");
+      }
+
+      function fecharModalPromotor() {
+        document.getElementById("modalPromotor").classList.add("hidden");
+      }
+
+      function enviarCadastroPromotor() {
+        const chave = document.getElementById("cadPromotorChave").value.trim();
+        const nome = document.getElementById("cadPromotorNome").value.trim();
+        const email = document.getElementById("cadPromotorEmail").value.trim();
+        const perfil = document.getElementById("cadPromotorPerfil").value;
+        const nivel = document.getElementById("cadPromotorNivel").value;
+        const status = document.getElementById("cadPromotorStatus").value;
+        const meta = parseFloat(document.getElementById("cadPromotorMeta").value) || 0;
+
+        if (!chave || !nome) {
+          showToast("A Chave J e o Nome são obrigatórios.", "error");
+          return;
+        }
+
+        const btn = document.getElementById("btnSalvarPromotor");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+
+        const payload = {
+          chave: chave,
+          nome: nome,
+          email: email,
+          perfil: perfil,
+          nivel: nivel,
+          meta: meta,
+          status: status
+        };
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerText = "Salvar Promotor";
+            
+            if (res.sucesso) {
+              fecharModalPromotor();
+              showToast(res.mensagem, "success");
+            } else {
+              showToast(res.erro, "error");
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerText = "Salvar Promotor";
+            showToast("Erro no servidor: " + err.message, "error");
+          })
+          .salvarPromotorBase(payload);
+      }
     </script>
   </body>
 </html>
