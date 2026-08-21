@@ -271,3 +271,72 @@ function deletarLancamentoFinanceiro(id) {
     return { sucesso: false, erro: e.message };
   }
 }
+
+// NOVA FUNÇÃO: GATILHO DIÁRIO PARA ATUALIZAÇÃO DE STATUS
+function atualizarStatusFinanceiroAutomatizado() {
+  try {
+    const ss = getDatabaseConnection(); 
+    const sheet = ss.getSheetByName("Financeiro");
+    if (!sheet) return;
+
+    const range = sheet.getDataRange();
+    const data = range.getValues();
+    if (data.length <= 1) return; // Planilha vazia
+
+    const normalizar = (t) => String(t || "").trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const headers = data[0].map(normalizar);
+    
+    const idxStatus = headers.indexOf("STATUS");
+    const idxDataVenc = headers.indexOf("DATA_VENCIMENTO");
+
+    if (idxStatus === -1 || idxDataVenc === -1) return;
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    let alterou = false;
+
+    // Varre todas as linhas a partir da linha 2
+    for (let i = 1; i < data.length; i++) {
+      let statusAtual = String(data[i][idxStatus]).toUpperCase();
+      
+      // Ignora o que já foi pago ou cancelado (não precisa de alerta)
+      if (statusAtual === "PAGAMENTO REALIZADO" || statusAtual === "CANCELADO") continue;
+      
+      let dataVenc = new Date(data[i][idxDataVenc]);
+      if (isNaN(dataVenc.getTime())) continue;
+
+      dataVenc.setHours(0, 0, 0, 0);
+      let diffTime = dataVenc.getTime() - hoje.getTime();
+      let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let novoStatus = statusAtual;
+
+      // REGRAS DE NEGÓCIO:
+      if (diffDays < 0) {
+        // Se a data já passou (ontem para trás)
+        novoStatus = "EM ATRASO";
+      } else if (diffDays <= 5 && diffDays >= 0) {
+        // Se vence hoje ou nos próximos 5 dias
+        novoStatus = "URGENTE";
+      } else if (diffDays > 5) {
+        // Se vence daqui a mais de 5 dias
+        novoStatus = "AGUARDANDO";
+      }
+
+      // Se o status mudou, atualiza na memória
+      if (novoStatus !== statusAtual) {
+        data[i][idxStatus] = novoStatus;
+        alterou = true;
+      }
+    }
+
+    // Se houve alguma alteração, grava tudo de volta na planilha de uma só vez (Alta Performance)
+    if (alterou) {
+      range.setValues(data);
+    }
+
+  } catch (e) {
+    console.error("Erro na automação de status: " + e.message);
+  }
+}
