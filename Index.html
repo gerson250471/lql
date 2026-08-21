@@ -3434,6 +3434,10 @@
         document.getElementById("modalFinanceiro").classList.remove("hidden");
       }
 
+      function fecharModalFinanceiro() {
+        document.getElementById("modalFinanceiro").classList.add("hidden");
+      }
+
       function salvarLancamentoFinanceiro() {
         const idLancamento = document.getElementById("finLancamentoId").value; 
         const tipo = document.getElementById("finTipo").value;
