@@ -1732,7 +1732,11 @@
               </div>
               <div>
                 <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Venc.</label>
-                <input type="date" id="finDataVenc" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500" />
+                <input
+                  type="date"
+                  id="finDataVenc"
+                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500"
+                />
               </div>
             </div>
 
@@ -3370,20 +3374,18 @@
 
       function abrirModalNovoLancamento() {
         document.getElementById("finLancamentoId").value = ""; 
-        document.getElementById("finDataVenc").value = new Date().toISOString().split("T")[0]; 
+        document.getElementById("finDataVenc").value = new Date().toISOString().split("T")[0]; // CORRIGIDO
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
         document.getElementById("finPromotor").value = "";
         document.getElementById("finObs").value = ""; 
 
         if (listasFinanceirasAtuais) {
-          // NOVO: Força a recriação do HTML das opções sempre que o modal abre
           preencherSelectUI('finTipo', listasFinanceirasAtuais.tipos);
           preencherSelectUI('finFonte', listasFinanceirasAtuais.fontes);
           preencherSelectUI('finFormaPagto', listasFinanceirasAtuais.formasPagto);
           preencherSelectUI('finStatus', listasFinanceirasAtuais.status);
 
-          // Define a primeira opção como padrão (se existir)
           if (listasFinanceirasAtuais.tipos && listasFinanceirasAtuais.tipos.length > 0) document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
           if (listasFinanceirasAtuais.fontes && listasFinanceirasAtuais.fontes.length > 0) document.getElementById("finFonte").value = listasFinanceirasAtuais.fontes[0];
           if (listasFinanceirasAtuais.formasPagto && listasFinanceirasAtuais.formasPagto.length > 0) document.getElementById("finFormaPagto").value = listasFinanceirasAtuais.formasPagto[0];
@@ -3399,7 +3401,7 @@
         if(!item) return;
 
         document.getElementById("finLancamentoId").value = item.id; 
-        document.getElementById("finDataVenc").value = item.dataFormatoInput; // ID Alterado
+        document.getElementById("finDataVenc").value = item.dataFormatoInput; // CORRIGIDO
         document.getElementById("finValor").value = item.valor;
         document.getElementById("finDescricao").value = item.descricao;
         document.getElementById("finPromotor").value = item.promotor;
@@ -3418,14 +3420,10 @@
         document.getElementById("modalFinanceiro").classList.remove("hidden");
       }
 
-      function fecharModalFinanceiro() {
-        document.getElementById("modalFinanceiro").classList.add("hidden");
-      }
-
       function salvarLancamentoFinanceiro() {
         const idLancamento = document.getElementById("finLancamentoId").value; 
         const tipo = document.getElementById("finTipo").value;
-        const dataVencimento = document.getElementById("finDataVenc").value; // ID Alterado
+        const dataVencimento = document.getElementById("finDataVenc").value; // CORRIGIDO
         const categoria = document.getElementById("finCategoria").value;
         const valor = parseFloat(document.getElementById("finValor").value);
         const descricao = document.getElementById("finDescricao").value.trim();
@@ -3447,7 +3445,7 @@
         const payload = {
           id: idLancamento, 
           tipo: tipo,
-          dataVencimento: dataVencimento, // Alterado
+          dataVencimento: dataVencimento, // CORRIGIDO: Agora envia com o nome exato que o backend espera!
           categoria: categoria,
           valor: valor,
           descricao: descricao,
