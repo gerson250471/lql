@@ -213,9 +213,29 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
       }
     }
 
+    // NOVO: ORDENAÇÃO INTELIGENTE (1º Vermelho, 2º Amarelo, 3º Data)
+    lancamentos.sort(function(a, b) {
+      // Define os "pesos" das cores (quanto menor, mais no topo)
+      const prioridade = { 'red': 1, 'yellow': 2, 'none': 3 };
+      const pesoA = prioridade[a.alerta] || 3;
+      const pesoB = prioridade[b.alerta] || 3;
+
+      // 1º Nível de ordenação: Pela Cor
+      if (pesoA !== pesoB) {
+        return pesoA - pesoB;
+      }
+
+      // 2º Nível de ordenação: Se tiverem a mesma cor, ordena pela data 
+      // (Data mais antiga primeiro)
+      if (a.dataFormatoInput < b.dataFormatoInput) return -1;
+      if (a.dataFormatoInput > b.dataFormatoInput) return 1;
+
+      return 0; // Mantém a ordem caso sejam exatamente do mesmo dia
+    });
+
     return {
       sucesso: true,
-      dados: lancamentos.reverse(),
+      dados: lancamentos, // <-- Retiramos o .reverse() porque já ordenamos acima
       resumo: { receitas: totReceitas, despesas: totDespesas, saldo: totReceitas - totDespesas },
       resumoFontes: resumoFontes
     };
