@@ -85,13 +85,20 @@
                   Esqueci a senha
                 </button>
               </div>
-              <input
-                type="password"
-                id="txtSenha"
-                placeholder="Digite sua senha"
-                autocomplete="current-password"
-                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
-              />
+              <!-- INÍCIO DO NOVO BLOCO DE SENHA COM ÍCONE -->
+              <div class="relative">
+                <input
+                  type="password"
+                  id="txtSenha"
+                  placeholder="Digite sua senha"
+                  autocomplete="current-password"
+                  class="w-full p-4 pr-12 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+                />
+                <button type="button" onclick="toggleVisibilidadeSenha('txtSenha', 'iconeOlhoLogin')" class="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-blue-600 transition-colors focus:outline-none">
+                  <i id="iconeOlhoLogin" class="fas fa-eye text-lg"></i>
+                </button>
+              </div>
+              <!-- FIM DO NOVO BLOCO -->
             </div>
           </div>
 
@@ -336,7 +343,7 @@
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
                 <!-- Versão do Sistema -->
-                V: 1.5.0
+                V: 1.6.0
               </span>
               <button
                 onclick="logout()"
@@ -3363,13 +3370,20 @@
 
       function abrirModalNovoLancamento() {
         document.getElementById("finLancamentoId").value = ""; 
-        document.getElementById("finDataVenc").value = new Date().toISOString().split("T")[0]; // ID Alterado
+        document.getElementById("finDataVenc").value = new Date().toISOString().split("T")[0]; 
         document.getElementById("finValor").value = "";
         document.getElementById("finDescricao").value = "";
         document.getElementById("finPromotor").value = "";
         document.getElementById("finObs").value = ""; 
 
         if (listasFinanceirasAtuais) {
+          // NOVO: Força a recriação do HTML das opções sempre que o modal abre
+          preencherSelectUI('finTipo', listasFinanceirasAtuais.tipos);
+          preencherSelectUI('finFonte', listasFinanceirasAtuais.fontes);
+          preencherSelectUI('finFormaPagto', listasFinanceirasAtuais.formasPagto);
+          preencherSelectUI('finStatus', listasFinanceirasAtuais.status);
+
+          // Define a primeira opção como padrão (se existir)
           if (listasFinanceirasAtuais.tipos && listasFinanceirasAtuais.tipos.length > 0) document.getElementById("finTipo").value = listasFinanceirasAtuais.tipos[0];
           if (listasFinanceirasAtuais.fontes && listasFinanceirasAtuais.fontes.length > 0) document.getElementById("finFonte").value = listasFinanceirasAtuais.fontes[0];
           if (listasFinanceirasAtuais.formasPagto && listasFinanceirasAtuais.formasPagto.length > 0) document.getElementById("finFormaPagto").value = listasFinanceirasAtuais.formasPagto[0];
@@ -3823,6 +3837,23 @@ function salvarParametrosFinanceirosUI() {
             showToast("Erro no servidor: " + err.message, "error");
           })
           .salvarPromotorBase(payload);
+      }
+      // Função para mostrar/esconder a senha
+      function toggleVisibilidadeSenha(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("fa-eye");
+          icon.classList.add("fa-eye-slash");
+          icon.classList.add("text-blue-600"); // Destaca o ícone com a cor azul quando a senha está visível
+        } else {
+          input.type = "password";
+          icon.classList.remove("fa-eye-slash");
+          icon.classList.remove("text-blue-600");
+          icon.classList.add("fa-eye");
+        }
       }
     </script>
   </body>
