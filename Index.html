@@ -343,7 +343,7 @@
                 class="text-[8px] font-bold text-slate-400 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded tracking-widest"
               >
                 <!-- Versão do Sistema -->
-                V: 1.7.0
+                V: 1.8.0
               </span>
               <button
                 onclick="logout()"
@@ -1671,8 +1671,8 @@
           </div>
         </div>
 
-        <!-- NOVO: CARDS RESUMO POR FONTE -->
-        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-2 px-2">Saldos por Conta (Fonte)</h3>
+        <!-- CARDS RESUMO POR TIPO -->
+        <h3 class="font-black text-slate-700 uppercase text-xs tracking-widest mb-2 px-2">Resumo por Tipo</h3>
         <div id="containerSaldosFontes" class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
           <!-- Renderizado dinamicamente via JS -->
         </div>
@@ -1806,38 +1806,37 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label
-                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-                  >Fonte / Conta</label
-                >
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Fonte / Conta</label>
                 <select id="finFonte" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
                   <option value="">Carregando...</option>
                 </select>
               </div>
               <div>
-                <label
-                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-                  >Forma de Pagto</label
-                >
-                <select
-                  id="finFormaPagto"
-                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
-                >
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Forma de Pagto</label>
+                <!-- O ONCHANGE AQUI TRATA DO PIX AUTOMÁTICO -->
+                <select id="finFormaPagto" onchange="verificarPIX()" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
                   <option value="">Carregando...</option>
                 </select>
               </div>
               <div>
-                <label
-                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1"
-                  >Status</label
-                >
-                <select
-                  id="finStatus"
-                  class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white"
-                >
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</label>
+                <select id="finStatus" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
                   <option value="">Carregando...</option>
+                </select>
+              </div>
+              <div>
+                <!-- O NOVO CAMPO DE RECORRÊNCIA -->
+                <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Repetir</label>
+                <select id="finParcelas" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-emerald-500 bg-white">
+                  <option value="1">1x Único</option>
+                  <option value="2">2 Meses</option>
+                  <option value="3">3 Meses</option>
+                  <option value="4">4 Meses</option>
+                  <option value="5">5 Meses</option>
+                  <option value="6">6 Meses</option>
+                  <option value="12">12 Meses</option>
                 </select>
               </div>
             </div>
@@ -3383,10 +3382,38 @@
           .solicitarRecuperacaoSenha(identificador);
       }
 
+      function verificarPIX() {
+        const forma = document.getElementById("finFormaPagto").value.toUpperCase();
+        if (forma === "PIX") {
+          document.getElementById("finStatus").value = "PAGAMENTO REALIZADO";
+        }
+      }
+
+      function excluirLancamento(id) {
+        if (!confirm("Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita.")) return;
+        
+        showToast("Apagando lançamento...", "success");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.sucesso) {
+              showToast(res.mensagem, "success");
+              carregarDadosFinanceiros(); // Atualiza a tela instantaneamente
+            } else {
+              showToast(res.erro, "error");
+            }
+          })
+          .withFailureHandler(function (err) {
+            showToast("Erro no servidor: " + err.message, "error");
+          })
+          .deletarLancamentoFinanceiro(id);
+      }
+
       // Funções do Módulo Financeiro
       let lancamentosFinanceirosMemoria = []; 
 
       function abrirModalNovoLancamento() {
+        document.getElementById("finParcelas").value = "1";
+        document.getElementById("finParcelas").disabled = false;
         document.getElementById("finLancamentoId").value = ""; 
         document.getElementById("finDataVenc").value = new Date().toISOString().split("T")[0]; // CORRIGIDO
         document.getElementById("finValor").value = "";
@@ -3411,6 +3438,9 @@
       }
 
       function abrirModalEdicaoFinanceiro(id) {
+        document.getElementById("finParcelas").value = "1";
+        document.getElementById("finParcelas").disabled = true; // Impede repetir uma edição
+
         const item = lancamentosFinanceirosMemoria.find(i => i.id === id);
         if(!item) return;
 
@@ -3461,7 +3491,8 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
 
         const payload = {
-          id: idLancamento, 
+          id: idLancamento,
+          parcelas: parcelas, // <-- NOVO AQUI 
           tipo: tipo,
           dataVencimento: dataVencimento, // CORRIGIDO: Agora envia com o nome exato que o backend espera!
           categoria: categoria,
@@ -3534,9 +3565,10 @@
               <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
               <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${statusPillClass}">${item.status}</span></td>
               <td class="p-4 text-center">
-                <button onclick="abrirModalEdicaoFinanceiro('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-white p-2 rounded-lg border border-slate-200 hover:bg-blue-50 transition-all shadow-sm">
-                  <i class="fas fa-edit"></i>
-                </button>
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="abrirModalEdicaoFinanceiro('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-white p-2 rounded-lg border border-slate-200 hover:bg-blue-50 transition-all shadow-sm"><i class="fas fa-edit"></i></button>
+                  <button onclick="excluirLancamento('${item.id}')" class="text-red-600 hover:text-red-800 bg-white p-2 rounded-lg border border-slate-200 hover:bg-red-50 transition-all shadow-sm"><i class="fas fa-trash"></i></button>
+                </div>
               </td>
             </tr>
           `;
@@ -3588,19 +3620,19 @@
             document.getElementById("finTotalDespesas").innerText = formataMoeda(res.resumo.despesas);
             document.getElementById("finSaldoMes").innerText = formataMoeda(res.resumo.saldo);
 
-            // RENDERIZAÇÃO DOS CARDS POR FONTE/CONTA BANCÁRIA
-            let htmlCardsFontes = '';
-            for (let f in res.resumoFontes) {
-              const saldoFonte = res.resumoFontes[f].saldo;
-              let corSaldo = saldoFonte >= 0 ? 'text-blue-600' : 'text-red-600';
-              htmlCardsFontes += `
+            // RENDERIZAÇÃO DOS CARDS POR TIPO
+            let htmlCardsTipos = '';
+            for (let t in res.resumoTipos) {
+              const info = res.resumoTipos[t];
+              let corSaldo = info.tipoCategoria === 'ENTRADA' ? 'text-emerald-600' : 'text-red-600';
+              htmlCardsTipos += `
                 <div class="bg-white border-b-2 border-slate-300 p-4 rounded-xl shadow-sm text-center">
-                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate">${f}</p>
-                  <p class="text-lg font-black ${corSaldo}">${formataMoeda(saldoFonte)}</p>
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate" title="${t}">${t}</p>
+                  <p class="text-lg font-black ${corSaldo}">${formataMoeda(info.total)}</p>
                 </div>
               `;
             }
-            document.getElementById("containerSaldosFontes").innerHTML = htmlCardsFontes;
+            document.getElementById("containerSaldosFontes").innerHTML = htmlCardsTipos;
 
           })
           .withFailureHandler(function (err) {
