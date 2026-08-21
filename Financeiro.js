@@ -128,7 +128,6 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
     const idxTipo = getIdx("TIPO");
     const idxCategoria = getIdx("CATEGORIA");
     const idxDescricao = getIdx("DESCRICAO");
-    // LER DAS NOVAS COLUNAS
     const idxValorEnt = getIdx("VALOR_ENTRADA");
     const idxValorSai = getIdx("VALOR_SAIDA");
     const idxForma = getIdx("FORMA_PAGTO");
@@ -155,16 +154,20 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
 
       let mesLinha = String(dVenc.getMonth() + 1).padStart(2, '0');
       let anoLinha = String(dVenc.getFullYear());
+      let status = String(row[idxStatus] || "PAGO").toUpperCase();
 
-      if (mesLinha === String(mesFiltro).padStart(2, '0') && anoLinha === String(anoFiltro)) {
+      // INTELIGÊNCIA FINANCEIRA: Verifica se é do mês selecionado OU se é uma pendência antiga
+      let isMesFiltrado = (mesLinha === String(mesFiltro).padStart(2, '0') && anoLinha === String(anoFiltro));
+      let dataInicioFiltro = new Date(anoFiltro, mesFiltro - 1, 1);
+      let isPendenteAntigo = (dVenc < dataInicioFiltro && status !== "PAGAMENTO REALIZADO" && status !== "CANCELADO");
+
+      if (isMesFiltrado || isPendenteAntigo) {
         let tipo = String(row[idxTipo] || "DESPESA").toUpperCase();
         
-        // RECUPERA O VALOR CONSOLIDADO PARA A TELA
         let valorEnt = idxValorEnt !== -1 ? Number(row[idxValorEnt]) || 0 : 0;
         let valorSai = idxValorSai !== -1 ? Number(row[idxValorSai]) || 0 : 0;
         let valorAbsoluto = valorEnt > 0 ? valorEnt : valorSai;
 
-        let status = String(row[idxStatus] || "PAGO").toUpperCase();
         let fonte = idxFonte !== -1 ? String(row[idxFonte] || "NÃO INFORMADA").toUpperCase() : "NÃO INFORMADA";
 
         if (!resumoFontes[fonte]) resumoFontes[fonte] = { saldo: 0 };
@@ -202,7 +205,7 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
           tipo: tipo,
           categoria: row[idxCategoria] || "-",
           descricao: row[idxDescricao] || "-",
-          valor: valorAbsoluto, // Devolve o valor único para não quebrar a tela visual
+          valor: valorAbsoluto, 
           formaPagto: row[idxForma] || "-",
           status: status,
           fonte: fonte,
@@ -213,29 +216,23 @@ function getLancamentosFinanceiros(mesFiltro, anoFiltro) {
       }
     }
 
-    // NOVO: ORDENAÇÃO INTELIGENTE (1º Vermelho, 2º Amarelo, 3º Data)
+    // ORDENAÇÃO INTELIGENTE (1º Vermelho, 2º Amarelo, 3º Data)
     lancamentos.sort(function(a, b) {
-      // Define os "pesos" das cores (quanto menor, mais no topo)
       const prioridade = { 'red': 1, 'yellow': 2, 'none': 3 };
       const pesoA = prioridade[a.alerta] || 3;
       const pesoB = prioridade[b.alerta] || 3;
 
-      // 1º Nível de ordenação: Pela Cor
-      if (pesoA !== pesoB) {
-        return pesoA - pesoB;
-      }
+      if (pesoA !== pesoB) return pesoA - pesoB;
 
-      // 2º Nível de ordenação: Se tiverem a mesma cor, ordena pela data 
-      // (Data mais antiga primeiro)
       if (a.dataFormatoInput < b.dataFormatoInput) return -1;
       if (a.dataFormatoInput > b.dataFormatoInput) return 1;
 
-      return 0; // Mantém a ordem caso sejam exatamente do mesmo dia
+      return 0; 
     });
 
     return {
       sucesso: true,
-      dados: lancamentos, // <-- Retiramos o .reverse() porque já ordenamos acima
+      dados: lancamentos,
       resumo: { receitas: totReceitas, despesas: totDespesas, saldo: totReceitas - totDespesas },
       resumoFontes: resumoFontes
     };
