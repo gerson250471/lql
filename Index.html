@@ -3469,61 +3469,75 @@
       }
 
       function salvarLancamentoFinanceiro() {
-        const idLancamento = document.getElementById("finLancamentoId").value; 
-        const tipo = document.getElementById("finTipo").value;
-        const dataVencimento = document.getElementById("finDataVenc").value; // CORRIGIDO
-        const categoria = document.getElementById("finCategoria").value;
-        const valor = parseFloat(document.getElementById("finValor").value);
-        const descricao = document.getElementById("finDescricao").value.trim();
-        const promotor = document.getElementById("finPromotor").value.trim();
-        const fonte = document.getElementById("finFonte").value;
-        const formaPagto = document.getElementById("finFormaPagto").value;
-        const status = document.getElementById("finStatus").value;
-        const obs = document.getElementById("finObs").value.trim(); 
+        try {
+          // 1. Captura os dados
+          const idLancamento = document.getElementById("finLancamentoId").value; 
+          const tipo = document.getElementById("finTipo").value;
+          const dataVencimento = document.getElementById("finDataVenc").value; 
+          const categoria = document.getElementById("finCategoria").value;
+          const valor = parseFloat(document.getElementById("finValor").value);
+          const descricao = document.getElementById("finDescricao").value.trim();
+          const promotor = document.getElementById("finPromotor").value.trim();
+          const fonte = document.getElementById("finFonte").value;
+          const formaPagto = document.getElementById("finFormaPagto").value;
+          const status = document.getElementById("finStatus").value;
+          const obs = document.getElementById("finObs").value.trim(); 
+          
+          // CORREÇÃO: Puxar o valor das parcelas do HTML!
+          const parcelas = document.getElementById("finParcelas").value; 
 
-        if (!dataVencimento || !valor || !descricao) {
-          showToast("Preencha a Data de Vencimento, Valor e Descrição.", "error");
-          return;
+          // 2. Validação básica
+          if (!dataVencimento || !valor || !descricao) {
+            showToast("Preencha a Data de Vencimento, Valor e Descrição.", "error");
+            return;
+          }
+
+          // 3. Bloqueia o botão para evitar cliques duplos
+          const btn = document.getElementById("btnSalvarFin");
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+
+          // 4. Monta o pacote de dados
+          const payload = {
+            id: idLancamento, 
+            parcelas: parcelas, // Agora sim a variável existe!
+            tipo: tipo,
+            dataVencimento: dataVencimento, 
+            categoria: categoria,
+            valor: valor,
+            descricao: descricao,
+            promotor: promotor,
+            fonte: fonte,
+            formaPagto: formaPagto,
+            status: status,
+            obs: obs, 
+            usuarioLancamento: user ? user.chave : "SISTEMA" 
+          };
+
+          // 5. Envia para o Back-end
+          google.script.run
+            .withSuccessHandler(function (res) {
+              btn.disabled = false;
+              btn.innerText = "Salvar Lançamento";
+              if (res.sucesso) {
+                fecharModalFinanceiro(); 
+                showToast(res.mensagem, "success");
+                carregarDadosFinanceiros(); 
+              } else {
+                showToast(res.erro, "error");
+                alert("Ocorreu um erro no servidor: " + res.erro); 
+              }
+            })
+            .withFailureHandler(function (err) {
+              btn.disabled = false;
+              btn.innerText = "Salvar Lançamento";
+              showToast("Falha de comunicação: " + err.message, "error");
+            })
+            .salvarLancamentoFinanceiro(payload);
+
+        } catch (error) {
+          alert("Erro no formulário! Detalhe técnico: " + error.message);
         }
-
-        const btn = document.getElementById("btnSalvarFin");
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
-
-        const payload = {
-          id: idLancamento,
-          parcelas: parcelas, // <-- NOVO AQUI 
-          tipo: tipo,
-          dataVencimento: dataVencimento, // CORRIGIDO: Agora envia com o nome exato que o backend espera!
-          categoria: categoria,
-          valor: valor,
-          descricao: descricao,
-          promotor: promotor,
-          fonte: fonte,
-          formaPagto: formaPagto,
-          status: status,
-          obs: obs, 
-          usuarioLancamento: user.chave,
-        };
-
-        google.script.run
-          .withSuccessHandler(function (res) {
-            btn.disabled = false;
-            btn.innerText = "Salvar Lançamento";
-            if (res.sucesso) {
-              fecharModalFinanceiro();
-              showToast(res.mensagem, "success");
-              carregarDadosFinanceiros();
-            } else {
-              showToast(res.erro, "error");
-            }
-          })
-          .withFailureHandler(function (err) {
-            btn.disabled = false;
-            btn.innerText = "Salvar Lançamento";
-            showToast("Erro no servidor: " + err.message, "error");
-          })
-          .salvarLancamentoFinanceiro(payload);
       }
 
       function desenharLinhasFinanceiro(lista) {
