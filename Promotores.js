@@ -50,7 +50,7 @@ function salvarPromotorBase(dados) {
     if (idxEmail !== -1) novaLinha[idxEmail] = String(dados.email).toLowerCase();
     
     if (idxSenha !== -1) {
-      novaLinha[idxSenha] = isEdicao ? dataRows[rowIndex - 1][idxSenha] : "123456"; 
+      novaLinha[idxSenha] = isEdicao ? dataRows[rowIndex - 1][idxSenha] : "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"; 
     }
     
     const idxTrocarSenha = getIdx("TROCAR_SENHA");

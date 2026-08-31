@@ -1921,7 +1921,7 @@
           </div>
           <div>
             <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Meta (€/R$)</label>
-            <input type="number" id="cadPromotorMeta" placeholder="0.00" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500" />
+            <input type="text" id="cadPromotorMeta" placeholder="Ex: 250.000,00" class="w-full p-3 rounded-xl border border-slate-300 font-bold text-slate-700 text-sm outline-none focus:border-blue-500" />
           </div>
         </div>
         
@@ -3885,7 +3885,10 @@ function salvarParametrosFinanceirosUI() {
         const perfil = document.getElementById("cadPromotorPerfil").value;
         const nivel = document.getElementById("cadPromotorNivel").value;
         const status = document.getElementById("cadPromotorStatus").value;
-        const meta = parseFloat(document.getElementById("cadPromotorMeta").value) || 0;
+        
+        // NOVO: Lê como texto, retira os pontos de milhares, troca a vírgula por ponto e converte para decimal
+        const metaRaw = document.getElementById("cadPromotorMeta").value;
+        const meta = parseFloat(metaRaw.replace(/\./g, "").replace(",", ".")) || 0;
 
         if (!chave || !nome) {
           showToast("A Chave J e o Nome são obrigatórios.", "error");
