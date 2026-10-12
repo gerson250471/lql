@@ -106,7 +106,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
 /**
  * Busca e consolida a produção de todos os promotores (Exclusivo para ADMIN)
  */
-Aqui está a sua função getResumoProducaoAdmin 100% adaptada!Ela agora lê automaticamente as colunas de PRODUTO, GRUPO, CONVÊNIO e DESCRIÇÃO da sua aba bd_Producao. Se encontrar a palavra "CONSORCIO" (com ou sem acento) em qualquer uma dessas colunas, ela separa os valores na gaveta de Consórcio; caso contrário, soma na gaveta de Consignado.   Além disso, mantive os campos antigos (qtdContratos, volumeConsiderado, etc.) intactos para garantir compatibilidade total e limpei aquele if duplicado que estava no meio do código.Basta substituir a função antiga no seu arquivo .gs por esta:JavaScriptfunction getResumoProducaoAdmin(mesFiltro, anoFiltro) {
+function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
   try {
     const ss = getDatabaseConnection();
     const sheet = ss.getSheetByName("bd_Producao");
