@@ -17,3 +17,6 @@ __pycache__/
 
 # Planilha Excel
 *.xlsm
+
+# PASTAS LANDING PAGES
+LP/

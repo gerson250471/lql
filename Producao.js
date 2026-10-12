@@ -106,7 +106,7 @@ function getProducaoPromotor(chavePromotor, mesFiltro, anoFiltro) {
 /**
  * Busca e consolida a produção de todos os promotores (Exclusivo para ADMIN)
  */
-function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
+Aqui está a sua função getResumoProducaoAdmin 100% adaptada!Ela agora lê automaticamente as colunas de PRODUTO, GRUPO, CONVÊNIO e DESCRIÇÃO da sua aba bd_Producao. Se encontrar a palavra "CONSORCIO" (com ou sem acento) em qualquer uma dessas colunas, ela separa os valores na gaveta de Consórcio; caso contrário, soma na gaveta de Consignado.   Além disso, mantive os campos antigos (qtdContratos, volumeConsiderado, etc.) intactos para garantir compatibilidade total e limpei aquele if duplicado que estava no meio do código.Basta substituir a função antiga no seu arquivo .gs por esta:JavaScriptfunction getResumoProducaoAdmin(mesFiltro, anoFiltro) {
   try {
     const ss = getDatabaseConnection();
     const sheet = ss.getSheetByName("bd_Producao");
@@ -115,12 +115,14 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     const data = sheet.getDataRange().getValues();
     if (data.length <= 1) return { sucesso: true, dados: [], totaisGlobais: {} };
 
+    // Normaliza os cabeçalhos (remove espaços extras e coloca em maiúsculas)
     const headers = data[0].map(h => h.toString().trim().toUpperCase());
     
     const idxChave = headers.indexOf("CHAVE J");
     const idxPromotor = headers.indexOf("PROMOTOR");
     const idxAno = headers.indexOf("ANO");
-    const idxMes = headers.indexOf("MÊS");
+    let idxMes = headers.indexOf("MÊS");
+    if (idxMes === -1) idxMes = headers.indexOf("MES");
 
     let idxProducao = headers.indexOf("PRODUÇÃO");
     if (idxProducao === -1) idxProducao = headers.indexOf("PRODUCAO");
@@ -132,7 +134,16 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR COMISSAO");
     if (idxValorComissao === -1) idxValorComissao = headers.indexOf("VALOR");
 
-    const idxValorLiquido = headers.indexOf("VALOR LIQUIDO");
+    let idxValorLiquido = headers.indexOf("VALOR LIQUIDO");
+    if (idxValorLiquido === -1) idxValorLiquido = headers.indexOf("VALOR LÍQUIDO");
+
+    // NOVOS ÍNDICES: Para identificar se o contrato é Consórcio ou Consignado
+    const idxProduto = headers.indexOf("PRODUTO");
+    const idxGrupo = headers.indexOf("GRUPO");
+    let idxConvenio = headers.indexOf("CONVÊNIO");
+    if (idxConvenio === -1) idxConvenio = headers.indexOf("CONVENIO");
+    let idxDescricao = headers.indexOf("DESCRIÇÃO");
+    if (idxDescricao === -1) idxDescricao = headers.indexOf("DESCRICAO");
 
     if (idxChave === -1 || idxPromotor === -1 || idxMes === -1) {
       throw new Error("Colunas obrigatórias não encontradas na base de produção.");
@@ -140,32 +151,52 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
 
     const resumoPorPromotor = {};
     let globalVolume = 0;
+    let globalVolumeConsig = 0;
+    let globalVolumeConsorcio = 0;
     let globalBruto = 0;
     let globalComissao = 0;
     let globalLiquido = 0;
     let globalContratos = 0;
 
-    const formatNum = (val) => typeof val === 'number' ? val : 0;
+    // Garante leitura correta mesmo se algum número vier como texto formatado
+    const formatNum = (val) => {
+      if (typeof val === 'number') return val;
+      if (!val) return 0;
+      const limpo = String(val).replace(/[R$\s.]/g, '').replace(',', '.');
+      return parseFloat(limpo) || 0;
+    };
+
+    const normalizarTexto = (txt) => String(txt || "")
+      .toUpperCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
+    const mesBusca = String(mesFiltro).padStart(2, '0');
+    const anoBusca = String(anoFiltro).trim();
 
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       
       const anoLinha = String(row[idxAno]).trim();
       const mesLinha = String(row[idxMes]).trim().padStart(2, '0');
-      const mesBusca = String(mesFiltro).padStart(2, '0');
 
-      if (anoLinha === String(anoFiltro) || anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
-        // Correção de escopo aplicada abaixo
-      }
-
-      if (anoLinha === String(anoFiltro) && mesLinha === mesBusca) {
-        const chave = row[idxChave] || "SEM_CHAVE";
-        const nomePromotor = row[idxPromotor] || "NÃO IDENTIFICADO";
+      if (anoLinha === anoBusca && mesLinha === mesBusca) {
+        const chave = String(row[idxChave] || "SEM_CHAVE").trim();
+        const nomePromotor = String(row[idxPromotor] || "NÃO IDENTIFICADO").trim();
         
         const vCons = formatNum(row[idxProducao]);
-        const vBruto = formatNum(row[idxValorBruto]);
-        const vCom = formatNum(row[idxValorComissao]);
-        const vLiq = formatNum(row[idxValorLiquido]);
+        const vBruto = idxValorBruto !== -1 ? formatNum(row[idxValorBruto]) : 0;
+        const vCom = idxValorComissao !== -1 ? formatNum(row[idxValorComissao]) : 0;
+        const vLiq = idxValorLiquido !== -1 ? formatNum(row[idxValorLiquido]) : 0;
+
+        // Verifica se é CONSÓRCIO olhando Produto, Grupo, Convênio ou Descrição
+        const txtClassificacao = normalizarTexto(
+          (idxProduto !== -1 ? row[idxProduto] : "") + " " +
+          (idxGrupo !== -1 ? row[idxGrupo] : "") + " " +
+          (idxConvenio !== -1 ? row[idxConvenio] : "") + " " +
+          (idxDescricao !== -1 ? row[idxDescricao] : "")
+        );
+        const ehConsorcio = txtClassificacao.includes("CONSORCIO");
 
         if (!resumoPorPromotor[chave]) {
           resumoPorPromotor[chave] = {
@@ -175,18 +206,39 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
             volumeConsiderado: 0,
             valorBruto: 0,
             comissaoPaga: 0,
-            valorLiquido: 0
+            valorLiquido: 0,
+            // NOVAS GAVETAS SEPARADAS PARA O FRONT-END:
+            consignado: { qtd: 0, volume: 0, bruto: 0, comissao: 0, liquido: 0 },
+            consorcio: { qtd: 0, volume: 0, bruto: 0, comissao: 0, liquido: 0 }
           };
         }
 
+        // 1. Soma no total geral do promotor
         resumoPorPromotor[chave].qtdContratos += 1;
         resumoPorPromotor[chave].volumeConsiderado += vCons;
         resumoPorPromotor[chave].valorBruto += vBruto;
         resumoPorPromotor[chave].comissaoPaga += vCom;
         resumoPorPromotor[chave].valorLiquido += vLiq;
 
+        // 2. Soma na gaveta específica (Consórcio vs Consignado)
+        const gaveta = ehConsorcio 
+          ? resumoPorPromotor[chave].consorcio 
+          : resumoPorPromotor[chave].consignado;
+
+        gaveta.qtd += 1;
+        gaveta.volume += vCons;
+        gaveta.bruto += vBruto;
+        gaveta.comissao += vCom;
+        gaveta.liquido += vLiq;
+
+        // 3. Soma nos totais globais da empresa
         globalContratos += 1;
         globalVolume += vCons;
+        if (ehConsorcio) {
+          globalVolumeConsorcio += vCons;
+        } else {
+          globalVolumeConsig += vCons;
+        }
         globalBruto += vBruto;
         globalComissao += vCom;
         globalLiquido += vLiq;
@@ -198,6 +250,8 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     const totaisGlobais = {
       contratos: globalContratos,
       volume: globalVolume,
+      volumeConsignado: globalVolumeConsig,
+      volumeConsorcio: globalVolumeConsorcio,
       bruto: globalBruto,
       comissao: globalComissao,
       liquido: globalLiquido

@@ -701,23 +701,40 @@
                 <i class="fas fa-chart-pie mr-2"></i> Resumo de Produção
               </h1>
               <p class="text-slate-500 text-sm font-medium">
-                Consolidado financeiro da Equipe por mês/ano.
+                Consolidado financeiro da Equipe por mês/ano e modalidade.
               </p>
             </div>
 
             <div
-              class="flex items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto"
+              class="flex flex-wrap items-center gap-3 bg-white p-2 md:p-3 rounded-xl border border-slate-200 shadow-sm w-full md:w-auto"
             >
-              <label
-                class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2"
-                >Mês/Ano:</label
-              >
-              <input
-                type="month"
-                id="filtroMesAdmin"
-                onchange="carregarResumoAdmin()"
-                class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 bg-slate-50 flex-1 md:w-48 cursor-pointer"
-              />
+              <!-- NOVO: FILTRO POR TIPO (CONSIGNADO vs CONSÓRCIO) -->
+              <div class="flex items-center gap-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Tipo:</label>
+                <select
+                  id="filtroTipoAdmin"
+                  onchange="renderizarResumoAdminFront()"
+                  class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-indigo-700 outline-none focus:border-indigo-500 bg-indigo-50/40 cursor-pointer"
+                >
+                  <option value="TODOS">TODOS OS PRODUTOS</option>
+                  <option value="CONSIGNADO">CRÉDITO CONSIGNADO</option>
+                  <option value="CONSORCIO">CONSÓRCIO</option>
+                </select>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <label
+                  class="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2"
+                  >Mês/Ano:</label
+                >
+                <input
+                  type="month"
+                  id="filtroMesAdmin"
+                  onchange="carregarResumoAdmin()"
+                  class="p-2 border border-slate-300 rounded-lg text-sm font-bold text-slate-700 outline-none focus:border-indigo-500 bg-slate-50 flex-1 md:w-44 cursor-pointer"
+                />
+              </div>
+
               <button
                 onclick="carregarResumoAdmin()"
                 class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition-colors"
@@ -728,79 +745,72 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+          <!-- CARDS DE RESUMO (AGORA COM 6 COLUNAS SEPARANDO CONSIGNADO E CONSÓRCIO) -->
+          <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
             <div
-              class="bg-white border-b-4 border-indigo-500 p-4 rounded-xl shadow-sm"
+              id="cardAdminConsig"
+              class="bg-white border-b-4 border-indigo-600 p-4 rounded-xl shadow-sm"
             >
-              <p
-                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-              >
-                Produção
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                Prod. Consignado
               </p>
-              <p
-                id="adminTotalVolume"
-                class="text-xl md:text-2xl font-black text-indigo-700"
-              >
+              <p id="adminTotalConsignado" class="text-lg md:text-xl font-black text-indigo-700">
                 R$ 0,00
               </p>
             </div>
+
+            <div
+              id="cardAdminConsorcio"
+              class="bg-white border-b-4 border-purple-500 p-4 rounded-xl shadow-sm"
+            >
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                Prod. Consórcio
+              </p>
+              <p id="adminTotalConsorcio" class="text-lg md:text-xl font-black text-purple-700">
+                R$ 0,00
+              </p>
+            </div>
+
             <div
               class="bg-white border-b-4 border-slate-500 p-4 rounded-xl shadow-sm"
             >
-              <p
-                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-              >
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
                 Valor Bruto Total
               </p>
-              <p
-                id="adminTotalBruto"
-                class="text-xl md:text-2xl font-black text-slate-700"
-              >
+              <p id="adminTotalBruto" class="text-lg md:text-xl font-black text-slate-700">
                 R$ 0,00
               </p>
             </div>
+
             <div
               class="bg-white border-b-4 border-emerald-500 p-4 rounded-xl shadow-sm"
             >
-              <p
-                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-              >
-                Total Comissões Pagas
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                Comissões Pagas
               </p>
-              <p
-                id="adminTotalComissao"
-                class="text-xl md:text-2xl font-black text-emerald-600"
-              >
+              <p id="adminTotalComissao" class="text-lg md:text-xl font-black text-emerald-600">
                 R$ 0,00
               </p>
             </div>
+
             <div
               class="bg-white border-b-4 border-amber-500 p-4 rounded-xl shadow-sm"
             >
-              <p
-                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-              >
-                Lucro Estimado (Líquido)
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
+                Lucro Estimado (Líq.)
               </p>
-              <p
-                id="adminTotalLiquido"
-                class="text-xl md:text-2xl font-black text-amber-600"
-              >
+              <p id="adminTotalLiquido" class="text-lg md:text-xl font-black text-amber-600">
                 R$ 0,00
               </p>
             </div>
+
             <div
               class="bg-white border-b-4 border-blue-400 p-4 rounded-xl shadow-sm text-center"
             >
-              <p
-                class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
-              >
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
                 Contratos
               </p>
-              <p
-                id="adminTotalContratos"
-                class="text-3xl font-black text-blue-600 mt-1"
-              >
+              <p id="adminTotalContratos" class="text-2xl font-black text-blue-600 mt-0.5">
                 0
               </p>
             </div>
@@ -818,29 +828,22 @@
                     <th class="p-4 border-b border-slate-700 font-black">
                       Promotor
                     </th>
-                    <th
-                      class="p-4 border-b border-slate-700 font-black text-center"
-                    >
+                    <th class="p-4 border-b border-slate-700 font-black text-center">
                       Qtd Contratos
                     </th>
-                    <th
-                      class="p-4 border-b border-slate-700 font-black text-right text-indigo-300"
-                    >
-                      Produção
+                    <th id="thColConsig" class="p-4 border-b border-slate-700 font-black text-right text-indigo-300">
+                      Vol. Consignado
                     </th>
-                    <th
-                      class="p-4 border-b border-slate-700 font-black text-right"
-                    >
+                    <th id="thColConsorcio" class="p-4 border-b border-slate-700 font-black text-right text-purple-300">
+                      Vol. Consórcio
+                    </th>
+                    <th class="p-4 border-b border-slate-700 font-black text-right">
                       Valor Bruto
                     </th>
-                    <th
-                      class="p-4 border-b border-slate-700 font-black text-right text-emerald-400"
-                    >
+                    <th class="p-4 border-b border-slate-700 font-black text-right text-emerald-400">
                       Comissão (Custo)
                     </th>
-                    <th
-                      class="p-4 border-b border-slate-700 font-black text-right text-amber-400"
-                    >
+                    <th class="p-4 border-b border-slate-700 font-black text-right text-amber-400">
                       Líquido (Empresa)
                     </th>
                   </tr>
@@ -848,7 +851,7 @@
                 <tbody id="tabelaAdminProducaoBody">
                   <tr>
                     <td
-                      colspan="6"
+                      colspan="7"
                       class="p-8 text-center text-slate-400 font-bold"
                     >
                       <i class="fas fa-spinner fa-spin mr-2"></i> Processando
@@ -859,7 +862,6 @@
               </table>
             </div>
           </div>
-        </div>
         <!-- PÁGINA: LEADS -->
         <div
           id="viewLeads"
@@ -3079,6 +3081,8 @@
           .atualizarParametrosPadrao(dadosParaSalvar);
       }
 
+      let dadosResumoAdminMemoria = []; // Guarda os dados do mês para filtrar rápido
+
       function carregarResumoAdmin() {
         const tbody = document.getElementById("tabelaAdminProducaoBody");
         const inputMes = document.getElementById("filtroMesAdmin");
@@ -3092,66 +3096,138 @@
 
         const [anoFiltro, mesFiltro] = inputMes.value.split("-");
 
-        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Consolidando produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
+        // Se a função de engajamento existir, chama em paralelo
+        if (typeof carregarEngajamentoAdmin === "function") {
+          carregarEngajamentoAdmin(mesFiltro, anoFiltro);
+        }
 
-        // Zera os cards
-        document.getElementById("adminTotalVolume").innerText = "R$ 0,00";
-        document.getElementById("adminTotalBruto").innerText = "R$ 0,00";
-        document.getElementById("adminTotalComissao").innerText = "R$ 0,00";
-        document.getElementById("adminTotalLiquido").innerText = "R$ 0,00";
-        document.getElementById("adminTotalContratos").innerText = "0";
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Consolidando produção de ${mesFiltro}/${anoFiltro}...</td></tr>`;
 
         google.script.run
           .withSuccessHandler(function (res) {
             if (!res.sucesso) {
-              tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
               return;
             }
 
-            tbody.innerHTML = "";
-
-            if (res.dados.length === 0) {
-              tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-400">Nenhuma produção registada para <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
-              return;
-            }
-
-            const formataMoeda = (valor) =>
-              Number(valor).toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              });
-
-            res.dados.forEach(function (p) {
-              tbody.innerHTML += `
-                <tr class="hover:bg-indigo-50/30 transition-colors border-b border-slate-100 group">
-                  <td class="p-4 text-xs font-black text-slate-700 uppercase"><i class="fas fa-user-tie text-slate-400 mr-2"></i>${p.nome}</td>
-                  <td class="p-4 text-xs font-bold text-slate-500 text-center">${p.qtdContratos}</td>
-                  <td class="p-4 text-xs font-black text-indigo-700 text-right bg-indigo-50/10">${formataMoeda(p.volumeConsiderado)}</td>
-                  <td class="p-4 text-xs font-bold text-slate-600 text-right">${formataMoeda(p.valorBruto)}</td>
-                  <td class="p-4 text-xs font-black text-emerald-600 text-right">${formataMoeda(p.comissaoPaga)}</td>
-                  <td class="p-4 text-xs font-black text-amber-600 text-right bg-amber-50/10">${formataMoeda(p.valorLiquido)}</td>
-                </tr>
-              `;
-            });
-
-            // Atualiza os Cards Totais da Empresa
-            const globais = res.totaisGlobais;
-            document.getElementById("adminTotalVolume").innerText =
-              formataMoeda(globais.volume);
-            document.getElementById("adminTotalBruto").innerText = formataMoeda(
-              globais.bruto,
-            );
-            document.getElementById("adminTotalComissao").innerText =
-              formataMoeda(globais.comissao);
-            document.getElementById("adminTotalLiquido").innerText =
-              formataMoeda(globais.liquido);
-            document.getElementById("adminTotalContratos").innerText =
-              globais.contratos;
+            dadosResumoAdminMemoria = res.dados || [];
+            renderizarResumoAdminFront();
           })
           .withFailureHandler(function (err) {
-            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500 font-bold">Falha de comunicação: ${err.message}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500 font-bold">Falha de comunicação: ${err.message}</td></tr>`;
           })
           .getResumoProducaoAdmin(mesFiltro, anoFiltro);
+      }
+
+      function renderizarResumoAdminFront() {
+        const tbody = document.getElementById("tabelaAdminProducaoBody");
+        const tipoFiltro = document.getElementById("filtroTipoAdmin").value; // TODOS, CONSIGNADO, CONSORCIO
+        const inputMes = document.getElementById("filtroMesAdmin").value;
+        const [anoFiltro, mesFiltro] = inputMes.split("-");
+
+        const formataMoeda = (valor) =>
+          Number(valor || 0).toLocaleString("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          });
+
+        // Ajusta visibilidade das colunas de cabeçalho conforme o filtro
+        document.getElementById("thColConsig").style.display = (tipoFiltro === "CONSORCIO") ? "none" : "";
+        document.getElementById("thColConsorcio").style.display = (tipoFiltro === "CONSIGNADO") ? "none" : "";
+
+        tbody.innerHTML = "";
+
+        let totConsig = 0;
+        let totConsorcio = 0;
+        let totBruto = 0;
+        let totComissao = 0;
+        let totLiquido = 0;
+        let totContratos = 0;
+
+        // Monta a lista filtrada de acordo com a modalidade escolhida
+        let listaParaExibir = [];
+
+        dadosResumoAdminMemoria.forEach(function (p) {
+          // Caso o backend já envie separado em p.consignado e p.consorcio:
+          const dadosConsig = p.consignado || { qtd: 0, volume: 0, bruto: 0, comissao: 0, liquido: 0 };
+          const dadosConsorcio = p.consorcio || { qtd: 0, volume: 0, bruto: 0, comissao: 0, liquido: 0 };
+
+          let qtd = 0, volConsig = 0, volConsorcio = 0, bruto = 0, comissao = 0, liquido = 0;
+
+          if (tipoFiltro === "CONSIGNADO") {
+            qtd = dadosConsig.qtd;
+            volConsig = dadosConsig.volume;
+            bruto = dadosConsig.bruto;
+            comissao = dadosConsig.comissao;
+            liquido = dadosConsig.liquido;
+          } else if (tipoFiltro === "CONSORCIO") {
+            qtd = dadosConsorcio.qtd;
+            volConsorcio = dadosConsorcio.volume;
+            bruto = dadosConsorcio.bruto;
+            comissao = dadosConsorcio.comissao;
+            liquido = dadosConsorcio.liquido;
+          } else {
+            // TODOS
+            qtd = dadosConsig.qtd + dadosConsorcio.qtd;
+            volConsig = dadosConsig.volume;
+            volConsorcio = dadosConsorcio.volume;
+            bruto = dadosConsig.bruto + dadosConsorcio.bruto;
+            comissao = dadosConsig.comissao + dadosConsorcio.comissao;
+            liquido = dadosConsig.liquido + dadosConsorcio.liquido;
+          }
+
+          if (qtd > 0) {
+            totConsig += volConsig;
+            totConsorcio += volConsorcio;
+            totBruto += bruto;
+            totComissao += comissao;
+            totLiquido += liquido;
+            totContratos += qtd;
+
+            listaParaExibir.push({
+              nome: p.nome,
+              qtd: qtd,
+              volConsig: volConsig,
+              volConsorcio: volConsorcio,
+              bruto: bruto,
+              comissao: comissao,
+              liquido: liquido,
+              volumeTotalOrdem: volConsig + volConsorcio
+            });
+          }
+        });
+
+        // Ordena do maior volume para o menor
+        listaParaExibir.sort((a, b) => b.volumeTotalOrdem - a.volumeTotalOrdem);
+
+        if (listaParaExibir.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" class="p-10 text-center text-slate-400">Nenhuma produção registrada para este filtro em <span class="font-bold text-slate-600">${mesFiltro}/${anoFiltro}</span>.</td></tr>`;
+        } else {
+          listaParaExibir.forEach(function (item) {
+            const tdConsig = tipoFiltro === "CONSORCIO" ? "" : `<td class="p-4 text-xs font-black text-indigo-700 text-right bg-indigo-50/10">${formataMoeda(item.volConsig)}</td>`;
+            const tdConsorcio = tipoFiltro === "CONSIGNADO" ? "" : `<td class="p-4 text-xs font-black text-purple-700 text-right bg-purple-50/10">${formataMoeda(item.volConsorcio)}</td>`;
+
+            tbody.innerHTML += `
+              <tr class="hover:bg-indigo-50/30 transition-colors border-b border-slate-100 group">
+                <td class="p-4 text-xs font-black text-slate-700 uppercase"><i class="fas fa-user-tie text-slate-400 mr-2"></i>${item.nome}</td>
+                <td class="p-4 text-xs font-bold text-slate-500 text-center">${item.qtd}</td>
+                ${tdConsig}
+                ${tdConsorcio}
+                <td class="p-4 text-xs font-bold text-slate-600 text-right">${formataMoeda(item.bruto)}</td>
+                <td class="p-4 text-xs font-black text-emerald-600 text-right">${formataMoeda(item.comissao)}</td>
+                <td class="p-4 text-xs font-black text-amber-600 text-right bg-amber-50/10">${formataMoeda(item.liquido)}</td>
+              </tr>
+            `;
+          });
+        }
+
+        // Atualiza os Cards Superiores
+        document.getElementById("adminTotalConsignado").innerText = formataMoeda(totConsig);
+        document.getElementById("adminTotalConsorcio").innerText = formataMoeda(totConsorcio);
+        document.getElementById("adminTotalBruto").innerText = formataMoeda(totBruto);
+        document.getElementById("adminTotalComissao").innerText = formataMoeda(totComissao);
+        document.getElementById("adminTotalLiquido").innerText = formataMoeda(totLiquido);
+        document.getElementById("adminTotalContratos").innerText = totContratos;
       }
 
       let usuarioLogadoTemp = null;
