@@ -2089,14 +2089,314 @@
         )
           document.getElementById("finStatus").value = "PAGAMENTO REALIZADO";
       }
-      function carregarDadosFinanceiros() {
-        /* Código original de listagem preservado via servidor */
-      }
-      function salvarLancamentoFinanceiro() {
-        /* Código de salvamento protegido em Try/Catch preservado */
-      }
+      // ==========================================
+      // RESTAURAÇÃO DO MÓDULO FINANCEIRO
+      // ==========================================
       function fecharModalFinanceiro() {
         document.getElementById("modalFinanceiro").classList.add("hidden");
+      }
+
+      function excluirLancamento(id) {
+        if (
+          !confirm(
+            "Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita.",
+          )
+        )
+          return;
+        showToast("Apagando lançamento...", "success");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res.sucesso) {
+              showToast(res.mensagem, "success");
+              carregarDadosFinanceiros();
+            } else {
+              showToast(res.erro, "error");
+            }
+          })
+          .withFailureHandler(function (err) {
+            showToast("Erro no servidor: " + err.message, "error");
+          })
+          .deletarLancamentoFinanceiro(id);
+      }
+
+      function abrirModalNovoLancamento() {
+        document.getElementById("finParcelas").value = "1";
+        document.getElementById("finParcelas").disabled = false;
+        document.getElementById("finLancamentoId").value = "";
+        document.getElementById("finDataVenc").value = new Date()
+          .toISOString()
+          .split("T")[0];
+        document.getElementById("finValor").value = "";
+        document.getElementById("finDescricao").value = "";
+        document.getElementById("finPromotor").value = "";
+        document.getElementById("finObs").value = "";
+
+        if (listasFinanceirasAtuais) {
+          preencherSelectUI("finTipo", listasFinanceirasAtuais.tipos);
+          preencherSelectUI("finFonte", listasFinanceirasAtuais.fontes);
+          preencherSelectUI(
+            "finFormaPagto",
+            listasFinanceirasAtuais.formasPagto,
+          );
+          preencherSelectUI("finStatus", listasFinanceirasAtuais.status);
+
+          if (
+            listasFinanceirasAtuais.tipos &&
+            listasFinanceirasAtuais.tipos.length > 0
+          )
+            document.getElementById("finTipo").value =
+              listasFinanceirasAtuais.tipos[0];
+          if (
+            listasFinanceirasAtuais.fontes &&
+            listasFinanceirasAtuais.fontes.length > 0
+          )
+            document.getElementById("finFonte").value =
+              listasFinanceirasAtuais.fontes[0];
+          if (
+            listasFinanceirasAtuais.formasPagto &&
+            listasFinanceirasAtuais.formasPagto.length > 0
+          )
+            document.getElementById("finFormaPagto").value =
+              listasFinanceirasAtuais.formasPagto[0];
+          if (
+            listasFinanceirasAtuais.status &&
+            listasFinanceirasAtuais.status.length > 0
+          )
+            document.getElementById("finStatus").value =
+              listasFinanceirasAtuais.status[0];
+        }
+
+        atualizarCategoriasFin();
+        document.getElementById("modalFinanceiro").classList.remove("hidden");
+      }
+
+      function abrirModalEdicaoFinanceiro(id) {
+        document.getElementById("finParcelas").value = "1";
+        document.getElementById("finParcelas").disabled = true; // Impede repetir uma edição
+
+        const item = lancamentosFinanceirosMemoria.find((i) => i.id === id);
+        if (!item) return;
+
+        document.getElementById("finLancamentoId").value = item.id;
+        document.getElementById("finDataVenc").value = item.dataFormatoInput;
+        document.getElementById("finValor").value = item.valor;
+        document.getElementById("finDescricao").value = item.descricao;
+        document.getElementById("finPromotor").value = item.promotor;
+        document.getElementById("finObs").value = item.obs || "";
+
+        document.getElementById("finTipo").value = item.tipo;
+        atualizarCategoriasFin();
+
+        setTimeout(() => {
+          document.getElementById("finCategoria").value = item.categoria;
+          document.getElementById("finFonte").value = item.fonte;
+          document.getElementById("finFormaPagto").value = item.formaPagto;
+          document.getElementById("finStatus").value = item.status;
+        }, 50);
+
+        document.getElementById("modalFinanceiro").classList.remove("hidden");
+      }
+
+      function salvarLancamentoFinanceiro() {
+        try {
+          const idLancamento = document.getElementById("finLancamentoId").value;
+          const tipo = document.getElementById("finTipo").value;
+          const dataVencimento = document.getElementById("finDataVenc").value;
+          const categoria = document.getElementById("finCategoria").value;
+          const valor = parseFloat(document.getElementById("finValor").value);
+          const descricao = document
+            .getElementById("finDescricao")
+            .value.trim();
+          const promotor = document.getElementById("finPromotor").value.trim();
+          const fonte = document.getElementById("finFonte").value;
+          const formaPagto = document.getElementById("finFormaPagto").value;
+          const status = document.getElementById("finStatus").value;
+          const obs = document.getElementById("finObs").value.trim();
+          const parcelas = document.getElementById("finParcelas").value;
+
+          if (!dataVencimento || !valor || !descricao) {
+            showToast(
+              "Preencha a Data de Vencimento, Valor e Descrição.",
+              "error",
+            );
+            return;
+          }
+
+          const btn = document.getElementById("btnSalvarFin");
+          btn.disabled = true;
+          btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin mr-1"></i> SALVANDO...';
+
+          const payload = {
+            id: idLancamento,
+            parcelas: parcelas,
+            tipo: tipo,
+            dataVencimento: dataVencimento,
+            categoria: categoria,
+            valor: valor,
+            descricao: descricao,
+            promotor: promotor,
+            fonte: fonte,
+            formaPagto: formaPagto,
+            status: status,
+            obs: obs,
+            usuarioLancamento: user ? user.chave : "SISTEMA",
+          };
+
+          google.script.run
+            .withSuccessHandler(function (res) {
+              btn.disabled = false;
+              btn.innerText = "Salvar Lançamento";
+              if (res.sucesso) {
+                fecharModalFinanceiro();
+                showToast(res.mensagem, "success");
+                carregarDadosFinanceiros();
+              } else {
+                showToast(res.erro, "error");
+                alert("Erro no servidor: " + res.erro);
+              }
+            })
+            .withFailureHandler(function (err) {
+              btn.disabled = false;
+              btn.innerText = "Salvar Lançamento";
+              showToast("Falha de comunicação: " + err.message, "error");
+            })
+            .salvarLancamentoFinanceiro(payload);
+        } catch (error) {
+          alert("Erro no formulário! Detalhe técnico: " + error.message);
+        }
+      }
+
+      function desenharLinhasFinanceiro(lista) {
+        const tbody = document.getElementById("tabelaFinanceiroBody");
+        tbody.innerHTML = "";
+        const formataMoeda = (val) =>
+          val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+        if (lista.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="10" class="p-10 text-center text-slate-400 font-bold">Nenhum lançamento encontrado.</td></tr>`;
+          return;
+        }
+
+        lista.forEach(function (item) {
+          let tipoCor =
+            item.tipo === "RECEITA" ||
+            item.tipo === "ENTRADA" ||
+            item.tipo.includes("ENTRADA")
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-slate-100 text-slate-700";
+          let valorCor =
+            item.tipo === "RECEITA" ||
+            item.tipo === "ENTRADA" ||
+            item.tipo.includes("ENTRADA")
+              ? "text-emerald-600"
+              : "text-red-600";
+          let rowClass =
+            "hover:bg-slate-50 transition-colors border-b border-slate-100";
+          let statusPillClass = "bg-slate-100 text-slate-700";
+
+          if (item.alerta === "red") {
+            rowClass =
+              "bg-red-50 hover:bg-red-100 border-b border-red-100 border-l-4 border-l-red-500";
+            statusPillClass = "bg-red-200 text-red-800";
+          } else if (item.alerta === "yellow") {
+            rowClass =
+              "bg-yellow-50 hover:bg-yellow-100 border-b border-yellow-100 border-l-4 border-l-yellow-500";
+            statusPillClass = "bg-yellow-200 text-yellow-800";
+          } else if (item.status === "PAGAMENTO REALIZADO") {
+            statusPillClass = "bg-emerald-100 text-emerald-700";
+          }
+
+          tbody.innerHTML += `
+            <tr class="${rowClass}">
+              <td class="p-4 text-xs font-bold text-slate-600">${item.dataVencimento}</td>
+              <td class="p-4 text-[10px] font-black text-emerald-600">${item.dataPagamento || "-"}</td>
+              <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${tipoCor}">${item.tipo}</span></td>
+              <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.fonte}</td>
+              <td class="p-4 text-xs font-bold text-slate-700 uppercase">${item.categoria}</td>
+              <td class="p-4 text-xs font-medium text-slate-600 uppercase">${item.descricao}</td>
+              <td class="p-4 text-xs font-black text-right ${valorCor}">${formataMoeda(item.valor)}</td>
+              <td class="p-4 text-xs font-bold text-slate-500 text-center uppercase">${item.formaPagto}</td>
+              <td class="p-4 text-center"><span class="px-2.5 py-1 rounded text-[9px] font-black uppercase ${statusPillClass}">${item.status}</span></td>
+              <td class="p-4 text-center">
+                <div class="flex items-center justify-center gap-2">
+                  <button onclick="abrirModalEdicaoFinanceiro('${item.id}')" class="text-blue-600 hover:text-blue-800 bg-white p-2 rounded-lg border border-slate-200 hover:bg-blue-50 transition-all shadow-sm"><i class="fas fa-edit"></i></button>
+                  <button onclick="excluirLancamento('${item.id}')" class="text-red-600 hover:text-red-800 bg-white p-2 rounded-lg border border-slate-200 hover:bg-red-50 transition-all shadow-sm"><i class="fas fa-trash"></i></button>
+                </div>
+              </td>
+            </tr>`;
+        });
+      }
+
+      function filtrarFinanceiroFront() {
+        const statusSelecionado = document
+          .getElementById("filtroStatusFinanceiro")
+          .value.toUpperCase();
+        if (!statusSelecionado)
+          desenharLinhasFinanceiro(lancamentosFinanceirosMemoria);
+        else {
+          const filtrados = lancamentosFinanceirosMemoria.filter(
+            (i) => i.status === statusSelecionado,
+          );
+          desenharLinhasFinanceiro(filtrados);
+        }
+      }
+
+      function carregarDadosFinanceiros() {
+        const tbody = document.getElementById("tabelaFinanceiroBody");
+        const inputMes = document.getElementById("filtroMesFinanceiro");
+
+        if (!inputMes.value) {
+          const hoje = new Date();
+          inputMes.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, "0")}`;
+        }
+        const [anoFiltro, mesFiltro] = inputMes.value.split("-");
+
+        tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-slate-400 font-bold"><i class="fas fa-circle-notch fa-spin mr-2"></i> Carregando financeiro...</td></tr>`;
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500 font-bold">Erro: ${res.erro}</td></tr>`;
+              return;
+            }
+
+            lancamentosFinanceirosMemoria = res.dados;
+            filtrarFinanceiroFront();
+
+            const formataMoeda = (val) =>
+              val.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              });
+            document.getElementById("finTotalReceitas").innerText =
+              formataMoeda(res.resumo.receitas);
+            document.getElementById("finTotalDespesas").innerText =
+              formataMoeda(res.resumo.despesas);
+            document.getElementById("finSaldoMes").innerText = formataMoeda(
+              res.resumo.saldo,
+            );
+
+            let htmlCardsTipos = "";
+            for (let t in res.resumoTipos) {
+              const info = res.resumoTipos[t];
+              let corSaldo =
+                info.tipoCategoria === "ENTRADA"
+                  ? "text-emerald-600"
+                  : "text-red-600";
+              htmlCardsTipos += `
+                <div class="bg-white border-b-2 border-slate-300 p-4 rounded-xl shadow-sm text-center">
+                  <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 truncate" title="${t}">${t}</p>
+                  <p class="text-lg font-black ${corSaldo}">${formataMoeda(info.total)}</p>
+                </div>`;
+            }
+            document.getElementById("containerSaldosFontes").innerHTML =
+              htmlCardsTipos;
+          })
+          .withFailureHandler(function (err) {
+            tbody.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500 font-bold">Falha: ${err.message}</td></tr>`;
+          })
+          .getLancamentosFinanceiros(mesFiltro, anoFiltro);
       }
 
       // ==========================================
@@ -2717,4 +3017,4 @@
     </script>
   </body>
 </html>
-<!-- 261013 1209 -->
+<!-- 261013 1250 -->
