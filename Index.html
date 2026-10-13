@@ -2639,7 +2639,82 @@
           })
           .atualizarParametrosPadrao(dadosParaSalvar);
       }
+
+      // ==========================================
+      // EDIÇÃO DAS LISTAS FINANCEIRAS (PARÂMETROS)
+      // ==========================================
+      function carregarParametrosFinEditor() {
+        const container = document.getElementById("containerParamsFin");
+        container.innerHTML =
+          '<div class="text-center font-bold text-slate-400 py-10"><i class="fas fa-spinner fa-spin mr-2"></i> Lendo listas do sistema...</div>';
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (!res.sucesso) {
+              container.innerHTML = `<p class="text-red-500 font-bold p-10">${res.erro}</p>`;
+              return;
+            }
+            const d = res.dados;
+
+            const criarCaixa = (label, id, listaItens) => `
+            <div>
+              <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">${label}</label>
+              <textarea id="${id}" rows="5" class="w-full p-3 border-2 border-slate-200 rounded-xl font-bold text-slate-600 bg-slate-50 outline-none focus:border-emerald-500 text-xs uppercase resize-none leading-relaxed transition-colors">${listaItens.join("\n")}</textarea>
+            </div>
+          `;
+
+            container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              ${criarCaixa("Tipos (Rec/Desp)", "edFinTipos", d.tipos)}
+              ${criarCaixa("Categorias de ENTRADA", "edFinCatEnt", d.categoriasEntrada)}
+              ${criarCaixa("Categorias de SAÍDA", "edFinCatSai", d.categoriasSaida)}
+              ${criarCaixa("Fontes / Bancos", "edFinFontes", d.fontes)}
+              ${criarCaixa("Formas de Pagamento", "edFinFormas", d.formasPagto)}
+              ${criarCaixa("Status", "edFinStatus", d.status)}
+            </div>
+          `;
+          })
+          .getParametrosFinanceiros();
+      }
+
+      function salvarParametrosFinanceirosUI() {
+        const btn = document.getElementById("btnSalvarParamsFin");
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-1"></i> A GRAVAR...';
+
+        const lerCaixa = (id) =>
+          document
+            .getElementById(id)
+            .value.toUpperCase()
+            .split("\n")
+            .map((i) => i.trim())
+            .filter((i) => i !== "");
+
+        const payload = {
+          tipos: lerCaixa("edFinTipos"),
+          categoriasEntrada: lerCaixa("edFinCatEnt"),
+          categoriasSaida: lerCaixa("edFinCatSai"),
+          fontes: lerCaixa("edFinFontes"),
+          formasPagto: lerCaixa("edFinFormas"),
+          status: lerCaixa("edFinStatus"),
+        };
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar Listas';
+
+            if (res.sucesso) {
+              showToast("Listas financeiras atualizadas!", "success");
+              carregarCombosFinanceiro(); // Atualiza a memória instantaneamente
+            } else {
+              showToast("Erro: " + res.erro, "error");
+            }
+          })
+          .salvarParametrosFinanceiros(payload);
+      }
     </script>
   </body>
 </html>
-<!-- 261013 1204 -->
+<!-- 261013 1209 -->
