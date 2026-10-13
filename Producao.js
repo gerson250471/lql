@@ -263,3 +263,89 @@ function getResumoProducaoAdmin(mesFiltro, anoFiltro) {
     return { sucesso: false, erro: e.message };
   }
 }
+
+// NOVA FUNÇÃO: CALCULA O ESFORÇO DA EQUIPE NO CRM
+function getMetricasCrmAdmin(mes, ano) {
+  try {
+    const ss = getDatabaseConnection();
+    const abaLeads = ss.getSheetByName("Leads");
+    const abaHistorico = ss.getSheetByName("HistoricoLeads");
+    const abaPromotores = ss.getSheetByName("Promotores");
+
+    let stats = {};
+
+    // 1. Inicia os promotores
+    if (abaPromotores) {
+      const dadosP = abaPromotores.getDataRange().getValues();
+      const idxChave = dadosP[0].findIndex(h => String(h).toUpperCase().includes("CHAVE"));
+      const idxNome = dadosP[0].findIndex(h => String(h).toUpperCase() === "NOME");
+      for (let i = 1; i < dadosP.length; i++) {
+        let c = String(dadosP[i][idxChave]).toUpperCase().trim();
+        if (c) stats[c] = { nome: dadosP[i][idxNome], leadsTotal: 0, leadsTrab: 0, interacoes: 0 };
+      }
+    }
+
+    // 2. Conta a Carteira de Leads (Trabalhados vs Total)
+    if (abaLeads) {
+      const dadosL = abaLeads.getDataRange().getValues();
+      const idxProm = dadosL[0].findIndex(h => String(h).toUpperCase() === "PROMOTOR");
+      const idxStatus = dadosL[0].findIndex(h => String(h).toUpperCase() === "STATUS");
+      if (idxProm !== -1) {
+        for (let i = 1; i < dadosL.length; i++) {
+          let p = String(dadosL[i][idxProm]).toUpperCase().trim();
+          let st = String(dadosL[i][idxStatus]).toUpperCase().trim();
+          if (p && stats[p]) {
+            stats[p].leadsTotal++;
+            if (st !== "NOVO") stats[p].leadsTrab++;
+          }
+        }
+      }
+    }
+
+    // 3. Conta as Interações do Mês Específico
+    if (abaHistorico) {
+      const dadosH = abaHistorico.getDataRange().getValues();
+      const idxPromH = dadosH[0].findIndex(h => String(h).toUpperCase() === "PROMOTOR");
+      const idxDataH = dadosH[0].findIndex(h => String(h).toUpperCase() === "DATA");
+      if (idxPromH !== -1 && idxDataH !== -1) {
+        for (let i = 1; i < dadosH.length; i++) {
+          let p = String(dadosH[i][idxPromH]).toUpperCase().trim();
+          let rawData = dadosH[i][idxDataH];
+          if (!p || !stats[p] || !rawData) continue;
+
+          let dataVal = null;
+          if (rawData instanceof Date) dataVal = rawData;
+          else {
+            let partes = String(rawData).split(" ")[0].split("/");
+            if (partes.length === 3) dataVal = new Date(partes[2], partes[1] - 1, partes[0]);
+          }
+
+          if (dataVal) {
+            let m = String(dataVal.getMonth() + 1).padStart(2, '0');
+            let y = String(dataVal.getFullYear());
+            if (m === String(mes).padStart(2, '0') && y === String(ano)) {
+              stats[p].interacoes++;
+            }
+          }
+        }
+      }
+    }
+
+    // 4. Formata e faz a matemática final
+    let arr = Object.keys(stats).map(k => {
+      let s = stats[k];
+      let penetracao = s.leadsTotal > 0 ? Math.round((s.leadsTrab / s.leadsTotal) * 100) : 0;
+      let esforco = s.leadsTotal > 0 ? (s.interacoes / s.leadsTotal).toFixed(1) : 0;
+      return {
+        chave: k, nome: s.nome || k, leadsTotal: s.leadsTotal, leadsTrab: s.leadsTrab,
+        interacoes: s.interacoes, penetracao: penetracao, esforco: esforco
+      };
+    }).filter(i => i.leadsTotal > 0 || i.interacoes > 0); // Oculta quem não tem leads nem trabalhou
+
+    arr.sort((a, b) => b.interacoes - a.interacoes); // Ordena pelos mais esforçados
+
+    return { sucesso: true, dados: arr };
+  } catch (e) {
+    return { sucesso: false, erro: e.message };
+  }
+}
