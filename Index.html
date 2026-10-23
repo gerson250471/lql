@@ -114,6 +114,121 @@
         </div>
       </div>
 
+      <!-- MODAL ESQUECI A SENHA -->
+      <div
+        id="modalEsqueciSenha"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+        style="display: none"
+      >
+        <div
+          class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
+        >
+          <div>
+            <h3
+              class="text-xl font-black text-slate-800 uppercase tracking-tight"
+            >
+              Recuperar Acesso
+            </h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+              Informe a sua Chave J ou E-mail para receber uma senha temporária.
+            </p>
+          </div>
+          <div class="space-y-4 text-left">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Chave J ou E-mail</label
+              >
+              <input
+                type="text"
+                id="txtRecuperaIdentificador"
+                placeholder="Ex: JJ826554"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm uppercase"
+              />
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button
+              onclick="fecharModalEsqueciSenha()"
+              class="w-1/3 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-xl transition-all uppercase text-xs"
+            >
+              Cancelar
+            </button>
+            <button
+              id="btnEnviarRecuperacao"
+              onclick="enviarRecuperacaoSenha()"
+              class="w-2/3 bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase text-xs"
+            >
+              Enviar Senha
+            </button>
+          </div>
+          <div
+            id="msgErroRecupera"
+            class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
+            style="display: none"
+          ></div>
+        </div>
+      </div>
+
+      <!-- MODAL DE PRIMEIRA TROCA DE SENHA -->
+      <div
+        id="modalTrocaSenha"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+        style="display: none"
+      >
+        <div
+          class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center space-y-6 border border-slate-100"
+        >
+          <div>
+            <h3
+              class="text-xl font-black text-slate-800 uppercase tracking-tight"
+            >
+              Primeiro Acesso
+            </h3>
+            <p class="text-xs text-slate-500 font-medium mt-1">
+              Por segurança, altere a sua senha inicial (123456).
+            </p>
+          </div>
+          <div class="space-y-4 text-left">
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Nova Senha</label
+              >
+              <input
+                type="password"
+                id="txtNovaSenha"
+                placeholder="Mínimo de 6 caracteres"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Confirmar Nova Senha</label
+              >
+              <input
+                type="password"
+                id="txtConfirmaSenha"
+                placeholder="Repita a nova senha"
+                class="w-full p-4 border-2 border-slate-100 rounded-xl font-bold text-slate-700 bg-slate-50 outline-none focus:border-blue-600 focus:bg-white transition-all text-sm"
+              />
+            </div>
+          </div>
+          <button
+            onclick="salvarNovaSenha()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-xl shadow-lg transition-all uppercase tracking-wider text-sm active:scale-95"
+          >
+            Atualizar Senha e Entrar
+          </button>
+          <div
+            id="msgErroTroca"
+            class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs font-bold uppercase"
+            style="display: none"
+          ></div>
+        </div>
+      </div>
+
       <!-- TELA PRINCIPAL (NAVBAR) -->
       <div id="mainScreen" class="hidden pt-8">
         <nav
@@ -1817,6 +1932,7 @@
         document.getElementById("boxLogin").classList.remove("hidden");
         showToast("Sessão Terminada", "success");
       }
+
       function toggleVisibilidadeSenha(idInp, idIco) {
         let i = document.getElementById(idInp),
           c = document.getElementById(idIco);
@@ -1849,11 +1965,13 @@
           })
           .getTodosPromotores();
       }
+
       function abrirModalPromotor() {
         document.getElementById("cadPromotorChave").value = "";
         document.getElementById("cadPromotorChave").readOnly = false;
         document.getElementById("modalPromotor").classList.remove("hidden");
       }
+
       function editarPromotor(chv) {
         const p = promotoresMemoria.find((i) => i.chave === chv);
         if (p) {
@@ -1866,9 +1984,11 @@
           document.getElementById("modalPromotor").classList.remove("hidden");
         }
       }
+
       function fecharModalPromotor() {
         document.getElementById("modalPromotor").classList.add("hidden");
       }
+
       function enviarCadastroPromotor() {
         const payload = {
           chave: document.getElementById("cadPromotorChave").value.trim(),
@@ -2057,6 +2177,7 @@
       // ==========================================
       // FINANCEIRO (COM PARCELAS E PIX)
       // ==========================================
+
       function carregarCombosFinanceiro() {
         google.script.run
           .withSuccessHandler((res) => {
@@ -2068,6 +2189,7 @@
           })
           .getParametrosFinanceiros();
       }
+
       function preencherSelectUI(id, arr) {
         const el = document.getElementById(id);
         if (!el) return;
@@ -2076,6 +2198,7 @@
           (v) => (el.innerHTML += `<option value="${v}">${v}</option>`),
         );
       }
+
       function atualizarCategoriasFin() {
         const t = document.getElementById("finTipo").value.toUpperCase();
         let c = t.includes("ENTRADA")
@@ -2083,12 +2206,14 @@
           : listasFinanceirasAtuais.categoriasSaida;
         preencherSelectUI("finCategoria", c);
       }
+
       function verificarPIX() {
         if (
           document.getElementById("finFormaPagto").value.toUpperCase() === "PIX"
         )
           document.getElementById("finStatus").value = "PAGAMENTO REALIZADO";
       }
+
       // ==========================================
       // RESTAURAÇÃO DO MÓDULO FINANCEIRO
       // ==========================================
@@ -2691,6 +2816,7 @@
           })
           .getDetalhesEHistoricoLead(cpf, user.chave);
       }
+
       function fecharModalLead() {
         document.getElementById("modalLead").classList.add("hidden");
         document.getElementById("leadObs").value = "";
@@ -2776,6 +2902,7 @@
           })
           .getTabelasPorPerfil(user.perfil);
       }
+
       function changeSimMode(m) {
         simMode = m;
         document.getElementById("tabEmp").className =
@@ -2795,12 +2922,14 @@
         document.getElementById("vInput").value = "";
         resetSimResult();
       }
+
       function resetSimResult() {
         const resTxt = document.getElementById("resTxt");
         resTxt.innerText = "Aguardando dados...";
         resTxt.className =
           "text-slate-400 font-bold uppercase tracking-widest text-sm";
       }
+
       function calcSim() {
         const fator = parseFloat(document.getElementById("selTab").value);
         const valor = parseFloat(document.getElementById("vInput").value);
@@ -3014,7 +3143,88 @@
           })
           .salvarParametrosFinanceiros(payload);
       }
+
+      // ==========================================
+      // RECUPERAÇÃO E TROCA DE SENHA OBRIGATÓRIA
+      // ==========================================
+      function abrirModalEsqueciSenha() {
+        document.getElementById("txtRecuperaIdentificador").value =
+          document.getElementById("txtIdentificador").value;
+        document.getElementById("msgErroRecupera").style.display = "none";
+        document.getElementById("modalEsqueciSenha").style.display = "flex";
+      }
+
+      function fecharModalEsqueciSenha() {
+        document.getElementById("modalEsqueciSenha").style.display = "none";
+      }
+
+      function enviarRecuperacaoSenha() {
+        const identificador = document
+          .getElementById("txtRecuperaIdentificador")
+          .value.trim();
+        const divErro = document.getElementById("msgErroRecupera");
+        const btn = document.getElementById("btnEnviarRecuperacao");
+        divErro.style.display = "none";
+        if (!identificador) {
+          divErro.innerText = "Informe a Chave J ou E-mail.";
+          divErro.style.display = "block";
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = "ENVIANDO...";
+        google.script.run
+          .withSuccessHandler(function (res) {
+            btn.disabled = false;
+            btn.innerText = "Enviar Senha";
+            if (res.sucesso) {
+              fecharModalEsqueciSenha();
+              showToast(res.mensagem, "success");
+            } else {
+              divErro.innerText = res.erro;
+              divErro.style.display = "block";
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.innerText = "Enviar Senha";
+            divErro.innerText = "Erro: " + err.message;
+            divErro.style.display = "block";
+          })
+          .solicitarRecuperacaoSenha(identificador);
+      }
+
+      function salvarNovaSenha() {
+        const novaSenha = document.getElementById("txtNovaSenha").value;
+        const confirma = document.getElementById("txtConfirmaSenha").value;
+        const divErro = document.getElementById("msgErroTroca");
+        divErro.style.display = "none";
+
+        if (!novaSenha || novaSenha.length < 6) {
+          divErro.innerText = "A nova senha deve ter pelo menos 6 caracteres.";
+          divErro.style.display = "block";
+          return;
+        }
+        if (novaSenha !== confirma) {
+          divErro.innerText = "As senhas não coincidem.";
+          divErro.style.display = "block";
+          return;
+        }
+
+        google.script.run
+          .withSuccessHandler(function (resposta) {
+            if (resposta.sucesso) {
+              document.getElementById("modalTrocaSenha").style.display = "none";
+              showToast("Senha alterada com sucesso!", "success");
+              iniciarSessao(usuarioLogadoTemp); // Libera a entrada no sistema
+            } else {
+              divErro.innerText = resposta.erro;
+              divErro.style.display = "block";
+            }
+          })
+          .alterarSenhaUsuario(usuarioLogadoTemp.chave, novaSenha);
+      }
     </script>
   </body>
 </html>
-<!-- 261013 1303 -->
+<!-- 261023 1456 -->
