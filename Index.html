@@ -10,6 +10,51 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <link rel="stylesheet" href="https://majb.online/shared/style.css" />
+    <!-- Regras para exportação em PDF / Impressão -->
+    <style>
+      @media print {
+        @page {
+          margin: 1cm;
+          size: A4 portrait;
+        }
+        body {
+          background-color: white !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        /* Esconde barra de navegação, faixa amarela e botões na hora de gerar o PDF */
+        nav,
+        .fixed.top-0,
+        .btn-imprimir {
+          display: none !important;
+        }
+
+        /* Remove espaçamentos inúteis para a folha de papel */
+        #mainScreen,
+        #app {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        /* Remove sombras para poupar tinta e deixar com cara de documento oficial */
+        .shadow-md,
+        .shadow-xl,
+        .shadow-sm {
+          box-shadow: none !important;
+          border: 1px solid #e2e8f0 !important;
+        }
+
+        /* Evita que uma linha da tabela seja cortada a meio entre duas páginas */
+        table {
+          page-break-inside: auto;
+        }
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+      }
+    </style>
   </head>
   <body>
     <div
@@ -1046,11 +1091,24 @@
           id="viewComissoes"
           class="view-content hidden p-4 md:p-6 max-w-5xl mx-auto space-y-8"
         >
-          <h1
-            class="text-3xl md:text-5xl font-black text-blue-700 italic uppercase tracking-tighter text-center"
+          <div
+            class="flex flex-col md:flex-row justify-between items-center gap-4"
           >
-            TABELA DE COMISSIONAMENTO
-          </h1>
+            <h1
+              class="text-3xl md:text-5xl font-black text-blue-700 italic uppercase tracking-tighter text-center md:text-left"
+            >
+              TABELA DE COMISSIONAMENTO
+            </h1>
+
+            <!-- NOVO BOTÃO DE IMPRESSÃO -->
+            <button
+              onclick="window.print()"
+              class="btn-imprimir bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-black uppercase text-sm shadow-md flex items-center justify-center gap-2 transition-colors"
+            >
+              <i class="fas fa-file-pdf text-lg"></i> Gerar PDF / Imprimir
+            </button>
+          </div>
+
           <div id="commCont" class="space-y-8 pb-20"></div>
         </div>
 
@@ -3227,4 +3285,4 @@
     </script>
   </body>
 </html>
-<!-- 261023 1456 -->
+<!-- 261028 0958 -->
