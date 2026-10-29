@@ -2951,6 +2951,14 @@
                 });
               somaComissao += Number(p.comissao) || 0;
               somaVolume += Number(p.producao) || 0;
+
+              // Puxa a observação. Se estiver vazia, coloca um traço.
+              const textoStatus = p.observacao ? p.observacao : "-";
+              // Se houver texto, destaca a vermelho/laranja para chamar a atenção do promotor
+              const corStatus = p.observacao
+                ? "text-red-500"
+                : "text-slate-500";
+
               tbody.innerHTML += `
               <tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-100 group">
                 <td class="p-3 text-[10px] font-bold text-slate-500">${p.dataContrato}</td>
@@ -2960,9 +2968,10 @@
                 <td class="p-3 text-[10px] font-bold text-slate-600 uppercase">${p.produto}</td>
                 <td class="p-3 text-[10px] font-black text-blue-600 text-right">${formataMoeda(p.producao)}</td>
                 <td class="p-3 text-[10px] font-black text-emerald-600 text-right bg-emerald-50/30">${formataMoeda(p.comissao)}</td>
-                <td class="p-3 text-[10px] font-bold text-slate-500 text-center">${p.pagoEm}</td>
+                <td class="p-3 text-[10px] font-bold ${corStatus} text-center truncate max-w-[150px]" title="${textoStatus}">${textoStatus}</td>
               </tr>`;
             });
+
             document.getElementById("resumoComissao").innerText =
               somaComissao.toLocaleString("pt-BR", {
                 style: "currency",
@@ -3319,4 +3328,4 @@
     </script>
   </body>
 </html>
-<!-- 261029 1139 -->
+<!-- 261029 1208 -->
