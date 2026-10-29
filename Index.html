@@ -1956,6 +1956,7 @@
           perfil: dadosUsuario.perfil || "BLACK",
           meta: dadosUsuario.meta || 0,
         };
+
         document.getElementById("boxLogin").classList.add("hidden");
         document.getElementById("mainScreen").classList.remove("hidden");
         document.getElementById("nomeDisplay").innerText =
@@ -1966,19 +1967,33 @@
           user.meta || 0
         ).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+        // =================================================================
+        // TRAVA DE SEGURANÇA (FILTRO DE ACESSO RESTAURADO E REFORÇADO)
+        // =================================================================
+        const menusRestritos = [
+          "navAdminLeads",
+          "navParametros",
+          "navAdminProducao",
+          "navFinanceiro",
+        ];
+
         if (
           user.nivelAcesso === "ADMINISTRADOR" ||
           user.nivelAcesso === "PROGRAMADOR"
         ) {
-          [
-            "navAdminLeads",
-            "navParametros",
-            "navAdminProducao",
-            "navFinanceiro",
-          ].forEach((id) =>
-            document.getElementById(id).classList.remove("hidden"),
-          );
+          // Destranca os menus se for Gestor
+          menusRestritos.forEach((id) => {
+            if (document.getElementById(id))
+              document.getElementById(id).classList.remove("hidden");
+          });
+        } else {
+          // ESCONDE OBRIGATORIAMENTE se for utilizador comum (Bloqueio total)
+          menusRestritos.forEach((id) => {
+            if (document.getElementById(id))
+              document.getElementById(id).classList.add("hidden");
+          });
         }
+
         switchView("home");
         carregarCombosFinanceiro();
         carregarCombosProposta();
@@ -1988,7 +2003,26 @@
         user = null;
         document.getElementById("mainScreen").classList.add("hidden");
         document.getElementById("boxLogin").classList.remove("hidden");
-        showToast("Sessão Terminada", "success");
+
+        // Bloqueia a interface no momento em que alguém sai da conta
+        const menusRestritos = [
+          "navAdminLeads",
+          "navParametros",
+          "navAdminProducao",
+          "navFinanceiro",
+        ];
+        menusRestritos.forEach((id) => {
+          if (document.getElementById(id))
+            document.getElementById(id).classList.add("hidden");
+        });
+
+        // Limpa os campos de senha para o próximo utilizador
+        if (document.getElementById("txtIdentificador"))
+          document.getElementById("txtIdentificador").value = "";
+        if (document.getElementById("txtSenha"))
+          document.getElementById("txtSenha").value = "";
+
+        showToast("Sessão Terminada com segurança", "success");
       }
 
       function toggleVisibilidadeSenha(idInp, idIco) {
@@ -3285,4 +3319,4 @@
     </script>
   </body>
 </html>
-<!-- 261028 0958 -->
+<!-- 261029 1139 -->
