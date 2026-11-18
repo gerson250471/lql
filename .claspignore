@@ -1,18 +1,29 @@
-# Ignorar dependências do Node e ficheiros de configuração do Yarn
+# Ignorar dependências do Node e ficheiros de configuração
 
 node_modules/
 package.json
 yarn.lock
+jest.config.js
 
-# Ignorar os nossos scripts de automação local
+# Ignorar a Bateria de Testes (CRÍTICO)
+
+tests/
+
+# Ignorar os nossos scripts de automação e configuração local
 
 atualizar-versao.js
+.claspignore
+.gitignore
 
 # Ignorar ficheiros do Git e do VS Code
 
 .git/
 .vscode/
 
-# Pasta Divulgações
+# Ignorar Pastas Locais e Ficheiros Office
 
 Divulgacoes/
+_.xlsm
+_.docx
+_.vba
+~$_

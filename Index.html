@@ -1655,71 +1655,158 @@
             </button>
           </div>
           <div class="p-6 space-y-4 text-left">
+            <!-- Linha 1: Tipo e Data -->
             <div class="grid grid-cols-2 gap-4">
-              <select
-                id="finTipo"
-                onchange="atualizarCategoriasFin()"
-                class="w-full p-3 rounded-xl border font-bold text-sm uppercase"
-              ></select
-              ><input
-                type="date"
-                id="finDataVenc"
-                class="w-full p-3 rounded-xl border font-bold text-sm"
-              />
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Tipo de Lançamento</label
+                >
+                <select
+                  id="finTipo"
+                  onchange="atualizarCategoriasFin()"
+                  class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm uppercase bg-slate-50 focus:border-emerald-500 outline-none transition-colors"
+                ></select>
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Data de Vencimento</label
+                >
+                <input
+                  type="date"
+                  id="finDataVenc"
+                  class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm text-slate-600 bg-slate-50 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
             </div>
+
+            <!-- Linha 2: Categoria e Valor (Agora com R$ destacado) -->
             <div class="grid grid-cols-2 gap-4">
-              <select
-                id="finCategoria"
-                class="w-full p-3 rounded-xl border font-bold text-sm uppercase"
-              ></select
-              ><input
-                type="number"
-                id="finValor"
-                placeholder="Valor"
-                class="w-full p-3 rounded-xl border font-bold text-sm"
-              />
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Categoria</label
+                >
+                <select
+                  id="finCategoria"
+                  class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm uppercase bg-slate-50 focus:border-emerald-500 outline-none transition-colors"
+                ></select>
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Valor Bruto</label
+                >
+                <div
+                  class="flex border-2 border-slate-100 rounded-xl overflow-hidden bg-slate-50 focus-within:border-emerald-500 transition-colors"
+                >
+                  <span
+                    class="px-4 py-3 text-slate-400 font-black bg-slate-100 border-r border-slate-200"
+                    >R$</span
+                  >
+                  <input
+                    type="number"
+                    id="finValor"
+                    placeholder="0.00"
+                    class="w-full p-3 font-black text-sm text-slate-700 bg-transparent outline-none"
+                  />
+                </div>
+              </div>
             </div>
+
+            <!-- Linha 3: Descrição e Promotor -->
             <div class="grid grid-cols-2 gap-4">
-              <input
-                type="text"
-                id="finDescricao"
-                placeholder="Desc"
-                class="w-full p-3 rounded-xl border font-bold text-sm uppercase"
-              /><input
-                type="text"
-                id="finPromotor"
-                placeholder="Promotor"
-                class="w-full p-3 rounded-xl border font-bold text-sm uppercase"
-              />
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Descrição Curta</label
+                >
+                <input
+                  type="text"
+                  id="finDescricao"
+                  placeholder="Ex: Pagamento Cliente X"
+                  class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm uppercase bg-slate-50 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                  >Promotor / Responsável</label
+                >
+                <input
+                  type="text"
+                  id="finPromotor"
+                  placeholder="Nome (Opcional)"
+                  class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-sm uppercase bg-slate-50 focus:border-emerald-500 outline-none transition-colors"
+                />
+              </div>
             </div>
-            <div class="grid grid-cols-4 gap-2">
-              <select
-                id="finFonte"
-                class="w-full p-2 rounded border text-xs"
-              ></select
-              ><select
-                id="finFormaPagto"
-                onchange="verificarPIX()"
-                class="w-full p-2 rounded border text-xs"
-              ></select
-              ><select
-                id="finStatus"
-                class="w-full p-2 rounded border text-xs"
-              ></select
-              ><select
-                id="finParcelas"
-                class="w-full p-2 rounded border text-xs"
+
+            <!-- Linha 4: Fonte, Pagamento, Status e Parcelas -->
+            <div
+              class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-slate-50/50 p-3 rounded-xl border border-slate-100"
+            >
+              <div>
+                <label
+                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Conta/Fonte</label
+                >
+                <select
+                  id="finFonte"
+                  class="w-full p-2.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:border-emerald-500"
+                ></select>
+              </div>
+              <div>
+                <label
+                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Forma de Pagto</label
+                >
+                <select
+                  id="finFormaPagto"
+                  onchange="verificarPIX()"
+                  class="w-full p-2.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:border-emerald-500"
+                ></select>
+              </div>
+              <div>
+                <label
+                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Status</label
+                >
+                <select
+                  id="finStatus"
+                  class="w-full p-2.5 rounded-lg border border-slate-200 text-xs font-black text-slate-600 bg-white outline-none focus:border-emerald-500"
+                ></select>
+              </div>
+              <div>
+                <label
+                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1"
+                  >Parcelas</label
+                >
+                <select
+                  id="finParcelas"
+                  class="w-full p-2.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-600 bg-white outline-none focus:border-emerald-500 cursor-pointer"
+                >
+                  <option value="1">1x</option>
+                  <option value="2">2x</option>
+                  <option value="12">12x</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Observações Livres -->
+            <div>
+              <label
+                class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5"
+                >Anotações / Observações</label
               >
-                <option value="1">1x</option>
-                <option value="2">2x</option>
-                <option value="12">12x</option>
-              </select>
+              <textarea
+                id="finObs"
+                rows="2"
+                placeholder="Informações adicionais da transação..."
+                class="w-full p-3 rounded-xl border-2 border-slate-100 font-bold text-xs text-slate-600 uppercase bg-slate-50 focus:border-emerald-500 outline-none transition-colors resize-none"
+              ></textarea>
             </div>
-            <textarea
-              id="finObs"
-              rows="2"
-              class="w-full p-3 rounded-xl border font-bold text-sm uppercase"
-            ></textarea>
           </div>
           <div class="p-6 bg-slate-50 flex gap-3">
             <button
@@ -3328,4 +3415,4 @@
     </script>
   </body>
 </html>
-<!-- 261029 1208 -->
+<!-- 261118 1115 Ajuste no Modal Financeiro estava confuso -->

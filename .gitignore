@@ -15,8 +15,10 @@ __pycache__/
 .vscode/
 .idea/
 
-# Planilha Excel
+# Planilha Excel, Documentos word e temporários
 *.xlsm
+*.docx
+~$*
 
 # PASTAS LANDING PAGES
 LP/
